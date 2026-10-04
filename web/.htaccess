@@ -1,0 +1,11 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Serve existing files and folders directly (like JS, CSS, assets)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Redirect everything else (dynamic URLs) to Flutter's index.html
+    RewriteRule ^.*$ index.html [L]
+</IfModule>
