@@ -3,7 +3,7 @@ import '../model/subtitlemodel.dart';
 
 class Constant {
   static String baseUrl =
-      'https://nexstream.biz.id/public/api/'; // Replace with your API Path (Get from Admin panel)
+      'https://nexstream.biz.id/api/'; // Replace with your API Path (Get from Admin panel)
   static String apiToken =
       'v25dcFLxPGg0MIGu7jkSDIJQTEEDqcZx'; // Replace with your API Token (Get from Admin panel)
 
