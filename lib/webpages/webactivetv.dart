@@ -612,14 +612,14 @@ class WebActiveTVState extends State<WebActiveTV> {
         printLog('Login Successfull!');
         if (!mounted) return;
         LoadingOverlay().hide();
-        Utils.showToast(context, "${generalProvider.loginTVModel.message}");
+        Utils.showToast("${generalProvider.loginTVModel.message}");
         if (context.canPop()) {
           context.pop();
         }
       } else {
         if (!mounted) return;
         LoadingOverlay().hide();
-        Utils.showToast(context, "${generalProvider.loginTVModel.message}");
+        Utils.showToast("${generalProvider.loginTVModel.message}");
       }
     }
   }

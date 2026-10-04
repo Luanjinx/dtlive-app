@@ -1217,7 +1217,6 @@ class ApiService {
   // search_content API
   Future<SearchModel> searchContent(dynamic searchText, pageNo) async {
     printLog('searchContent searchText ==>>> $searchText');
-    printLog('searchContent userIsKid ===>>> ${Constant.userIsKid}');
     SearchModel searchModel;
     String search = "search_content";
     Response response = await dio.post(
@@ -1690,10 +1689,10 @@ class ApiService {
 /* ========================== Download Videos ========================== */
 Future<void> prepareVideoDownload(
   BuildContext context,
-  contentdetails.Result? contentDetails, {
-  String? selectedVideoUrl,
-}) async {
+  contentdetails.Result? contentDetails,
+) async {
   contentdetails.Result? sectionDetails = contentDetails;
+  printLog('videoExtension ============> ${sectionDetails?.videoExtension}');
   final downloadProvider = Provider.of<VideoDownloadProvider>(
     context,
     listen: false,
@@ -1725,12 +1724,15 @@ Future<void> prepareVideoDownload(
             '${(sectionDetails?.id ?? 0)}${(Constant.userID)}_KID')
       : ('${(sectionDetails?.name ?? "").replaceAll(" ", "")}'
             '${(sectionDetails?.id ?? 0)}${(Constant.userID)}');
-  String vExtension = sectionDetails?.videoExtension ?? "mp4";
-  printLog('videoExtension ============> $vExtension');
   try {
     localPath = await Utils.prepareSaveDir();
     printLog("localPath ====> $localPath");
-    mTargetFile = File(path.join(localPath, '$mFileName.$vExtension'));
+    mTargetFile = File(
+      path.join(
+        localPath,
+        '$mFileName.${(sectionDetails?.videoExtension ?? "mp4")}',
+      ),
+    );
     // This is a sync operation on a real
     // app you'd probably prefer to use writeAsByte and handle its Future
   } catch (e) {
@@ -1770,7 +1772,7 @@ Future<void> prepareVideoDownload(
 
   try {
     if (context.mounted) {
-      Utils.showToast(context, Locales.string(context, "download_started"));
+      Utils.showToast(Locales.string(context, "download_started"));
     }
 
     /* Potrait Image Download */
@@ -1789,9 +1791,7 @@ Future<void> prepareVideoDownload(
 
     /* Video Download */
     await dio.download(
-      (selectedVideoUrl != null && selectedVideoUrl.isNotEmpty)
-          ? selectedVideoUrl
-          : (sectionDetails?.video320 ?? ""),
+      sectionDetails?.video320 ?? "",
       mTargetFile?.path,
       onReceiveProgress: (received, total) async {
         if (total != -1) {
@@ -1812,26 +1812,13 @@ Future<void> prepareVideoDownload(
     );
     printLog("generateKey =======> $generateKey");
     printLog("generateIVKey =====> $generateIVKey");
-    if (vExtension.toLowerCase() == ".mkv" ||
-        vExtension.toLowerCase() == "mkv") {
-      dynamic encryptedMKVFile = await Utils.encryptMKV([
-        mTargetFile,
-        generateKey,
-        generateIVKey,
-        context,
-        vExtension,
-      ]);
-      printLog("encryptedMKVFile =====> $encryptedMKVFile");
-    } else {
-      dynamic encryptedFile = await Utils.encryptUsingFFMPEG([
-        mTargetFile,
-        generateKey,
-        generateIVKey,
-        context,
-        vExtension,
-      ]);
-      printLog("encryptedFile =====> $encryptedFile");
-    }
+    dynamic encryptedFile = await Utils.encryptUsingFFMPEG([
+      mTargetFile,
+      generateKey,
+      generateIVKey,
+      context,
+    ]);
+    printLog("encryptedFile =====> $encryptedFile");
     /* ***************** Encrypt Video File END */
 
     DownloadItem downloadedItem = DownloadItem(
@@ -1840,9 +1827,7 @@ Future<void> prepareVideoDownload(
       securityIVKey: generateIVKey,
       name: sectionDetails?.name,
       description: sectionDetails?.description,
-      videoUrl: (selectedVideoUrl != null && selectedVideoUrl.isNotEmpty)
-          ? selectedVideoUrl
-          : sectionDetails?.video320,
+      videoUrl: sectionDetails?.video320,
       savedDir: localPath,
       savedFile: mTargetFile?.path ?? "",
       videoType: sectionDetails?.videoType,
@@ -1872,11 +1857,11 @@ Future<void> prepareVideoDownload(
     downloadProvider.setCurrentDownload(null);
     downloadProvider.setLoading(false);
     if (context.mounted) {
-      Utils.showToast(context, Locales.string(context, "download_completed"));
+      Utils.showToast(Locales.string(context, "download_completed"));
     }
   } catch (e) {
     if (context.mounted) {
-      Utils.showToast(context, Locales.string(context, "download_failed"));
+      Utils.showToast(Locales.string(context, "download_failed"));
     }
   }
 }
@@ -1889,7 +1874,6 @@ Future<void> prepareShowDownload(
   required int? seasonPos,
   required int? episodePos,
   required episode.Result? episodeDetails,
-  String? selectedVideoUrl,
 }) async {
   contentdetails.Result? sectionDetails = contentDetails;
   int seasonPosition = seasonPos ?? 0;
@@ -1939,8 +1923,6 @@ Future<void> prepareShowDownload(
   /* Prepare Target Video File START ************* */
   File? mTargetFile;
   String? localPath;
-  String vExtension = episodeDetails?.videoExtension ?? "mp4";
-  printLog('videoExtension ============> $vExtension');
   try {
     localPath = await Utils.prepareShowSaveDir(
       (sectionDetails?.name ?? "").replaceAll(RegExp('\\W+'), ''),
@@ -1962,7 +1944,12 @@ Future<void> prepareShowDownload(
     }
     printLog("mFileName ======> $mFileName");
 
-    mTargetFile = File(path.join(localPath, '$mFileName.$vExtension'));
+    mTargetFile = File(
+      path.join(
+        localPath,
+        '$mFileName.${episodeDetails?.videoExtension != '' ? (episodeDetails?.videoExtension ?? 'mp4') : 'mp4'}',
+      ),
+    );
   } catch (e) {
     printLog("saveShowStorage Exception ===> $e");
   }
@@ -2018,7 +2005,7 @@ Future<void> prepareShowDownload(
 
   try {
     if (!context.mounted) return;
-    Utils.showToast(context, Locales.string(context, "download_started"));
+    Utils.showToast(Locales.string(context, "download_started"));
 
     /* Save Video/Show */
     List<DownloadItem> myDownloadList = [];
@@ -2087,9 +2074,7 @@ Future<void> prepareShowDownload(
 
     /* Video Download */
     await dio.download(
-      (selectedVideoUrl != null && selectedVideoUrl.isNotEmpty)
-          ? selectedVideoUrl
-          : (epiDetails?.video320 ?? ""),
+      epiDetails?.video320 ?? "",
       mTargetFile?.path,
       onReceiveProgress: (received, total) async {
         if (total != -1) {
@@ -2111,26 +2096,13 @@ Future<void> prepareShowDownload(
     printLog("generateKey =======> $generateKey");
     printLog("generateIVKey =====> $generateIVKey");
 
-    if (vExtension.toLowerCase() == ".mkv" ||
-        vExtension.toLowerCase() == "mkv") {
-      dynamic encryptedMKVFile = await Utils.encryptMKV([
-        mTargetFile,
-        generateKey,
-        generateIVKey,
-        context,
-        vExtension,
-      ]);
-      printLog("encryptedMKVFile =====> $encryptedMKVFile");
-    } else {
-      dynamic encryptedFile = await Utils.encryptUsingFFMPEG([
-        mTargetFile,
-        generateKey,
-        generateIVKey,
-        context,
-        vExtension,
-      ]);
-      printLog("encryptedFile =======> $encryptedFile");
-    }
+    dynamic encryptedFile = await Utils.encryptUsingFFMPEG([
+      mTargetFile,
+      generateKey,
+      generateIVKey,
+      context,
+    ]);
+    printLog("encryptedFile =======> $encryptedFile");
     /* ***************** Encrypt Episode File END */
 
     /* Check In Downloaded Items START **************** */
@@ -2223,11 +2195,11 @@ Future<void> prepareShowDownload(
     downloadProvider.setCurrentDownload(null);
     downloadProvider.setLoading(false);
     if (context.mounted) {
-      Utils.showToast(context, Locales.string(context, "download_completed"));
+      Utils.showToast(Locales.string(context, "download_completed"));
     }
   } catch (e) {
     if (!context.mounted) return;
-    Utils.showToast(context, Locales.string(context, "download_failed"));
+    Utils.showToast(Locales.string(context, "download_failed"));
   }
 }
 /* ========================== Download Shows ========================== */

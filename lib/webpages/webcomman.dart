@@ -1067,7 +1067,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
     );
   }
 
-  List<DropdownItem<type.Result>>? _buildWebDropDownItems() {
+  List<DropdownMenuItem<type.Result>>? _buildWebDropDownItems() {
     final List<type.Result> typeDropDownList = [];
 
     // 1. Add static "Home" at first position
@@ -1112,7 +1112,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
       final bool isSelected =
           isHomeSelected || isRentSelected || isOtherTabSelected;
 
-      return DropdownItem<type.Result>(
+      return DropdownMenuItem<type.Result>(
         value: value,
         alignment: Alignment.center,
         child: Container(

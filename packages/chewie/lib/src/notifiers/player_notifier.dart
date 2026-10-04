@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 /// over all State-Changes inside chewie
 ///
 class PlayerNotifier extends ChangeNotifier {
-  PlayerNotifier._(bool hideStuff) : _hideStuff = hideStuff;
+  PlayerNotifier._(
+    bool hideStuff,
+  ) : _hideStuff = hideStuff;
 
   bool _hideStuff;
 
@@ -19,6 +21,8 @@ class PlayerNotifier extends ChangeNotifier {
 
   // ignore: prefer_constructors_over_static_methods
   static PlayerNotifier init() {
-    return PlayerNotifier._(true);
+    return PlayerNotifier._(
+      true,
+    );
   }
 }

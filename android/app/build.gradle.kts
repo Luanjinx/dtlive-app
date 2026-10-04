@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.dramastream.android"
+    namespace = "com.javstory.prjkt"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -33,11 +33,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.dramastream.android"
+        applicationId = "com.javstory.prjkt"
         minSdk = 25
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
+        multiDexEnabled = true
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -96,8 +98,16 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:2.3.20")
     implementation("com.google.android.material:material:1.12.0")
+    implementation("com.android.support:multidex:2.0.1")
+
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
+
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test.runner:1.5.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.0")
+    api("androidx.test:core:1.4.0")
 }
 
 flutter {

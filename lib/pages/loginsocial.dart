@@ -484,7 +484,6 @@ class LoginSocialState extends State<LoginSocial> {
   }
 
   Future<void> _gmailLogin() async {
-    numberController.clear();
     try {
       if (!initialized) {
         await _initGoogleSignIn();
@@ -548,7 +547,6 @@ class LoginSocialState extends State<LoginSocial> {
 
   /* Apple Login */
   Future<void> signInWithApple() async {
-    numberController.clear();
     final rawNonce = generateNonce();
     final nonce = Utils.sha256ofString(rawNonce);
 

@@ -243,7 +243,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     getAppVersion();
     _getUserData();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await connectivityProvider.initConnectivity();
+      await connectivityProvider.initConnectivity(context);
       await _getDeviceInfo();
       if (!kIsWeb) await _fetchIntro();
       await _getData();

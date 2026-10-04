@@ -502,13 +502,5 @@
     "language_singular": "ભાષા",
     "language_plural": "ભાષાઓ",
     "see_all_reviews": "બધી સમીક્ષાઓ જુઓ",
-    "write_review": "સમીક્ષા લખો",
-    "select_download_quality": "ડાઉનલોડ ગુણવત્તા પસંદ કરો",
-    "select_quality_note": "ડાઉનલોડ કરવા માટે ગુણવત્તા પસંદ કરો. ઉચ્ચ ગુણવત્તાનો અર્થ છે મોટી ફ઼ાઇલ સાઇઝ.",
-    "quality_320p": "320p  •  નીચી",
-    "quality_480p": "480p  •  સ્ટાન્ડર્ડ",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "મ્યૂટ",
-    "unmute": "અનમ્યૂટ"
+    "write_review": "સમીક્ષા લખો"
 }

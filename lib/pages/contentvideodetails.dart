@@ -682,7 +682,15 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
               ),
 
               /* Download */
-              if (!(kIsWeb) || !(Constant.isTV)) _buildDownloadWithSubCheck(),
+              if (!(kIsWeb) || !(Constant.isTV))
+                (videoDetailsProvider
+                                .contentDetailModel
+                                .result?[0]
+                                .isDownload ??
+                            0) ==
+                        1
+                    ? _buildDownloadWithSubCheck()
+                    : const SizedBox.shrink(),
 
               /* Watchlist */
               Consumer<VideoDetailsProvider>(
@@ -1899,7 +1907,7 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
   Widget _buildDownloadWithSubCheck() {
     if ((videoDetailsProvider.contentDetailModel.result?[0].isDownload ?? 0) ==
         0) {
-      return _buildDownloadBtn();
+      return const SizedBox.shrink();
     }
     if ((videoDetailsProvider.contentDetailModel.result?[0].isPremium ?? 0) ==
             1 &&
@@ -1943,11 +1951,9 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
                     .result?[0]
                     .videoUploadType ==
                 "external") &&
-        videoDetailsProvider.contentDetailModel.result?[0].videoExtension !=
-            null &&
         (videoDetailsProvider.contentDetailModel.result?[0].videoExtension ??
                 "")
-            .isNotEmpty) {
+            .contains("mp4")) {
       return Consumer2<VideoDetailsProvider, VideoDownloadProvider>(
         builder: (context, videoDetailsProvider, downloadProvider, child) {
           bool isInDownload = false;
@@ -2149,42 +2155,20 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
       Utils.showSnackbar(context, "fail", "no_internet", true);
       return;
     }
-
-    final result = videoDetailsProvider.contentDetailModel.result?[0];
-    if (result == null) return;
-
-    final Map<String, String> qualities = {};
-    if ((result.video320 ?? "").isNotEmpty) {
-      qualities["320p"] = result.video320 ?? "";
-    }
-    if ((result.video480 ?? "").isNotEmpty) {
-      qualities["480p"] = result.video480 ?? "";
-    }
-    if ((result.video720 ?? "").isNotEmpty) {
-      qualities["720p"] = result.video720 ?? "";
-    }
-    if ((result.video1080 ?? "").isNotEmpty) {
-      qualities["1080p"] = result.video1080 ?? "";
-    }
-
-    if (qualities.isEmpty) {
+    if ((videoDetailsProvider.contentDetailModel.result?[0].video320 ?? "")
+        .isNotEmpty) {
+      try {
+        prepareVideoDownload(
+          context,
+          videoDetailsProvider.contentDetailModel.result?[0],
+        );
+      } catch (e) {
+        printLog("Downloading... Exception ======> $e");
+      }
+    } else {
       if (!mounted) return;
       Utils.showSnackbar(context, "fail", "invalid_url", true);
-      return;
     }
-
-    if (!mounted) return;
-    Utils.showQualityDownloadDialog(
-      context: context,
-      qualities: qualities,
-      onQualitySelected: (selectedUrl) {
-        try {
-          prepareVideoDownload(context, result, selectedVideoUrl: selectedUrl);
-        } catch (e) {
-          printLog("Downloading... Exception ======> $e");
-        }
-      },
-    );
   }
 
   void buildDownloadCompleteDialog() {
@@ -2635,9 +2619,6 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
       rentBuy: videoDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );

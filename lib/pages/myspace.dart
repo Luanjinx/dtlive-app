@@ -250,9 +250,6 @@ class MySpaceState extends State<MySpace> with RouteAware {
       rentBuy: continueWatchingList?[position].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );
@@ -375,54 +372,55 @@ class MySpaceState extends State<MySpace> with RouteAware {
                   fit: BoxFit.contain,
                 ),
               ),
-              InkWell(
-                borderRadius: BorderRadius.circular(Dimens.cardRadius),
-                onTap: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return const Settings();
-                      },
+              if (Constant.userIsKid == false)
+                InkWell(
+                  borderRadius: BorderRadius.circular(Dimens.cardRadius),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return const Settings();
+                        },
+                      ),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          height: 15,
+                          width: 15,
+                          alignment: Alignment.centerLeft,
+                          child: MyImage(
+                            imagePath: "ic_setting.png",
+                            fit: BoxFit.contain,
+                            color: titleTextColor,
+                          ),
+                        ),
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          margin: const EdgeInsets.only(left: 5),
+                          child: MyText(
+                            color: titleTextColor,
+                            text: "help_setting",
+                            multilanguage: true,
+                            textalign: TextAlign.start,
+                            fontsizeNormal: 13,
+                            fontsizeWeb: 15,
+                            fontweight: FontWeight.w500,
+                            maxline: 1,
+                            overflow: TextOverflow.ellipsis,
+                            fontstyle: FontStyle.normal,
+                          ),
+                        ),
+                      ],
                     ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Container(
-                        height: 15,
-                        width: 15,
-                        alignment: Alignment.centerLeft,
-                        child: MyImage(
-                          imagePath: "ic_setting.png",
-                          fit: BoxFit.contain,
-                          color: titleTextColor,
-                        ),
-                      ),
-                      Container(
-                        alignment: Alignment.centerLeft,
-                        margin: const EdgeInsets.only(left: 5),
-                        child: MyText(
-                          color: titleTextColor,
-                          text: "help_setting",
-                          multilanguage: true,
-                          textalign: TextAlign.start,
-                          fontsizeNormal: 13,
-                          fontsizeWeb: 15,
-                          fontweight: FontWeight.w500,
-                          maxline: 1,
-                          overflow: TextOverflow.ellipsis,
-                          fontstyle: FontStyle.normal,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -1080,18 +1078,19 @@ class MySpaceState extends State<MySpace> with RouteAware {
 
   Future<void> _checkPINAndChangeMode() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController =====> ${pinPutController.text}");
     mySpaceProvider.setUpdateLoading(true);
-    await mySpaceProvider.pcCheckPassword(pinPutController.text.toString());
+    await mySpaceProvider.pcCheckPassword(
+      pinPutController.text.toString(),
+    );
     if (!mySpaceProvider.loadingPCCheck) {
       if (mySpaceProvider.successModel.status == 200) {
         _clickToChangeProfiles(userIsKid: false, clickFrom: 'dialog');
       } else {
-        if (!mounted) return;
-        Utils.showToast(context, mySpaceProvider.successModel.message ?? "");
+        Utils.showToast(mySpaceProvider.successModel.message ?? "");
       }
     }
   }

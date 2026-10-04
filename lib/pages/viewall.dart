@@ -248,9 +248,6 @@ class ViewAllState extends State<ViewAll> {
       rentBuy: viewAllProvider.continueWatchList?[position].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );

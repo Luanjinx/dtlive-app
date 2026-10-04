@@ -992,14 +992,10 @@ class _MyEpisodeDownloadsState extends State<MyEpisodeDownloads> {
       isLive: false,
       videoId: myEpisodeList?[position].id ?? 0,
       videoTitle: myEpisodeList?[position].description ?? "",
-      videoType:
-          int.tryParse(myEpisodeList?[position].videoType?.toString() ?? "") ??
-          0, // [FIX]
-      subVideoType:
-          int.tryParse(
-            myEpisodeList?[position].subVideoType?.toString() ?? "",
-          ) ??
-          0, // [FIX]
+      videoType: int.tryParse(
+            myEpisodeList?[position].videoType?.toString() ?? "") ?? 0, // [FIX]
+      subVideoType: int.tryParse(
+            myEpisodeList?[position].subVideoType?.toString() ?? "") ?? 0, // [FIX]
       typeId: 4,
       episodeId: myEpisodeList?[position].showId ?? 0,
       videoUrl: myEpisodeList?[position].savedFile ?? "",
@@ -1014,9 +1010,6 @@ class _MyEpisodeDownloadsState extends State<MyEpisodeDownloads> {
       rentBuy: myEpisodeList?[position].rentBuy ?? 0,
       securityKey: myEpisodeList?[position].securityKey ?? "",
       securityIVKey: myEpisodeList?[position].securityIVKey,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );

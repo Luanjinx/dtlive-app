@@ -502,13 +502,5 @@
     "language_singular": "Ngôn ngữ",
     "language_plural": "Ngôn ngữ",
     "see_all_reviews": "Xem tất cả đánh giá",
-    "write_review": "Viết đánh giá",
-    "select_download_quality": "Chọn chất lượng tải xuống",
-    "select_quality_note": "Chọn chất lượng để tải xuống. Chất lượng cao hơn nghĩa là kích thước tệp lớn hơn.",
-    "quality_320p": "320p  •  Thấp",
-    "quality_480p": "480p  •  Tiêu chuẩn",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Tắt tiếng",
-    "unmute": "Bật tiếng"
+    "write_review": "Viết đánh giá"
 }

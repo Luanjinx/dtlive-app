@@ -11,15 +11,15 @@ import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:pay_with_paystack/pay_with_paystack.dart';
-// import 'package:payu_checkoutpro_flutter/PayUConstantKeys.dart';
-// import 'package:payu_checkoutpro_flutter/payu_checkoutpro_flutter.dart';
+import 'package:payu_checkoutpro_flutter/PayUConstantKeys.dart';
+import 'package:payu_checkoutpro_flutter/payu_checkoutpro_flutter.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:in_app_purchase_storekit/in_app_purchase_storekit.dart';
 import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 import 'package:flutter_paypal/flutter_paypal.dart';
 import 'package:flutter_stripe/flutter_stripe.dart' as stripe;
-import 'package:flutterwave_standard/flutterwave.dart' as flutterwavepg;
+import 'package:flutterwave_standard_smart/flutterwave.dart';
 import 'package:paytmpayments_allinonesdk/paytmpayments_allinonesdk.dart';
 import 'package:razorpay_web/razorpay_web.dart';
 
@@ -29,8 +29,8 @@ import '../provider/paymentprovider.dart';
 import '../provider/profileprovider.dart';
 import '../routes/routes_constant.dart';
 import '../subscription/instamojopg.dart';
-// import '../subscription/payuhashservice.dart';
-// import '../subscription/payuparams.dart';
+import '../subscription/payuhashservice.dart';
+import '../subscription/payuparams.dart';
 import '../utils/color.dart';
 import '../utils/constant.dart';
 import '../utils/dimens.dart';
@@ -82,7 +82,7 @@ class AllPayment extends StatefulWidget {
 }
 
 class AllPaymentState extends State<AllPayment>
-/* implements PayUCheckoutProProtocol  */ {
+    implements PayUCheckoutProProtocol {
   SharedPre sharedPref = SharedPre();
 
   late PaymentProvider paymentProvider;
@@ -142,7 +142,7 @@ class AllPaymentState extends State<AllPayment>
   Map<String, dynamic>? paymentIntent;
 
   /* PayUMoney */
-  // late PayUCheckoutProFlutter _payUCheckoutPro;
+  late PayUCheckoutProFlutter _payUCheckoutPro;
 
   @override
   void initState() {
@@ -271,10 +271,7 @@ class AllPaymentState extends State<AllPayment>
         "addTransaction status :===> ${paymentProvider.transSuccessModel.status}",
       );
       if (paymentProvider.transSuccessModel.status != 200) {
-        Utils.showToast(
-          context,
-          paymentProvider.transSuccessModel.message ?? "",
-        );
+        Utils.showToast(paymentProvider.transSuccessModel.message ?? "");
       }
     }
   }
@@ -315,10 +312,7 @@ class AllPaymentState extends State<AllPayment>
         "addRentTransaction status :===> ${paymentProvider.transSuccessModel.status}",
       );
       if (paymentProvider.transSuccessModel.status != 200) {
-        Utils.showToast(
-          context,
-          paymentProvider.transSuccessModel.message ?? "",
-        );
+        Utils.showToast(paymentProvider.transSuccessModel.message ?? "");
       }
     }
   }
@@ -334,7 +328,6 @@ class AllPaymentState extends State<AllPayment>
         widget.itemId,
       );
       if (!paymentProvider.couponLoading) {
-        if (!mounted) return;
         if (paymentProvider.couponModel.status == 200) {
           final double original = double.tryParse(widget.price ?? "0") ?? 0;
           final double discounted =
@@ -351,12 +344,12 @@ class AllPaymentState extends State<AllPayment>
           );
           strCouponCode = paymentProvider.couponModel.result?.uniqueId
               .toString();
-          Utils.showToast(context, paymentProvider.couponModel.message ?? "");
+          Utils.showToast(paymentProvider.couponModel.message ?? "");
         } else {
           _couponErrorMsg =
               paymentProvider.couponModel.message ?? "Invalid coupon code.";
           _appliedCouponCode = null;
-          Utils.showToast(context, paymentProvider.couponModel.message ?? "");
+          Utils.showToast(paymentProvider.couponModel.message ?? "");
         }
         if (mounted) setState(() {});
       }
@@ -369,7 +362,6 @@ class AllPaymentState extends State<AllPayment>
         widget.price,
       );
       if (!paymentProvider.couponLoading) {
-        if (!mounted) return;
         if (paymentProvider.couponModel.status == 200) {
           final double original = double.tryParse(widget.price ?? "0") ?? 0;
           final double discounted =
@@ -386,12 +378,12 @@ class AllPaymentState extends State<AllPayment>
           );
           strCouponCode = paymentProvider.couponModel.result?.uniqueId
               .toString();
-          Utils.showToast(context, paymentProvider.couponModel.message ?? "");
+          Utils.showToast(paymentProvider.couponModel.message ?? "");
         } else {
           _couponErrorMsg =
               paymentProvider.couponModel.message ?? "Invalid coupon code.";
           _appliedCouponCode = null;
-          Utils.showToast(context, paymentProvider.couponModel.message ?? "");
+          Utils.showToast(paymentProvider.couponModel.message ?? "");
         }
         if (mounted) setState(() {});
       }
@@ -406,7 +398,7 @@ class AllPaymentState extends State<AllPayment>
     paymentProvider.setFinalAmount(widget.price ?? "");
     if (mounted) {
       setState(() {});
-      Utils.showToast(context, Locales.string(context, "coupon_removed"));
+      Utils.showToast(Locales.string(context, "coupon_removed"));
     }
   }
 
@@ -489,11 +481,7 @@ class AllPaymentState extends State<AllPayment>
           );
         }
         isPaymentDone = false;
-        if (!mounted) return;
-        Utils.showToast(
-          context,
-          paymentProvider.updateStatusModel.message ?? "",
-        );
+        Utils.showToast(paymentProvider.updateStatusModel.message ?? "");
       }
     }
   }
@@ -503,10 +491,7 @@ class AllPaymentState extends State<AllPayment>
     if (!mounted) return;
     if (gatewayTxnId.isEmpty) {
       LoadingOverlay().hide();
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
       return;
     }
     LoadingOverlay().show(context);
@@ -524,23 +509,17 @@ class AllPaymentState extends State<AllPayment>
       final int newBalance =
           paymentProvider.addWalletAmountModel.walletAmount ?? 0;
       printLog("TopupSuccess newBalance ===> $newBalance");
-      Utils.showToast(context, Locales.string(context, "wallet_topup_success"));
+      Utils.showToast(Locales.string(context, "wallet_topup_success"));
       Utils.exitPage(context);
     } else {
-      Utils.showToast(
-        context,
-        paymentProvider.addWalletAmountModel.message ?? "",
-      );
+      Utils.showToast(paymentProvider.addWalletAmountModel.message ?? "");
     }
   }
 
   /* ── Wallet-only payment ───────────────────────────────── */
   Future<void> _payWithWallet() async {
     if (!_walletCoversAll) {
-      Utils.showToast(
-        context,
-        Locales.string(context, "insufficient_wallet_balance"),
-      );
+      Utils.showToast(Locales.string(context, "insufficient_wallet_balance"));
       return;
     }
     try {
@@ -565,24 +544,17 @@ class AllPaymentState extends State<AllPayment>
         );
       }
       LoadingOverlay().hide();
-      if (!mounted) return;
       if (paymentProvider.transSuccessModel.result != null &&
           (paymentProvider.transSuccessModel.result?.length ?? 0) > 0) {
         await updateTransStatus(2);
       } else {
-        Utils.showToast(
-          context,
-          paymentProvider.transSuccessModel.message ?? "",
-        );
+        Utils.showToast(paymentProvider.transSuccessModel.message ?? "");
       }
     } on Exception catch (e) {
       printLog("_payWithWallet Exception =====> $e");
       LoadingOverlay().hide();
       if (!mounted) return;
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
 
@@ -629,7 +601,6 @@ class AllPaymentState extends State<AllPayment>
         );
       }
       LoadingOverlay().hide();
-      if (!mounted) return;
       if (paymentProvider.transSuccessModel.result != null &&
           (paymentProvider.transSuccessModel.result?.length ?? 0) > 0) {
         if (paymentProvider.finalAmount != "0") {
@@ -639,16 +610,13 @@ class AllPaymentState extends State<AllPayment>
           await updateTransStatus(2);
         }
       } else {
-        Utils.showToast(
-          context,
-          paymentProvider.transSuccessModel.message ?? "",
-        );
+        Utils.showToast(paymentProvider.transSuccessModel.message ?? "");
       }
     } on Exception catch (e) {
       printLog("openPayment Exception =====> $e");
       LoadingOverlay().hide();
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "cash_payment_msg"));
+      Utils.showToast(Locales.string(context, "cash_payment_msg"));
     }
   }
 
@@ -674,7 +642,7 @@ class AllPaymentState extends State<AllPayment>
       _initInstamojo();
     } else if (pgName == "cash") {
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "cash_payment_msg"));
+      Utils.showToast(Locales.string(context, "cash_payment_msg"));
     }
   }
 
@@ -686,18 +654,12 @@ class AllPaymentState extends State<AllPayment>
   }) {
     if (isBothKeyReq) {
       if (key1 == "" || key2 == "") {
-        Utils.showToast(
-          context,
-          Locales.string(context, "payment_not_processed"),
-        );
+        Utils.showToast(Locales.string(context, "payment_not_processed"));
         return false;
       }
     } else {
       if (key1 == "") {
-        Utils.showToast(
-          context,
-          Locales.string(context, "payment_not_processed"),
-        );
+        Utils.showToast(Locales.string(context, "payment_not_processed"));
         return false;
       }
     }
@@ -754,7 +716,8 @@ class AllPaymentState extends State<AllPayment>
                   ],
                   _buildPriceBreakdown(),
                   const SizedBox(height: 20),
-                  if (!_isFreeCheckout) _buildPaymentMethodSelector(),
+                  if (!_isFreeCheckout && widget.payType != "wallet_topup")
+                    _buildPaymentMethodSelector(),
                   if (_isFreeCheckout) const SizedBox(height: 8),
                   if (_useWallet && widget.payType != "wallet_topup")
                     _buildWalletPaymentView(),
@@ -1007,7 +970,6 @@ class AllPaymentState extends State<AllPayment>
                                     applyCoupon();
                                   } else {
                                     Utils.showToast(
-                                      context,
                                       Locales.string(
                                         context,
                                         "enter_coupon_code",
@@ -1187,30 +1149,29 @@ class AllPaymentState extends State<AllPayment>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         /* Online / Wallet toggle */
-        if (widget.payType != "wallet_topup")
-          Row(
-            children: [
-              Expanded(
-                child: _buildMethodOption(
-                  labelKey: "online_payment",
-                  selectedLabelKey: "online_selected",
-                  icon: Icons.payment_rounded,
-                  selected: !_useWallet,
-                  onTap: () => setState(() => _useWallet = false),
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: _buildMethodOption(
+                labelKey: "online_payment",
+                selectedLabelKey: "online_selected",
+                icon: Icons.payment_rounded,
+                selected: !_useWallet,
+                onTap: () => setState(() => _useWallet = false),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _buildMethodOption(
-                  labelKey: "use_wallet",
-                  selectedLabelKey: "wallet_selected",
-                  icon: Icons.account_balance_wallet_rounded,
-                  selected: _useWallet,
-                  onTap: () => setState(() => _useWallet = true),
-                ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildMethodOption(
+                labelKey: "use_wallet",
+                selectedLabelKey: "wallet_selected",
+                icon: Icons.account_balance_wallet_rounded,
+                selected: _useWallet,
+                onTap: () => setState(() => _useWallet = true),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
         if (!_useWallet) ...[
           const SizedBox(height: 16),
           MyText(
@@ -1758,7 +1719,7 @@ class AllPaymentState extends State<AllPayment>
     if (response.notFoundIDs.isNotEmpty) {
       LoadingOverlay().hide(); // Stop Loading...
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "check_sku"));
+      Utils.showToast(Locales.string(context, "check_sku"));
       return;
     }
     printLog("productID ============> ${response.productDetails[0].id}");
@@ -1776,10 +1737,7 @@ class AllPaymentState extends State<AllPayment>
       printLog("_initInAppPurchase Exception ============> $e");
       LoadingOverlay().hide(); // Stop Loading...
       if (!mounted) return;
-      Utils.showToast(
-        context,
-        Locales.string(context, "transaction_cancelled"),
-      );
+      Utils.showToast(Locales.string(context, "transaction_cancelled"));
     }
   }
 
@@ -1813,7 +1771,7 @@ class AllPaymentState extends State<AllPayment>
         } else if (purchaseDetails.status == PurchaseStatus.canceled) {
           LoadingOverlay().hide(); // Stop Loading...
           if (!mounted) return;
-          Utils.showToast(context, Locales.string(context, "payment_cancel"));
+          Utils.showToast(Locales.string(context, "payment_cancel"));
         }
         if (Platform.isAndroid) {
           if (!_kAutoConsume && purchaseDetails.productID == _kProductIds[0]) {
@@ -1898,17 +1856,11 @@ class AllPaymentState extends State<AllPayment>
         payByRazorpay(razorpayOrder: paymentProvider.razorpayOrderModel.result);
       } else {
         if (!mounted) return;
-        Utils.showToast(
-          context,
-          paymentProvider.razorpayOrderModel.errors ?? "",
-        );
+        Utils.showToast(paymentProvider.razorpayOrderModel.errors ?? "");
       }
     } else {
       if (!mounted) return;
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
 
@@ -1944,7 +1896,7 @@ class AllPaymentState extends State<AllPayment>
     * 2. Error Description
     * 3. Metadata
     * */
-    Utils.showToast(context, Locales.string(context, "payment_fail"));
+    Utils.showToast(Locales.string(context, "payment_fail"));
     updateTransStatus(3);
     paymentProvider.setCurrentPayment("");
   }
@@ -1959,7 +1911,7 @@ class AllPaymentState extends State<AllPayment>
     printLog("paymentId ====MAIN====> ${response.paymentId}");
     printLog("paymentId ====AUTO====> ${paymentProvider.paymentId}");
     _gatewayTxnId = response.paymentId; // Razorpay transaction ID
-    Utils.showToast(context, Locales.string(context, "payment_success"));
+    Utils.showToast(Locales.string(context, "payment_success"));
     // Payment Success
     updateTransStatus(2);
   }
@@ -2065,10 +2017,7 @@ class AllPaymentState extends State<AllPayment>
                     updateTransStatus(2);
                   } else {
                     if (!mounted) return;
-                    Utils.showToast(
-                      context,
-                      Locales.string(context, "payment_fail"),
-                    );
+                    Utils.showToast(Locales.string(context, "payment_fail"));
                     updateTransStatus(3);
                   }
                 })
@@ -2089,17 +2038,11 @@ class AllPaymentState extends State<AllPayment>
           }
         } else {
           if (!mounted) return;
-          Utils.showToast(
-            context,
-            Locales.string(context, "payment_not_processed"),
-          );
+          Utils.showToast(Locales.string(context, "payment_not_processed"));
         }
       }
     } else {
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
   /* ********* Paytm END *********** */
@@ -2168,24 +2111,20 @@ class AllPaymentState extends State<AllPayment>
             onError: (params) {
               printLog("onError: ${params["message"]}");
               Utils.showToast(
-                context,
                 Locales.string(context, params["message"].toString()),
               );
               updateTransStatus(3);
             },
             onCancel: (params) {
               printLog('cancelled: $params');
-              Utils.showToast(context, params.toString());
+              Utils.showToast(params.toString());
               updateTransStatus(3);
             },
           ),
         ),
       );
     } else {
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
   /* ********* Paypal END *********** */
@@ -2290,10 +2229,7 @@ class AllPaymentState extends State<AllPayment>
         }
       }
     } else {
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
 
@@ -2335,10 +2271,7 @@ class AllPaymentState extends State<AllPayment>
             if (!mounted) return;
             _gatewayTxnId = paymentIntent?["id"]
                 ?.toString(); // Stripe payment intent ID
-            Utils.showToast(
-              context,
-              Locales.string(context, "payment_success"),
-            );
+            Utils.showToast(Locales.string(context, "payment_success"));
             updateTransStatus(2);
             paymentIntent = null;
           })
@@ -2348,7 +2281,7 @@ class AllPaymentState extends State<AllPayment>
     } on stripe.StripeException catch (e) {
       printLog('Error is:---> $e');
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "payment_fail"));
+      Utils.showToast(Locales.string(context, "payment_fail"));
       await updateTransStatus(3);
     } catch (e) {
       printLog('$e');
@@ -2369,26 +2302,27 @@ class AllPaymentState extends State<AllPayment>
     if (!isContinue) return;
     /* Check Keys */
 
-    final flutterwavepg.Customer customer = flutterwavepg.Customer(
+    final Customer customer = Customer(
       email: userEmail ?? "",
       name: userName ?? "",
       phoneNumber: userMobileNo ?? '',
     );
 
-    final flutterwavepg.Flutterwave flutterwave = flutterwavepg.Flutterwave(
+    final Flutterwave flutterwave = Flutterwave(
+      context: context,
       publicKey:
           paymentProvider.paymentOptionModel.result?.flutterWave?.key1 ?? "",
       currency: Constant.currency,
-      redirectUrl: 'https://www.domain.com',
+      redirectUrl: 'https://www.divinetechs.com',
       txRef: const Uuid().v1(),
       amount: paymentProvider.finalAmount.toString().trim(),
       customer: customer,
       paymentOptions: "card, payattitude, barter, bank transfer, ussd",
-      customization: flutterwavepg.Customization(title: widget.itemTitle),
+      customization: Customization(title: widget.itemTitle),
       isTestMode:
           paymentProvider.paymentOptionModel.result?.flutterWave?.isLive != "1",
     );
-    flutterwavepg.ChargeResponse? response = await flutterwave.charge(context);
+    ChargeResponse? response = await flutterwave.charge();
     printLog("Flutterwave response =====> ${response.toJson()}");
     if ((response.status == "success" ||
             response.status == "successful" ||
@@ -2399,15 +2333,15 @@ class AllPaymentState extends State<AllPayment>
           ?.toString(); // Flutterwave transaction ID
       printLog("paymentId ========> ${paymentProvider.paymentId}");
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "payment_success"));
+      Utils.showToast(Locales.string(context, "payment_success"));
       await updateTransStatus(2);
     } else if (response.status == "cancel" && response.status == "cancelled") {
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "payment_cancel"));
+      Utils.showToast(Locales.string(context, "payment_cancel"));
       await updateTransStatus(3);
     } else {
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "payment_fail"));
+      Utils.showToast(Locales.string(context, "payment_fail"));
       await updateTransStatus(3);
     }
   }
@@ -2415,106 +2349,106 @@ class AllPaymentState extends State<AllPayment>
 
   /* ********* PayUMoney START ********* */
   Future<void> _payUMoneyInit() async {
-    // printLog(
-    //   "_payUMoneyInit isLive ======> ${paymentProvider.paymentOptionModel.result?.payUMoney?.isLive}",
-    // );
-    // /* Check Keys */
-    // bool isContinue = checkKeysAndContinue(
-    //   isLive:
-    //       (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive ?? ""),
-    //   isBothKeyReq: false,
-    //   key1: (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? ""),
-    //   key2: (paymentProvider.paymentOptionModel.result?.payUMoney?.key2 ?? ""),
-    // );
-    // if (!isContinue) return;
-    // /* Check Keys */
+    printLog(
+      "_payUMoneyInit isLive ======> ${paymentProvider.paymentOptionModel.result?.payUMoney?.isLive}",
+    );
+    /* Check Keys */
+    bool isContinue = checkKeysAndContinue(
+      isLive:
+          (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive ?? ""),
+      isBothKeyReq: false,
+      key1: (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? ""),
+      key2: (paymentProvider.paymentOptionModel.result?.payUMoney?.key2 ?? ""),
+    );
+    if (!isContinue) return;
+    /* Check Keys */
 
-    // Map<dynamic, dynamic> additionalParam = {
-    //   PayUAdditionalParamKeys.udf1: "udf1",
-    //   PayUAdditionalParamKeys.udf2: "udf2",
-    //   PayUAdditionalParamKeys.udf3: "udf3",
-    //   PayUAdditionalParamKeys.udf4: "udf4",
-    //   PayUAdditionalParamKeys.udf5: "udf5",
-    // };
+    Map<dynamic, dynamic> additionalParam = {
+      PayUAdditionalParamKeys.udf1: "udf1",
+      PayUAdditionalParamKeys.udf2: "udf2",
+      PayUAdditionalParamKeys.udf3: "udf3",
+      PayUAdditionalParamKeys.udf4: "udf4",
+      PayUAdditionalParamKeys.udf5: "udf5",
+    };
 
-    // Map<dynamic, dynamic> payUPaymentParams = {
-    //   PayUPaymentParamKey.key:
-    //       (paymentProvider.paymentOptionModel.result?.payUMoney?.key2 ?? ""),
-    //   PayUPaymentParamKey.transactionId: paymentProvider.paymentId ?? "",
-    //   PayUPaymentParamKey.amount: double.parse(widget.price ?? "0").toString(),
-    //   PayUPaymentParamKey.productInfo: widget.itemTitle ?? "",
-    //   PayUPaymentParamKey.firstName: userName ?? "",
-    //   PayUPaymentParamKey.email: userEmail ?? "",
-    //   PayUPaymentParamKey.phone: userMobileNo ?? "",
-    //   PayUPaymentParamKey.ios_surl: "https://payu.herokuapp.com/ios_success",
-    //   PayUPaymentParamKey.ios_furl: "https://payu.herokuapp.com/ios_failure",
-    //   PayUPaymentParamKey.android_surl: "https://payu.herokuapp.com/success",
-    //   PayUPaymentParamKey.android_furl: "https://payu.herokuapp.com/failure",
-    //   PayUPaymentParamKey.environment:
-    //       (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive == "1")
-    //       ? "0"
-    //       : "1", //0 => Production, 1 => Test
-    //   PayUPaymentParamKey.additionalParam: additionalParam,
-    //   PayUPaymentParamKey.userCredential:
-    //       ('${paymentProvider.paymentOptionModel.result?.payUMoney?.key2}:${userEmail ?? ""}'),
-    // };
-    // printLog("_payUMoneyInit Params ======> ${payUPaymentParams.toString()}");
+    Map<dynamic, dynamic> payUPaymentParams = {
+      PayUPaymentParamKey.key:
+          (paymentProvider.paymentOptionModel.result?.payUMoney?.key2 ?? ""),
+      PayUPaymentParamKey.transactionId: paymentProvider.paymentId ?? "",
+      PayUPaymentParamKey.amount: double.parse(widget.price ?? "0").toString(),
+      PayUPaymentParamKey.productInfo: widget.itemTitle ?? "",
+      PayUPaymentParamKey.firstName: userName ?? "",
+      PayUPaymentParamKey.email: userEmail ?? "",
+      PayUPaymentParamKey.phone: userMobileNo ?? "",
+      PayUPaymentParamKey.ios_surl: "https://payu.herokuapp.com/ios_success",
+      PayUPaymentParamKey.ios_furl: "https://payu.herokuapp.com/ios_failure",
+      PayUPaymentParamKey.android_surl: "https://payu.herokuapp.com/success",
+      PayUPaymentParamKey.android_furl: "https://payu.herokuapp.com/failure",
+      PayUPaymentParamKey.environment:
+          (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive == "1")
+          ? "0"
+          : "1", //0 => Production, 1 => Test
+      PayUPaymentParamKey.additionalParam: additionalParam,
+      PayUPaymentParamKey.userCredential:
+          ('${paymentProvider.paymentOptionModel.result?.payUMoney?.key2}:${userEmail ?? ""}'),
+    };
+    printLog("_payUMoneyInit Params ======> ${payUPaymentParams.toString()}");
 
-    // try {
-    //   _payUCheckoutPro.openCheckoutScreen(
-    //     payUPaymentParams: payUPaymentParams,
-    //     payUCheckoutProConfig: PayUParams.createPayUConfigParams(),
-    //   );
-    // } on Exception catch (e) {
-    //   printLog("_payUMoneyInit Exception ======> ${e.toString()}");
-    // }
+    try {
+      _payUCheckoutPro.openCheckoutScreen(
+        payUPaymentParams: payUPaymentParams,
+        payUCheckoutProConfig: PayUParams.createPayUConfigParams(),
+      );
+    } on Exception catch (e) {
+      printLog("_payUMoneyInit Exception ======> ${e.toString()}");
+    }
   }
 
-  // @override
-  // generateHash(Map response) {
-  //   // Pass response param to your backend server
-  //   // Backend will generate the hash and will callback to
-  //   Map<dynamic, dynamic> hashResponse = PayUHashService(
-  //     (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive == "1")
-  //         ? (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? "")
-  //         : (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? ""),
-  //   ).generateHash(response);
-  //   printLog("hashResponse =====> $hashResponse");
-  //   _payUCheckoutPro.hashGenerated(hash: hashResponse);
-  // }
+  @override
+  generateHash(Map response) {
+    // Pass response param to your backend server
+    // Backend will generate the hash and will callback to
+    Map<dynamic, dynamic> hashResponse = PayUHashService(
+      (paymentProvider.paymentOptionModel.result?.payUMoney?.isLive == "1")
+          ? (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? "")
+          : (paymentProvider.paymentOptionModel.result?.payUMoney?.key3 ?? ""),
+    ).generateHash(response);
+    printLog("hashResponse =====> $hashResponse");
+    _payUCheckoutPro.hashGenerated(hash: hashResponse);
+  }
 
-  // @override
-  // onError(Map? response) {
-  //   printLog("onError response ======> $response");
-  //   if (!mounted) return;
-  //   Utils.showToast(context, Locales.string(context, "payment_fail"));
-  // }
+  @override
+  onError(Map? response) {
+    printLog("onError response ======> $response");
+    if (!mounted) return;
+    Utils.showToast(Locales.string(context, "payment_fail"));
+  }
 
-  // @override
-  // onPaymentCancel(Map? response) {
-  //   printLog("onPaymentCancel response ======> $response");
-  //   if (!mounted) return;
-  //   Utils.showToast(context, Locales.string(context, "payment_cancel"));
-  //   updateTransStatus(3);
-  // }
+  @override
+  onPaymentCancel(Map? response) {
+    printLog("onPaymentCancel response ======> $response");
+    if (!mounted) return;
+    Utils.showToast(Locales.string(context, "payment_cancel"));
+    updateTransStatus(3);
+  }
 
-  // @override
-  // onPaymentFailure(response) {
-  //   printLog("onPaymentFailure response ======> $response");
-  //   if (!mounted) return;
-  //   Utils.showToast(context, Locales.string(context, "payment_fail"));
-  //   updateTransStatus(3);
-  // }
+  @override
+  onPaymentFailure(response) {
+    printLog("onPaymentFailure response ======> $response");
+    if (!mounted) return;
+    Utils.showToast(Locales.string(context, "payment_fail"));
+    updateTransStatus(3);
+  }
 
-  // @override
-  // onPaymentSuccess(response) {
-  //   printLog("onPaymentSuccess response ======> $response");
-  //   if (!mounted) return;
-  //   _gatewayTxnId = response['mihpayid']
-  //       ?.toString(); // PayUMoney transaction ID
-  //   Utils.showToast(context, Locales.string(context, "payment_success"));
-  //   updateTransStatus(2);
-  // }
+  @override
+  onPaymentSuccess(response) {
+    printLog("onPaymentSuccess response ======> $response");
+    if (!mounted) return;
+    _gatewayTxnId = response['mihpayid']
+        ?.toString(); // PayUMoney transaction ID
+    Utils.showToast(Locales.string(context, "payment_success"));
+    updateTransStatus(2);
+  }
   /* ********** PayUMoney END ********** */
 
   /* ********* Paystack START ********* */
@@ -2547,16 +2481,16 @@ class AllPaymentState extends State<AllPayment>
         printLog("paymentId ========> ${paymentProvider.paymentId}");
         _gatewayTxnId = paymentData.reference?.toString(); // Paystack reference
         if (!mounted) return;
-        Utils.showToast(context, Locales.string(context, "payment_success"));
+        Utils.showToast(Locales.string(context, "payment_success"));
         await updateTransStatus(2);
       },
       transactionNotCompleted: (transaction) async {
         printLog("Transaction Not Successful! $transaction");
         if (!mounted) return;
-        Utils.showToast(context, Locales.string(context, "payment_fail"));
+        Utils.showToast(Locales.string(context, "payment_fail"));
         await updateTransStatus(3);
       },
-      callbackUrl: 'https://www.domain.in/',
+      callbackUrl: 'https://yourappname.divinetechs.in/',
     );
   }
   /* ********* Paystack END ********* */
@@ -2639,10 +2573,7 @@ class AllPaymentState extends State<AllPayment>
       // Handle error
       printLog('Failed to create Instamojo order');
       if (!mounted) return;
-      Utils.showToast(
-        context,
-        Locales.string(context, "payment_not_processed"),
-      );
+      Utils.showToast(Locales.string(context, "payment_not_processed"));
     }
   }
 
@@ -2687,7 +2618,7 @@ class AllPaymentState extends State<AllPayment>
           );
 
           if (!mounted) return;
-          Utils.showToast(context, Locales.string(context, "payment_success"));
+          Utils.showToast(Locales.string(context, "payment_success"));
 
           await updateTransStatus(2);
           printLog("PAYMENT STATUS SUCCESS");
@@ -2695,21 +2626,21 @@ class AllPaymentState extends State<AllPayment>
         } else {
           printLog("PAYMENT STATUS PENDING");
           if (!mounted) return;
-          Utils.showToast(context, Locales.string(context, "payment_fail"));
+          Utils.showToast(Locales.string(context, "payment_fail"));
           await updateTransStatus(3);
           //payment failed or pending.
         }
       } else {
         printLog("PAYMENT STATUS PENDING");
         if (!mounted) return;
-        Utils.showToast(context, Locales.string(context, "payment_cancel"));
+        Utils.showToast(Locales.string(context, "payment_cancel"));
         await updateTransStatus(3);
         //payment failed or pending.
       }
     } else {
       printLog("PAYMENT STATUS PENDING");
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "payment_fail"));
+      Utils.showToast(Locales.string(context, "payment_fail"));
       await updateTransStatus(3);
       //payment failed or pending.
     }
@@ -2846,10 +2777,7 @@ class _SuccessPageState extends State<SuccessPage> {
             Utils.redirectToMainPage(context: context);
           }
         } else {
-          Utils.showToast(
-            context,
-            paymentProvider.updateStatusModel.message ?? "",
-          );
+          Utils.showToast(paymentProvider.updateStatusModel.message ?? "");
         }
       }
     } on Exception catch (e) {
@@ -2947,10 +2875,7 @@ class _CancelPageState extends State<CancelPage> {
             Utils.redirectToMainPage(context: context);
           }
         } else {
-          Utils.showToast(
-            context,
-            paymentProvider.updateStatusModel.message ?? "",
-          );
+          Utils.showToast(paymentProvider.updateStatusModel.message ?? "");
         }
       }
     } on Exception catch (e) {

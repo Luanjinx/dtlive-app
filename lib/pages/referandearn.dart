@@ -89,7 +89,6 @@ class _ReferEarnState extends State<ReferEarn> {
                         ),
                       ),
                       child: SafeArea(
-                        bottom: false,
                         child: SizedBox(
                           width: (Dimens.isWeb(context))
                               ? (MediaQuery.of(context).size.width * 0.5)
@@ -107,13 +106,14 @@ class _ReferEarnState extends State<ReferEarn> {
                               _buildDescription(),
                               const SizedBox(height: 22),
                               _buildCodeCard(code),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 26),
                               _buildSocialShareSection(code),
                             ],
                           ),
                         ),
                       ),
                     ),
+                    const SizedBox(height: 26),
                     _buildHowItWorks(),
                     const SizedBox(height: 20),
                   ],
@@ -296,7 +296,7 @@ class _ReferEarnState extends State<ReferEarn> {
   /* ── Social share section ────────────────────────────────── */
   Widget _buildSocialShareSection(String code) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         children: [
           MyText(
@@ -311,51 +311,53 @@ class _ReferEarnState extends State<ReferEarn> {
             textalign: TextAlign.center,
             fontstyle: FontStyle.normal,
           ),
-          SizedBox(height: 15),
-          Row(
-            children: [
-              Expanded(
-                child: _buildSocialButton(
-                  imagePath: "ic_insta.png",
-                  onTap: () =>
-                      Utils.referCode(context: context, referralCode: code),
+          Container(
+            transform: Matrix4.translationValues(0, 25, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildSocialButton(
+                    imagePath: "ic_insta.png",
+                    onTap: () =>
+                        Utils.referCode(context: context, referralCode: code),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: _buildSocialButton(
-                  imagePath: "ic_fb.png",
-                  onTap: () =>
-                      Utils.referCode(context: context, referralCode: code),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: _buildSocialButton(
+                    imagePath: "ic_fb.png",
+                    onTap: () =>
+                        Utils.referCode(context: context, referralCode: code),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: _buildSocialButton(
-                  imagePath: "ic_ws.png",
-                  onTap: () async {
-                    if (!mounted) return;
-                    Utils.referCode(context: context, referralCode: code);
-                  },
+                const SizedBox(width: 5),
+                Expanded(
+                  child: _buildSocialButton(
+                    imagePath: "ic_ws.png",
+                    onTap: () async {
+                      if (!mounted) return;
+                      Utils.referCode(context: context, referralCode: code);
+                    },
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: _buildSocialButton(
-                  imagePath: "ic_tele.png",
-                  onTap: () =>
-                      Utils.referCode(context: context, referralCode: code),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: _buildSocialButton(
+                    imagePath: "ic_tele.png",
+                    onTap: () =>
+                        Utils.referCode(context: context, referralCode: code),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 5),
-              Expanded(
-                child: _buildSocialButton(
-                  imagePath: "ic_linkedin.png",
-                  onTap: () =>
-                      Utils.referCode(context: context, referralCode: code),
+                const SizedBox(width: 5),
+                Expanded(
+                  child: _buildSocialButton(
+                    imagePath: "ic_linkedin.png",
+                    onTap: () =>
+                        Utils.referCode(context: context, referralCode: code),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -368,11 +370,10 @@ class _ReferEarnState extends State<ReferEarn> {
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
       highlightColor: transparent,
       child: Container(
-        height: 52,
-        padding: EdgeInsets.all(3),
+        height: 50,
+        width: 50,
         alignment: Alignment.center,
         child: MyImage(imagePath: imagePath),
       ),

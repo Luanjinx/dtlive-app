@@ -502,13 +502,5 @@
     "language_singular": "Gjuhë",
     "language_plural": "Gjuhë",
     "see_all_reviews": "Shiko të gjitha komentet",
-    "write_review": "Shkruaj një koment",
-    "select_download_quality": "Zgjidh cilësinë e shkarkimit",
-    "select_quality_note": "Zgjidhni një cilësi për shkarkim. Cilësia më e lartë do të thotë skedar më i madh.",
-    "quality_320p": "320p  •  E ulët",
-    "quality_480p": "480p  •  Standarde",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Heshti",
-    "unmute": "Zhbëj heshtjen"
+    "write_review": "Shkruaj një koment"
 }

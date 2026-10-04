@@ -516,7 +516,7 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
                 child: Opacity(
                   opacity: _lateFade.value.clamp(0, 1),
                   child: MyText(
-                    text: Constant.appVersion,
+                    text: 'v1.0.0',
                     color: titleTextColor.withValues(alpha: .16),
                     fontsizeNormal: 10,
                     fontsizeWeb: 11,

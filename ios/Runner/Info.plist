@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>Dramastream</string>
+		<string>yourappname</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -15,14 +15,14 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>Dramastream</string>
+		<string>yourappname</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
 		<string>$(FLUTTER_BUILD_NAME)</string>
 		<key>CFBundleSignature</key>
 		<string>????</string>
-		<!-- Google Login set-up START **** -->
+		<!-- Google Sign-in Section -->
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -40,7 +40,7 @@
 		<!-- TODO Replace this value: -->
 		<!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
 		<string>CLIENT_ID</string>
-		<!-- ****** Google Login set-up END -->
+		<!-- End of the Google Sign-in Section -->
 		<key>CFBundleVersion</key>
 		<string>$(FLUTTER_BUILD_NUMBER)</string>
 		<key>LSRequiresIPhoneOS</key>
@@ -99,7 +99,7 @@
 		<key>NSDocumentsDirectory</key>
 		<string>YES</string>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>Dramastream uses the local network to discover the Dart debug tool and communicate with connected devices.</string>
+		<string>yourappname uses the local network to discover the Dart debug tool and communicate with connected devices.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>We are not using location anywhere in the app</string>
 		<key>NSMicrophoneUsageDescription</key>
@@ -364,7 +364,7 @@
 			<string>audio</string>
 		</array>
 		<key>UILaunchStoryboardName</key>
-		<string></string>
+		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
 		<key>UIRequiresFullScreen</key>

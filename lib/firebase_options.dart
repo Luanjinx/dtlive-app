@@ -41,52 +41,46 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBfTWGoyEbH7ka-msI1dWuqh0WYKj4uz_g',
-    appId: '1:946063364931:web:19fb412454c72c3757d5f6',
-    messagingSenderId: '946063364931',
-    projectId: 'yourappname-9aca3',
-    authDomain: 'yourappname-9aca3.firebaseapp.com',
-    storageBucket: 'yourappname-9aca3.firebasestorage.app',
+    apiKey: 'AIzaSyAWHjp026aIeKv2Gnf9KWJCyCr0ghXc8fk',
+    appId: '1:976172192756:web:548285a3134408f18e1fa1',
+    messagingSenderId: '976172192756',
+    projectId: 'dtlive-12784',
+    authDomain: 'dtlive-12784.firebaseapp.com',
+    storageBucket: 'dtlive-12784.firebasestorage.app',
+    measurementId: 'G-ZNNGBQXPH1',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAORaonzstIpKxEcvdT14tr44nKnJzO0Co',
-    appId: '1:946063364931:android:cd523b5793563a3257d5f6',
-    messagingSenderId: '946063364931',
-    projectId: 'yourappname-9aca3',
-    storageBucket: 'yourappname-9aca3.firebasestorage.app',
+    apiKey: 'AIzaSyDcObQ6BE_DG5HHRxRr8UTdJSLAtlBuNEg',
+    appId: '1:976172192756:android:c3692a8a3c3eabea8e1fa1',
+    messagingSenderId: '976172192756',
+    projectId: 'dtlive-12784',
+    storageBucket: 'dtlive-12784.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDv8lz2mfppOZhU4AH9F2pWx3Os6IcoACg',
-    appId: '1:946063364931:ios:7b130569ab62d92257d5f6',
-    messagingSenderId: '946063364931',
-    projectId: 'yourappname-9aca3',
-    storageBucket: 'yourappname-9aca3.firebasestorage.app',
-    androidClientId:
-        '946063364931-0tvpgi5e3p1h4joss2kso187lolk2qen.apps.googleusercontent.com',
-    iosClientId:
-        '946063364931-mf45cskfiqtc63namugb7n5usvgm8vkq.apps.googleusercontent.com',
-    iosBundleId: 'com.dramastream.ios',
+    apiKey: 'AIzaSyB8Km3XO8A2LdAYO7-FC9blnxBbhHA3Bps',
+    appId: '1:976172192756:ios:aba072dc0c15c34b8e1fa1',
+    messagingSenderId: '976172192756',
+    projectId: 'dtlive-12784',
+    storageBucket: 'dtlive-12784.firebasestorage.app',
+    iosBundleId: 'com.javstory.prjkt',
   );
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDv8lz2mfppOZhU4AH9F2pWx3Os6IcoACg',
-    appId: '1:946063364931:ios:7b130569ab62d92257d5f6',
-    messagingSenderId: '946063364931',
-    projectId: 'yourappname-9aca3',
-    storageBucket: 'yourappname-9aca3.firebasestorage.app',
-    androidClientId:
-        '946063364931-0tvpgi5e3p1h4joss2kso187lolk2qen.apps.googleusercontent.com',
-    iosClientId:
-        '946063364931-mf45cskfiqtc63namugb7n5usvgm8vkq.apps.googleusercontent.com',
-    iosBundleId: 'com.dramastream.ios',
+    apiKey: 'AIzaSyB8Km3XO8A2LdAYO7-FC9blnxBbhHA3Bps',
+    appId: '1:976172192756:ios:aba072dc0c15c34b8e1fa1',
+    messagingSenderId: '976172192756',
+    projectId: 'dtlive-12784',
+    storageBucket: 'dtlive-12784.firebasestorage.app',
+    iosBundleId: 'com.javstory.prjkt',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyDtOUk23PrTjn_CXbMf36CRcOK7LnHYGos',
-    appId: '1:946063364931:web:b77a759b6b9df96757d5f6',
-    messagingSenderId: '946063364931',
-    projectId: 'yourappname-9aca3',
-    authDomain: 'yourappname-9aca3.firebaseapp.com',
-    storageBucket: 'yourappname-9aca3.firebasestorage.app',
+    apiKey: 'AIzaSyAWHjp026aIeKv2Gnf9KWJCyCr0ghXc8fk',
+    appId: '1:976172192756:web:7185bba6af92e7248e1fa1',
+    messagingSenderId: '976172192756',
+    projectId: 'dtlive-12784',
+    authDomain: 'dtlive-12784.firebaseapp.com',
+    storageBucket: 'dtlive-12784.firebasestorage.app',
+    measurementId: 'G-407LYLFC85',
   );
 }

@@ -502,13 +502,5 @@
     "language_singular": "Taal",
     "language_plural": "Talen",
     "see_all_reviews": "Alle beoordelingen bekijken",
-    "write_review": "Schrijf een beoordeling",
-    "select_download_quality": "Downloadkwaliteit selecteren",
-    "select_quality_note": "Kies een kwaliteit om te downloaden. Hogere kwaliteit betekent een groter bestandsgrootte.",
-    "quality_320p": "320p  •  Laag",
-    "quality_480p": "480p  •  Standaard",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Dempen",
-    "unmute": "Dempen opheffen"
+    "write_review": "Schrijf een beoordeling"
 }

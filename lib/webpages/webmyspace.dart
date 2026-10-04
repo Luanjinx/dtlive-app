@@ -255,9 +255,6 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
       rentBuy: continueWatchingList?[position].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );
@@ -372,54 +369,55 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
               fit: BoxFit.contain,
             ),
           ),
-          InkWell(
-            borderRadius: BorderRadius.circular(Dimens.cardRadius),
-            onTap: () async {
-              if (!mounted) return;
-              context.go(
-                "/${RoutesConstant.settingsPage}",
-                extra: widget.newPage ?? "",
-              );
-            },
-            child: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: Utils.setBackground(
-                appBgColor.withValues(alpha: 0.1),
-                Dimens.cardRadius,
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Container(
-                    height: 25,
-                    width: 25,
-                    alignment: Alignment.centerLeft,
-                    child: MyImage(
-                      imagePath: "ic_setting.png",
-                      fit: BoxFit.contain,
+          if (Constant.userIsKid == false)
+            InkWell(
+              borderRadius: BorderRadius.circular(Dimens.cardRadius),
+              onTap: () async {
+                if (!mounted) return;
+                context.go(
+                  "/${RoutesConstant.settingsPage}",
+                  extra: widget.newPage ?? "",
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: Utils.setBackground(
+                  appBgColor.withValues(alpha: 0.1),
+                  Dimens.cardRadius,
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      height: 25,
+                      width: 25,
+                      alignment: Alignment.centerLeft,
+                      child: MyImage(
+                        imagePath: "ic_setting.png",
+                        fit: BoxFit.contain,
+                      ),
                     ),
-                  ),
-                  Container(
-                    alignment: Alignment.centerLeft,
-                    margin: const EdgeInsets.only(left: 15),
-                    child: MyText(
-                      color: white,
-                      text: "help_setting",
-                      multilanguage: true,
-                      textalign: TextAlign.start,
-                      fontsizeNormal: 13,
-                      fontsizeWeb: 18,
-                      fontweight: FontWeight.w500,
-                      maxline: 1,
-                      overflow: TextOverflow.ellipsis,
-                      fontstyle: FontStyle.normal,
+                    Container(
+                      alignment: Alignment.centerLeft,
+                      margin: const EdgeInsets.only(left: 15),
+                      child: MyText(
+                        color: white,
+                        text: "help_setting",
+                        multilanguage: true,
+                        textalign: TextAlign.start,
+                        fontsizeNormal: 13,
+                        fontsizeWeb: 18,
+                        fontweight: FontWeight.w500,
+                        maxline: 1,
+                        overflow: TextOverflow.ellipsis,
+                        fontstyle: FontStyle.normal,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
         ],
       ),
     );
@@ -1141,18 +1139,17 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
 
   Future<void> _checkPINAndChangeMode() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController =====> ${pinPutController.text}");
     mySpaceProvider.setUpdateLoading(true);
     await mySpaceProvider.pcCheckPassword(pinPutController.text.toString());
     if (!mySpaceProvider.loadingPCCheck) {
-      if (!mounted) return;
       if (mySpaceProvider.successModel.status == 200) {
         await _clickToChangeProfiles(userIsKid: false, clickFrom: 'dialog');
       } else {
-        Utils.showToast(context, mySpaceProvider.successModel.message ?? "");
+        Utils.showToast(mySpaceProvider.successModel.message ?? "");
       }
     }
   }

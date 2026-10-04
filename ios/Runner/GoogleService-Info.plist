@@ -7,7 +7,7 @@
 		<key>REVERSED_CLIENT_ID</key>
 		<string>com.googleusercontent.apps.946063364931-mf45cskfiqtc63namugb7n5usvgm8vkq</string>
 		<key>ANDROID_CLIENT_ID</key>
-		<string>946063364931-on7ef7qpcps70n63fvv34krka4hsvsun.apps.googleusercontent.com</string>
+		<string>946063364931-0tvpgi5e3p1h4joss2kso187lolk2qen.apps.googleusercontent.com</string>
 		<key>API_KEY</key>
 		<string>AIzaSyDv8lz2mfppOZhU4AH9F2pWx3Os6IcoACg</string>
 		<key>GCM_SENDER_ID</key>
@@ -15,7 +15,7 @@
 		<key>PLIST_VERSION</key>
 		<string>1</string>
 		<key>BUNDLE_ID</key>
-		<string>com.dramastream.ios</string>
+		<string>com.javstory.prjkt</string>
 		<key>PROJECT_ID</key>
 		<string>yourappname-9aca3</string>
 		<key>STORAGE_BUCKET</key>

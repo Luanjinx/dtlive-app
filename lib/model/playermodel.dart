@@ -31,7 +31,6 @@ class PlayerModel {
   String? videoThumb;
   String? securityKey;
   String? securityIVKey;
-  String? imaAdsStatus;
   vdocipher.Result? cipherMediaDetails;
   int? currentEpiPos;
   List<episodes.Result>? episodeList;
@@ -56,67 +55,64 @@ class PlayerModel {
     required this.videoThumb,
     required this.securityKey,
     required this.securityIVKey,
-    required this.imaAdsStatus,
     required this.currentEpiPos,
     required this.episodeList,
     required this.cipherMediaDetails,
   });
 
   factory PlayerModel.fromJson(Map<String, dynamic> json) => PlayerModel(
-    playType: json["playType"],
-    isLive: json["isLive"],
-    videoId: json["videoId"],
-    videoTitle: json["videoTitle"],
-    videoType: json["videoType"],
-    subVideoType: json["subVideoType"],
-    typeId: json["typeId"],
-    episodeId: json["episodeId"],
-    stopTime: json["stopTime"],
-    isPremium: json["isPremium"],
-    isBuy: json["isBuy"],
-    isRent: json["isRent"],
-    rentBuy: json["rentBuy"],
-    videoUrl: json["videoUrl"],
-    trailerUrl: json["trailerUrl"],
-    uploadType: json["uploadType"],
-    videoThumb: json["videoThumb"],
-    securityKey: json["securityKey"],
-    securityIVKey: json["securityIVKey"],
-    imaAdsStatus: json["imaAdsStatus"],
-    cipherMediaDetails: json["cipherMediaDetails"],
-    currentEpiPos: json["currentEpiPos"],
-    episodeList: json["episodeList"] == null
-        ? []
-        : List<episodes.Result>.from(
-            json["episodeList"]?.map((x) => episodes.Result.fromJson(x)) ?? [],
-          ),
-  );
+        playType: json["playType"],
+        isLive: json["isLive"],
+        videoId: json["videoId"],
+        videoTitle: json["videoTitle"],
+        videoType: json["videoType"],
+        subVideoType: json["subVideoType"],
+        typeId: json["typeId"],
+        episodeId: json["episodeId"],
+        stopTime: json["stopTime"],
+        isPremium: json["isPremium"],
+        isBuy: json["isBuy"],
+        isRent: json["isRent"],
+        rentBuy: json["rentBuy"],
+        videoUrl: json["videoUrl"],
+        trailerUrl: json["trailerUrl"],
+        uploadType: json["uploadType"],
+        videoThumb: json["videoThumb"],
+        securityKey: json["securityKey"],
+        securityIVKey: json["securityIVKey"],
+        cipherMediaDetails: json["cipherMediaDetails"],
+        currentEpiPos: json["currentEpiPos"],
+        episodeList: json["episodeList"] == null
+            ? []
+            : List<episodes.Result>.from(
+                json["episodeList"]?.map((x) => episodes.Result.fromJson(x)) ??
+                    []),
+      );
 
   Map<String, dynamic> toJson() => {
-    "playType": playType,
-    "videoId": videoId,
-    "isLive": isLive,
-    "videoTitle": videoTitle,
-    "videoType": videoType,
-    "subVideoType": subVideoType,
-    "typeId": typeId,
-    "episodeId": episodeId,
-    "stopTime": stopTime,
-    "isPremium": isPremium,
-    "isBuy": isBuy,
-    "isRent": isRent,
-    "rentBuy": rentBuy,
-    "videoUrl": videoUrl,
-    "trailerUrl": trailerUrl,
-    "uploadType": uploadType,
-    "videoThumb": videoThumb,
-    "securityKey": securityKey,
-    "imaAdsStatus": imaAdsStatus,
-    "cipherMediaDetails": cipherMediaDetails,
-    "securityIVKey": securityIVKey,
-    "currentEpiPos": currentEpiPos,
-    "episodeList": episodeList == null
-        ? []
-        : List<dynamic>.from(episodeList?.map((x) => x.toJson()) ?? []),
-  };
+        "playType": playType,
+        "videoId": videoId,
+        "isLive": isLive,
+        "videoTitle": videoTitle,
+        "videoType": videoType,
+        "subVideoType": subVideoType,
+        "typeId": typeId,
+        "episodeId": episodeId,
+        "stopTime": stopTime,
+        "isPremium": isPremium,
+        "isBuy": isBuy,
+        "isRent": isRent,
+        "rentBuy": rentBuy,
+        "videoUrl": videoUrl,
+        "trailerUrl": trailerUrl,
+        "uploadType": uploadType,
+        "videoThumb": videoThumb,
+        "securityKey": securityKey,
+        "cipherMediaDetails": cipherMediaDetails,
+        "securityIVKey": securityIVKey,
+        "currentEpiPos": currentEpiPos,
+        "episodeList": episodeList == null
+            ? []
+            : List<dynamic>.from(episodeList?.map((x) => x.toJson()) ?? []),
+      };
 }

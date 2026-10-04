@@ -62,7 +62,7 @@ import FirebaseAuth
     }
 
     let pipChannel = FlutterMethodChannel(
-        name: "com.dramastream.ios/pip",
+        name: "com.javstory.prjkt/pip",
         binaryMessenger: controller.binaryMessenger
     )
 

@@ -502,13 +502,5 @@
     "language_singular": "Dil",
     "language_plural": "Diller",
     "see_all_reviews": "Tüm yorumları gör",
-    "write_review": "Yorum yaz",
-    "select_download_quality": "İndirme kalitesini seç",
-    "select_quality_note": "İndirmek için bir kalite seçin. Daha yüksek kalite daha büyük dosya boyutu demektir.",
-    "quality_320p": "320p  •  Düşük",
-    "quality_480p": "480p  •  Standart",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Sessize Al",
-    "unmute": "Sesi Aç"
+    "write_review": "Yorum yaz"
 }

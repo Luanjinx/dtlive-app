@@ -659,7 +659,11 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
             color: descTextColor,
             fontWeight: FontWeight.w400,
             shadows: const [
-              Shadow(color: black, offset: Offset(0.5, 0.5), blurRadius: 2),
+              Shadow(
+                color: black,
+                offset: Offset(0.5, 0.5),
+                blurRadius: 2,
+              ),
             ],
           ),
         ),
@@ -1789,10 +1793,12 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
                         child: InkWell(
                           onTap: () async {
                             printLog("Clicked on remove!  ==>  $position");
-                            openConfirDialog(
-                              position: position,
-                              videoPos: videoPos,
-                            );
+                            if (!clipsProvider.loading) {
+                              openConfirDialog(
+                                position: position,
+                                videoPos: videoPos,
+                              );
+                            }
                           },
                           child: Container(
                             height: 20,
@@ -2862,7 +2868,10 @@ class _EpisodePlayerState extends State<_EpisodePlayer>
         color: transparent,
         child: Tooltip(
           message: 'Play/Pause',
-          child: AnimatedPlayPause(playing: _isVideoStarted, color: white),
+          child: AnimatedPlayPause(
+            playing: _isVideoStarted,
+            color: white,
+          ),
         ),
       ),
     );

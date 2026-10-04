@@ -502,13 +502,5 @@
     "language_singular": "Language",
     "language_plural": "Languages",
     "see_all_reviews": "See All Reviews",
-    "write_review": "Write a Review",
-    "select_download_quality": "Select Download Quality",
-    "select_quality_note": "Choose a quality to download. Higher quality means larger file size.",
-    "quality_320p": "320p  •  Low",
-    "quality_480p": "480p  •  Standard",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Mute",
-    "unmute": "Unmute"
+    "write_review": "Write a Review"
 }

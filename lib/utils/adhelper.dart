@@ -81,27 +81,27 @@ class AdHelper {
 
     interstitalad = await sharePref.read("interstital_ad") ?? "";
     interstitalIos = await sharePref.read("ios_interstital_ad") ?? "";
-    interstitaladid = await sharePref.read("interstital_ad_id") ?? "";
-    interstitaladidios = await sharePref.read("ios_interstital_ad_id") ?? "";
+    interstitaladid = await sharePref.read("interstital_adid") ?? "";
+    interstitaladidios = await sharePref.read("ios_interstital_adid") ?? "";
 
     rewardad = await sharePref.read("reward_ad") ?? "";
     rewardadIos = await sharePref.read("ios_reward_ad") ?? "";
-    rewardadid = await sharePref.read("reward_ad_id") ?? "";
-    rewardadidios = await sharePref.read("ios_reward_ad_id") ?? "";
+    rewardadid = await sharePref.read("reward_adid") ?? "";
+    rewardadidios = await sharePref.read("ios_reward_adid") ?? "";
 
     nativead = await sharePref.read("native_ad") ?? "";
     nativeadios = await sharePref.read("ios_native_ad") ?? "";
-    nativeid = await sharePref.read("native_ad_id") ?? "";
-    nativeidios = await sharePref.read("ios_native_ad_id") ?? "";
+    nativeid = await sharePref.read("native_adid") ?? "";
+    nativeidios = await sharePref.read("ios_native_adid") ?? "";
 
     String interstialAdClick =
-        await sharePref.read("interstital_ad_click") ?? "";
-    String rewardAdClick = await sharePref.read("reward_ad_click") ?? "";
+        await sharePref.read("interstital_adclick") ?? "";
+    String rewardAdClick = await sharePref.read("reward_adclick") ?? "";
     String interstialAdIOSClick =
-        await sharePref.read("ios_interstital_ad_click") ?? "";
-    String rewardAdIOSClick = await sharePref.read("ios_reward_ad_click") ?? "";
-    String nativeAdClick = await sharePref.read("native_ad_click") ?? "";
-    String nativeAdIOSClick = await sharePref.read("ios_native_ad_click") ?? "";
+        await sharePref.read("ios_interstital_adclick") ?? "";
+    String rewardAdIOSClick = await sharePref.read("ios_reward_adclick") ?? "";
+    String nativeAdClick = await sharePref.read("native_adclick") ?? "";
+    String nativeAdIOSClick = await sharePref.read("ios_native_adclick") ?? "";
 
     if (interstialAdIOSClick != "") {
       maxInterstitialAdIOSclick = int.parse(interstialAdIOSClick);
@@ -652,8 +652,8 @@ class _SmartBannerAdState extends State<SmartBannerAd> {
 
     bannerad = await sharePref.read("banner_ad") ?? "";
     banneradIos = await sharePref.read("ios_banner_ad") ?? "";
-    banneradid = await sharePref.read("banner_ad_id") ?? "";
-    banneradidios = await sharePref.read("ios_banner_ad_id") ?? "";
+    banneradid = await sharePref.read("banner_adid") ?? "";
+    banneradidios = await sharePref.read("ios_banner_adid") ?? "";
     printLog("================= SmartBannerAd status =================");
     printLog("admobAdsStatus : $admobAdsStatus");
     printLog("banner : $bannerad");

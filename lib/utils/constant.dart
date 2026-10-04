@@ -3,13 +3,13 @@ import '../model/subtitlemodel.dart';
 
 class Constant {
   static String baseUrl =
-      'https://nexstream.biz.id/public/api/'; // Replace with your API Path (Get from Admin panel)
+      'Enter your API url...'; // Replace with your API Path (Get from Admin panel)
   static String apiToken =
-      'v25dcFLxPGg0MIGu7jkSDIJQTEEDqcZx'; // Replace with your API Token (Get from Admin panel)
+      'Enter your API Token...'; // Replace with your API Token (Get from Admin panel)
 
-  static String appName = "Dramastream";
+  static String appName = "Javstory";
   static String appPackageName =
-      "com.dramastream.android"; // This is used for PIP channel
+      "com.javstory.prjkt"; // This is used for PIP channel
   static String appleAppId = ""; // This is used for Appstore iOS App redirect
   static String appVersion = "";
 
@@ -26,10 +26,10 @@ class Constant {
   static String? accessToken;
 
   /* Default Country Code */
-  static const String defaultCountryCode = "ID";
+  static const String defaultCountryCode = "IN";
 
   /* Constant for TV check */
-  static bool isTV = true;
+  static bool isTV = false;
 
   /* Device Info */
   static String deviceName = "";
@@ -83,7 +83,7 @@ class Constant {
   /* Stripe Checkout fields */
   // static const String webDomainURL = 'http://localhost:8080/'; //Localhost
   static const String webDomainURL =
-      'https://demo.dramastream.cloud/'; //Normal Web Host
+      'https://dtlivefweb.divinetechs.com/'; //Normal Web Host
   static String? paymentMode =
       'subscription'; // Set paymentMode as 'payment' for Single Time purchase Packages (Not Recurring Packages)
   static String? publishableKey;
@@ -136,9 +136,8 @@ class Constant {
   static const String vapIdKey = "vapid_key";
   static const String supportMobileKey = "contact";
   static const String supportEmailKey = "email";
-  static const String appDescriptionKey = "app_description";
+  static const String appDescriptionKey = "app_desripation";
   static const String brandImageKey = "powered_by_image";
-  static const String brandTextKey = "powered_by_text";
   static const String trailerAutoPlay = "auto_play_trailer";
   static const String parentControlStatus = "parent_control_status";
   static const String multipleDeviceSync = "multiple_device_sync";

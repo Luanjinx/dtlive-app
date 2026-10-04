@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_subtitle/flutter_subtitle.dart';
 import 'package:http/http.dart' as http;
-import 'package:path/path.dart' as path;
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:interactive_media_ads/interactive_media_ads.dart';
@@ -126,6 +125,7 @@ class _PlayerVideoState extends State<PlayerVideo>
   /* Next Episode Pop-up END */
 
   /* IMA Ads START */
+  String? imaAdsFeatureStatus;
   AdsLoader? _adsLoader;
   AdsManager? _adsManager;
   AppLifecycleState _lastLifecycleState = AppLifecycleState.resumed;
@@ -141,12 +141,8 @@ class _PlayerVideoState extends State<PlayerVideo>
   /// Returns true when IMA ads should be shown for this session.
   /// Ads are mobile-only, feature-flag-gated, and skipped for purchased/rented content.
   bool _shouldShowAds() {
-    if (!connectivityProvider.isOnline) return false;
     if (kIsWeb) return false;
-    if (widget.playerModel.imaAdsStatus != null &&
-        widget.playerModel.imaAdsStatus != "1") {
-      return false;
-    }
+    if (imaAdsFeatureStatus != "1") return false;
     if (widget.playerModel.isBuy == 1 || widget.playerModel.rentBuy == 1) {
       return false;
     }
@@ -371,7 +367,6 @@ class _PlayerVideoState extends State<PlayerVideo>
     printLog("initState videoUrl ======> ${widget.playerModel.videoUrl}");
     printLog("initState uploadType ====> ${widget.playerModel.uploadType}");
     printLog("initState stopTime ======> ${widget.playerModel.stopTime}");
-    printLog('initState imaAdsStatus ==> ${widget.playerModel.imaAdsStatus}');
     // Store the starting resume position (stopTime)
     _initialPositionMs = widget.playerModel.stopTime ?? 0;
 
@@ -422,6 +417,10 @@ class _PlayerVideoState extends State<PlayerVideo>
       _isControllerReady = true; // [FIX] controller now safely assigned
 
       // Step 3: Fetch ads config
+      imaAdsFeatureStatus = await Utils.configByStatus(
+        status: Constant.playerIMAAdsStatus,
+      );
+      printLog('_getData imaAdsFeatureStatus =======> $imaAdsFeatureStatus');
       _shouldShowContentVideo = false;
       _isAdActuallyPlaying = false;
 
@@ -555,33 +554,12 @@ class _PlayerVideoState extends State<PlayerVideo>
       dynamic tempFile;
 
       /* Decrypt & Play START ******************** */
-      printLog("_playerInit videoUrl =======> ${widget.playerModel.videoUrl}");
-      printLog(
-        "_playerInit securityKey ====> ${widget.playerModel.securityKey}",
-      );
-      printLog(
-        "_playerInit securityIVKey ==> ${widget.playerModel.securityIVKey}",
-      );
-      File videoFile = File(widget.playerModel.videoUrl ?? "");
-      printLog("_playerInit videoFile =======> $videoFile");
-      String rawExtension = path.extension(videoFile.path);
-      printLog("_playerInit rawExtension ====> $rawExtension");
-      if (rawExtension.toLowerCase() == ".mkv" ||
-          rawExtension.toLowerCase() == "mkv") {
-        tempFile = await Utils.decryptMKV([
-          videoFile,
-          widget.playerModel.securityKey ?? "",
-          widget.playerModel.securityIVKey ?? "",
-          context,
-        ]);
-      } else {
-        tempFile = await Utils.decryptUsingFFMPEG([
-          videoFile,
-          widget.playerModel.securityKey ?? "",
-          widget.playerModel.securityIVKey ?? "",
-          context,
-        ]);
-      }
+      tempFile = await Utils.decryptUsingFFMPEG([
+        File(widget.playerModel.videoUrl ?? ""),
+        widget.playerModel.securityKey ?? "",
+        widget.playerModel.securityIVKey,
+        context,
+      ]);
       printLog("_playerInit tempFile ======> $tempFile");
       if (tempFile != null) {
         _videoPlayerController = VideoPlayerController.file(
@@ -589,7 +567,9 @@ class _PlayerVideoState extends State<PlayerVideo>
         );
       } else {
         printLog("_playerInit decrypt Failed, playing original file URL");
-        _videoPlayerController = VideoPlayerController.file(videoFile);
+        _videoPlayerController = VideoPlayerController.file(
+          File(widget.playerModel.videoUrl ?? ""),
+        );
       }
       /* ********************** Decrypt & Play END */
     } else {
@@ -909,9 +889,6 @@ class _PlayerVideoState extends State<PlayerVideo>
       rentBuy: widget.playerModel.rentBuy ?? 0,
       securityKey: widget.playerModel.securityKey ?? "",
       securityIVKey: widget.playerModel.securityIVKey ?? "",
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: index,
       episodeList: list,
     );
@@ -989,76 +966,70 @@ class _PlayerVideoState extends State<PlayerVideo>
               ),
             ),
             Divider(color: white.withValues(alpha: 0.12), height: 1), // [IMP-4]
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(bottom: 16),
-                scrollDirection: Axis.vertical,
-                physics: AlwaysScrollableScrollPhysics(),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: widget.playerModel.episodeList?.length ?? 0,
-                  itemBuilder: (_, i) {
-                    final ep = widget.playerModel.episodeList![i];
-                    final isCurrent =
-                        i == (widget.playerModel.currentEpiPos ?? 0);
-                    return ListTile(
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(6),
-                        child: MyNetworkImage(
-                          imageUrl: ep.landscape ?? "",
-                          width: 72,
-                          height: 44,
-                          fit: BoxFit.cover,
-                        ),
+            LimitedBox(
+              maxHeight: 320,
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: widget.playerModel.episodeList?.length ?? 0,
+                itemBuilder: (_, i) {
+                  final ep = widget.playerModel.episodeList![i];
+                  final isCurrent =
+                      i == (widget.playerModel.currentEpiPos ?? 0);
+                  return ListTile(
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: MyNetworkImage(
+                        imageUrl: ep.landscape ?? "",
+                        width: 72,
+                        height: 44,
+                        fit: BoxFit.cover,
                       ),
-                      title: MyText(
-                        color: isCurrent ? colorAccent : white, // [IMP-4]
-                        text: ep.name ?? ep.description ?? "Episode ${i + 1}",
-                        multilanguage: false,
-                        textalign: TextAlign.start,
-                        fontsizeNormal: 13,
-                        fontsizeWeb: 14,
-                        fontweight: isCurrent
-                            ? FontWeight.w700
-                            : FontWeight.w500,
-                        maxline: 1,
-                        overflow: TextOverflow.ellipsis,
-                        fontstyle: FontStyle.normal,
-                      ),
-                      subtitle: isCurrent
-                          ? MyText(
-                              // [TASK-2]
-                              color: colorAccent,
-                              text: "now_playing",
-                              multilanguage: true,
-                              fontsizeNormal: 11,
-                              fontsizeWeb: 12,
-                              fontweight: FontWeight.w400,
-                              maxline: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textalign: TextAlign.start,
-                              fontstyle: FontStyle.normal,
-                            )
-                          : null,
-                      trailing: isCurrent
-                          ? Icon(
-                              Icons.play_arrow_rounded,
-                              color: colorAccent, // [IMP-4]
-                              size: 20,
-                            )
-                          : null,
-                      onTap: isCurrent
-                          ? null
-                          : () {
-                              Utils.exitDialog(context);
-                              _jumpToEpisode(i);
-                            },
-                    );
-                  },
-                ),
+                    ),
+                    title: MyText(
+                      color: isCurrent ? colorAccent : white, // [IMP-4]
+                      text: ep.name ?? ep.description ?? "Episode ${i + 1}",
+                      multilanguage: false,
+                      textalign: TextAlign.start,
+                      fontsizeNormal: 13,
+                      fontsizeWeb: 14,
+                      fontweight: isCurrent ? FontWeight.w700 : FontWeight.w500,
+                      maxline: 1,
+                      overflow: TextOverflow.ellipsis,
+                      fontstyle: FontStyle.normal,
+                    ),
+                    subtitle: isCurrent
+                        ? MyText(
+                            // [TASK-2]
+                            color: colorAccent,
+                            text: "now_playing",
+                            multilanguage: true,
+                            fontsizeNormal: 11,
+                            fontsizeWeb: 12,
+                            fontweight: FontWeight.w400,
+                            maxline: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textalign: TextAlign.start,
+                            fontstyle: FontStyle.normal,
+                          )
+                        : null,
+                    trailing: isCurrent
+                        ? Icon(
+                            Icons.play_arrow_rounded,
+                            color: colorAccent, // [IMP-4]
+                            size: 20,
+                          )
+                        : null,
+                    onTap: isCurrent
+                        ? null
+                        : () {
+                            Utils.exitDialog(context);
+                            _jumpToEpisode(i);
+                          },
+                  );
+                },
               ),
             ),
+            const SizedBox(height: 16),
           ],
         );
       },
@@ -2023,7 +1994,6 @@ class _PlayerVideoState extends State<PlayerVideo>
 
   Widget _buildTopBar() {
     // FIX-B5
-    final isDownload = widget.playerModel.playType == "Download"; // [IMP-1]
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
@@ -2121,11 +2091,9 @@ class _PlayerVideoState extends State<PlayerVideo>
               ),
             ),
             if (widget.playerModel.isLive == false &&
-                Constant.subtitleUrls.isNotEmpty &&
-                !isDownload)
+                Constant.subtitleUrls.isNotEmpty)
               _buildSubtitleToggle(),
-            if (widget.playerModel.isLive == false && !isDownload)
-              _buildOptionsButton(),
+            if (widget.playerModel.isLive == false) _buildOptionsButton(),
           ],
         ),
       ),
@@ -2829,10 +2797,7 @@ class _PlayerVideoState extends State<PlayerVideo>
               children: [
                 MyText(
                   color: white.withValues(alpha: 0.60),
-                  text: Locales.string(
-                    context,
-                    'playing_in_sec',
-                  ).replaceAll('{0}', '$_countdownSeconds'),
+                  text: Locales.string(context, 'playing_in_sec').replaceAll('{0}', '$_countdownSeconds'),
                   multilanguage: false,
                   fontsizeNormal: 11,
                   fontsizeWeb: 11,

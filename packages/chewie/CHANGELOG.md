@@ -1,44 +1,3 @@
-## [1.15.0]
-* 🌐 [#946](https://github.com/fluttercommunity/chewie/pull/946): Web: enter the browser's native (OS-level) fullscreen via the Fullscreen API instead of only expanding the Flutter view inside the browser window. Pressing Escape to leave browser fullscreen also exits Chewie's fullscreen. Controlled by the new `ChewieController.useNativeFullScreenOnWeb` flag (defaults to `true`; no effect on non-web platforms). Thanks [Ortes](https://github.com/Ortes).
-* 🖱️ [#950](https://github.com/fluttercommunity/chewie/pull/950): Show click cursor on hover over Material controls and progress bar. Thanks [Ortes](https://github.com/Ortes).
-* 💬 [#958](https://github.com/fluttercommunity/chewie/pull/958): Render inline markup in subtitle cue text. Thanks [Ortes](https://github.com/Ortes).
-* ⬆️ [#960](https://github.com/fluttercommunity/chewie/pull/960): Flutter 3.44 upgrade and CI improvements. Thanks [diegotori](https://github.com/diegotori).
-* **BREAKING CHANGE**: Library now requires at least Flutter and Dart versions `3.41.0` and `3.11` or higher respectively.
-
-## [1.14.1]
-* 🛠️ [#945](https://github.com/fluttercommunity/chewie/pull/945): Flutter 3.38 downgrade. Thanks [diegotori](https://github.com/diegotori).
-* Library now supports Flutter and Dart versions `3.38.0` and `3.10` or higher respectively, restoring previous compatibility.
-
-## [1.14.0]
-* 🛠️ [#944](https://github.com/fluttercommunity/chewie/pull/944): Flutter 3.41 Upgrade. Thanks [diegotori](https://github.com/diegotori).
-* **BREAKING CHANGE**: Library now requires at least Flutter version `3.41.0` or higher due to 
-  `wakelock_plus`'s upgrade to version `1.6.0`, which now requires this minimum Flutter version.
-
-## [1.13.1]
-* 🛠️ [#940](https://github.com/fluttercommunity/chewie/pull/940): fix: add mounted check in _startHideTimer to prevent setState after dispose. Thanks [Cleparr](https://github.com/Cleparr).
-
-## [1.13.0]
-* 🛠️ [#927](https://github.com/fluttercommunity/chewie/pull/927): Fix(web): Keep playback when entering/exiting fullscreen on web. Thanks [victorspringer](https://github.com/victorspringer).
-* **BREAKING CHANGE**: Library now requires at least Flutter version `3.32.0` or higher.
-
-## [1.12.1]
-* 🛠️ [#920](https://github.com/fluttercommunity/chewie/pull/920): Fix zoomAndPan not having an effect. Thanks [abalmagd](https://github.com/abalmagd).
-
-## [1.12.0]
-* 🛠️ [#923](https://github.com/fluttercommunity/chewie/pull/923): Flutter 3.29 minimum version. Thanks [diegotori](https://github.com/diegotori).
-* **BREAKING CHANGE**: Library now requires at least Flutter version `3.29.0` or higher.
-
-## [1.11.3]
-* 🛠️ [#917](https://github.com/fluttercommunity/chewie/pull/917): Resolve issue where 'subtitleOn' doesn't enable subtitles by default on iOS. Thanks [alideep5](https://github.com/alideep5).
-
-## [1.11.2]
-* 🛠️ [#912](https://github.com/fluttercommunity/chewie/pull/912): Add workaround for invalid buffering info on android. Thanks [timoxd7](https://github.com/timoxd7).
-
-## [1.11.1]
-* ⬆️ [#875](https://github.com/fluttercommunity/chewie/pull/875): Add background tap to pause video feature. Thanks [Ortes](https://github.com/Ortes).
-* 🛠️ [#896](https://github.com/fluttercommunity/chewie/pull/896): Fixed allowMute being ignored on Desktop. Thanks [mpoimer](https://github.com/mpoimer).
-* 🛠️ [#910](https://github.com/fluttercommunity/chewie/pull/910): Fix example on web. Thanks [Ortes](https://github.com/Ortes).
-
 ## [1.11.0]
 * ⬆️ [#900](https://github.com/fluttercommunity/chewie/pull/900): Flutter `3.29` upgrade. Thanks [diegotori](https://github.com/diegotori).
 * **BREAKING CHANGE**: Library now requires at least Flutter version `3.27.0`, for real this time.
@@ -411,3 +370,4 @@ Initial version of Chewie, the video player with a heart of gold.
   * Includes Material Player Controls
   * Includes Cupertino Player Controls
   * Spike version: Focus on good looking UI. Internal code is sloppy, needs a refactor and tests
+

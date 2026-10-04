@@ -502,13 +502,5 @@
     "language_singular": "لغة",
     "language_plural": "لغات",
     "see_all_reviews": "عرض جميع المراجعات",
-    "write_review": "كتابة مراجعة",
-    "select_download_quality": "اختر جودة التنزيل",
-    "select_quality_note": "اختر جودة للتنزيل. الجودة الأعلى تعني حجم ملف أكبر.",
-    "quality_320p": "320p  •  منخفضة",
-    "quality_480p": "480p  •  قياسية",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "كتم الصوت",
-    "unmute": "إلغاء كتم الصوت"
+    "write_review": "كتابة مراجعة"
 }

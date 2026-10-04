@@ -1,4 +1,4 @@
-package com.dramastream.android
+package com.javstory.prjkt
 
 import android.app.PictureInPictureParams
 import android.content.res.Configuration
@@ -16,7 +16,7 @@ import io.flutter.plugins.GeneratedPluginRegistrant
 // import com.google.android.gms.cast.framework.CastContext
 
 class MainActivity : FlutterFragmentActivity() {
-    private val CHANNEL = "com.dramastream.android/pip"
+    private val CHANNEL = "com.javstory.prjkt/pip"
     private var videoUrl: String? = null
     private var isPlaying = false
     private var playbackPosition: Int = 0

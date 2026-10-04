@@ -582,7 +582,6 @@ class _WebLoginSocialState extends State<WebLoginSocial> {
                 printLog("Click mobileNumber ==> $mobileNumber");
                 if (numberController.text.toString().isEmpty) {
                   Utils.showToast(
-                    context,
                     Locales.string(context, "enter_mobile_toast"),
                   );
                 } else {
@@ -719,9 +718,7 @@ class _WebLoginSocialState extends State<WebLoginSocial> {
 
       if (userCredential.user == null) {
         LoadingOverlay().hide();
-        if (mounted) {
-          Utils.showToast(context, Locales.string(context, "user_not_found"));
-        }
+        if (mounted) Utils.showToast(Locales.string(context, "user_not_found"));
         return;
       }
       printLog(
@@ -847,10 +844,7 @@ class _WebLoginSocialState extends State<WebLoginSocial> {
         // Hide Progress Dialog
         if (!mounted) return;
         LoadingOverlay().hide();
-        Utils.showToast(
-          context,
-          generalProvider.loginSocialModel.message ?? "",
-        );
+        Utils.showToast(generalProvider.loginSocialModel.message ?? "");
       }
     }
   }

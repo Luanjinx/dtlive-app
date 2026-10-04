@@ -294,9 +294,6 @@ class WebHomeState extends State<WebHome> {
       rentBuy: sectionList?[index].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );
@@ -376,8 +373,7 @@ class WebHomeState extends State<WebHome> {
           if (!sectionDataProvider.loadingBanner &&
               !Dimens.isBigScreen(context) &&
               sectionDataProvider.sectionBannerModel.status == 200 &&
-              sectionDataProvider.sectionBannerModel.result != null &&
-              (sectionDataProvider.sectionBannerModel.result?.length ?? 0) > 0)
+              sectionDataProvider.sectionBannerModel.result != null)
             Container(
               alignment: Alignment.centerLeft,
               padding: EdgeInsets.only(
@@ -399,7 +395,7 @@ class WebHomeState extends State<WebHome> {
                 fontstyle: FontStyle.normal,
               ),
             ),
-          if (sectionDataProvider.loadingBanner) ...[
+          if (sectionDataProvider.loadingBanner)
             if (Dimens.isBigScreen(context))
               ShimmerUtils.bannerWeb(context)
             else
@@ -408,16 +404,14 @@ class WebHomeState extends State<WebHome> {
                   top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
                 ),
                 child: ShimmerUtils.bannerMobile(context),
-              ),
-          ] else if (sectionDataProvider.sectionBannerModel.status == 200 &&
-              sectionDataProvider.sectionBannerModel.result != null &&
-              (sectionDataProvider.sectionBannerModel.result?.length ?? 0) >
-                  0) ...[
+              )
+          else if (sectionDataProvider.sectionBannerModel.status == 200 &&
+              sectionDataProvider.sectionBannerModel.result != null)
             if (Dimens.isBigScreen(context))
               _tvHomeBanner(sectionDataProvider.sectionBannerModel.result)
             else
-              _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result),
-          ] else
+              _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result)
+          else
             SizedBox(height: Dimens.homeTabHeight),
 
           /* Continue Watching & Remaining Sections */
@@ -822,17 +816,11 @@ class WebHomeState extends State<WebHome> {
                       /* Description */
                       if ((item.description ?? "").isNotEmpty) ...[
                         ExpandableText(
-                          (item.description ?? "")
-                              .replaceAll(RegExp(r'\s*\n+\s*'), ' ')
-                              .trim(),
-                          expandText: Locales.string(context, "more"),
-                          collapseText: Locales.string(context, "less"),
+                          item.description ?? "",
+                          expandText: "",
+                          collapseText: "",
                           maxLines: 2,
-                          linkColor: colorPrimary,
-                          linkStyle: const TextStyle(
-                            fontWeight: FontWeight.w700,
-                          ),
-                          animation: true,
+                          linkColor: descTextColor,
                           expandOnTextTap: true,
                           collapseOnTextTap: true,
                           style: kIsWeb

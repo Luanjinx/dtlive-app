@@ -597,13 +597,9 @@ class _MyDownloadsState extends State<MyDownloads> {
                         securityKey:
                             myDownloadsList?[position].securityKey ?? "",
                         securityIVKey: myDownloadsList?[position].securityIVKey,
-                        imaAdsStatus: await Utils.configByStatus(
-                          status: Constant.playerIMAAdsStatus,
-                        ),
                         currentEpiPos: 0,
                         episodeList: null,
                       );
-                      if (!context.mounted) return;
                       await Utils.openPlayer(
                         context: context,
                         playerModel: playerModel,
@@ -840,15 +836,8 @@ class _MyDownloadsState extends State<MyDownloads> {
   }
 
   Future<void> openPlayer(int position) async {
-    printLog(
-      "openPlayer savedFile ======> ${myDownloadsList?[position].savedFile}",
-    );
-    printLog(
-      "openPlayer securityKey ====> ${myDownloadsList?[position].securityKey}",
-    );
-    printLog(
-      "openPlayer securityIVKey ==> ${myDownloadsList?[position].securityIVKey}",
-    );
+    printLog("savedFile ======> ${myDownloadsList?[position].savedFile}");
+    printLog("securityKey ====> ${myDownloadsList?[position].securityKey}");
     PlayerModel playerModel = PlayerModel(
       playType: "Download",
       isLive: false,
@@ -869,10 +858,7 @@ class _MyDownloadsState extends State<MyDownloads> {
       isBuy: myDownloadsList?[position].isBuy ?? 0,
       rentBuy: myDownloadsList?[position].rentBuy ?? 0,
       securityKey: myDownloadsList?[position].securityKey ?? "",
-      securityIVKey: myDownloadsList?[position].securityIVKey ?? "",
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
+      securityIVKey: myDownloadsList?[position].securityIVKey,
       currentEpiPos: 0,
       episodeList: null,
     );

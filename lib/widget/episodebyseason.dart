@@ -849,9 +849,9 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                 "server_video" ||
             episodeProvider.episodeList?[position].videoUploadType ==
                 "external") &&
-        episodeProvider.episodeList?[position].videoExtension != null &&
-        (episodeProvider.episodeList?[position].videoExtension ?? "")
-            .isNotEmpty) {
+        (episodeProvider.episodeList?[position].videoExtension ?? "").contains(
+          "mp4",
+        )) {
       return Consumer2<ShowDetailsProvider, VideoDownloadProvider>(
         builder: (context, showDetailsProvider, downloadProvider, child) {
           bool isInDownload = false;
@@ -964,42 +964,24 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       Utils.showSnackbar(context, "fail", "no_internet", true);
       return;
     }
-
-    final epi = episodeProvider.episodeList?[position];
-    if (epi == null) return;
-
-    final Map<String, String> qualities = {};
-    if ((epi.video320 ?? "").isNotEmpty) qualities["320p"] = epi.video320 ?? "";
-    if ((epi.video480 ?? "").isNotEmpty) qualities["480p"] = epi.video480 ?? "";
-    if ((epi.video720 ?? "").isNotEmpty) qualities["720p"] = epi.video720 ?? "";
-    if ((epi.video1080 ?? "").isNotEmpty) {
-      qualities["1080p"] = epi.video1080 ?? "";
-    }
-
-    if (qualities.isEmpty) {
+    printLog(
+      "video320 ----------> ${episodeProvider.episodeList?[position].video320}",
+    );
+    if ((episodeProvider.episodeList?[position].video320 ?? "").isNotEmpty) {
+      printLog("seasonPos ---------> ${showDetailsProvider.seasonPos}");
+      printLog("episode Length ----> ${episodeProvider.episodeList?.length}");
+      if (!mounted) return;
+      prepareShowDownload(
+        context,
+        contentDetails: showDetailsProvider.contentDetailModel.result?[0],
+        seasonPos: showDetailsProvider.seasonPos,
+        episodePos: position,
+        episodeDetails: episodeProvider.episodeList?[position],
+      );
+    } else {
       if (!mounted) return;
       Utils.showSnackbar(context, "fail", "invalid_url", true);
-      return;
     }
-
-    if (!mounted) return;
-    Utils.showQualityDownloadDialog(
-      context: context,
-      qualities: qualities,
-      onQualitySelected: (selectedUrl) {
-        printLog("seasonPos ---------> ${showDetailsProvider.seasonPos}");
-        printLog("episode Length ----> ${episodeProvider.episodeList?.length}");
-        if (!mounted) return;
-        prepareShowDownload(
-          context,
-          contentDetails: showDetailsProvider.contentDetailModel.result?[0],
-          seasonPos: showDetailsProvider.seasonPos,
-          episodePos: position,
-          episodeDetails: epi,
-          selectedVideoUrl: selectedUrl,
-        );
-      },
-    );
   }
 
   void buildDownloadCompleteDialog({required int position}) {
@@ -1488,9 +1470,6 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         rentBuy: showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
         securityKey: "",
         securityIVKey: null,
-        imaAdsStatus: await Utils.configByStatus(
-          status: Constant.playerIMAAdsStatus,
-        ),
         currentEpiPos: epiPos,
         episodeList: episodeList,
       );

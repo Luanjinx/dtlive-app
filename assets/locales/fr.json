@@ -502,13 +502,5 @@
     "language_singular": "Langue",
     "language_plural": "Langues",
     "see_all_reviews": "Voir tous les avis",
-    "write_review": "Écrire un avis",
-    "select_download_quality": "Sélectionner la qualité de téléchargement",
-    "select_quality_note": "Choisissez une qualité à télécharger. Une qualité supérieure signifie un fichier plus volumineux.",
-    "quality_320p": "320p  •  Faible",
-    "quality_480p": "480p  •  Standard",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Muet",
-    "unmute": "Réactiver le son"
+    "write_review": "Écrire un avis"
 }

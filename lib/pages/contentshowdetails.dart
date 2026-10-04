@@ -2426,9 +2426,6 @@ class ContentShowDetailsState extends State<ContentShowDetails>
         rentBuy: showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
         securityKey: "",
         securityIVKey: null,
-        imaAdsStatus: await Utils.configByStatus(
-          status: Constant.playerIMAAdsStatus,
-        ),
         currentEpiPos: showDetailsProvider.mCurrentEpiPos,
         episodeList: episodeProvider.episodeBySeasonModel.result,
       );
@@ -2509,9 +2506,6 @@ class ContentShowDetailsState extends State<ContentShowDetails>
               showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
           securityKey: "",
           securityIVKey: null,
-          imaAdsStatus: await Utils.configByStatus(
-            status: Constant.playerIMAAdsStatus,
-          ),
           currentEpiPos: 0,
           episodeList: null,
         );

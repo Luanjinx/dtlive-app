@@ -353,19 +353,19 @@ class _WebProfileEditState extends State<WebProfileEdit> {
     if (nameController.text.toString().isEmpty ||
         nameController.text.toString() == "-" ||
         nameController.text.toString().contains("null")) {
-      return Utils.showToast(context, Locales.string(context, "enter_name"));
+      return Utils.showToast(Locales.string(context, "enter_name"));
     }
     if ((profileProvider.profileModel.result?[0].type ?? 0) == 1 &&
         (emailController.text.toString().isEmpty ||
             emailController.text.toString() == "-" ||
             emailController.text.toString().contains("null"))) {
-      return Utils.showToast(context, Locales.string(context, "enter_email"));
+      return Utils.showToast(Locales.string(context, "enter_email"));
     }
     if ((profileProvider.profileModel.result?[0].type ?? 0) != 1 &&
         (mobileNumberController.text.toString().isEmpty ||
             mobileNumberController.text.toString() == "-" ||
             mobileNumberController.text.toString().contains("null"))) {
-      return Utils.showToast(context, Locales.string(context, "enter_mobile"));
+      return Utils.showToast(Locales.string(context, "enter_mobile"));
     }
     LoadingOverlay().show(context);
     await sharePref.save("userfullname", nameController.text.toString());
@@ -393,7 +393,7 @@ class _WebProfileEditState extends State<WebProfileEdit> {
     await profileProvider.getProfile(context);
     if (!mounted) return;
     LoadingOverlay().hide();
-    Utils.showToast(context, profileProvider.successModel.message ?? "");
+    Utils.showToast(profileProvider.successModel.message ?? "");
   }
 
   /// Get from Avatar

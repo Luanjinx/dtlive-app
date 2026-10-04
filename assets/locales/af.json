@@ -502,13 +502,5 @@
     "language_singular": "Taal",
     "language_plural": "Tale",
     "see_all_reviews": "Sien alle resensies",
-    "write_review": "Skryf 'n resensie",
-    "select_download_quality": "Kies aflaaikwaliteit",
-    "select_quality_note": "Kies 'n kwaliteit om af te laai. Hoër kwaliteit beteken groter lêergrootte.",
-    "quality_320p": "320p  •  Laag",
-    "quality_480p": "480p  •  Standaard",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Volle HD",
-    "mute": "Demper",
-    "unmute": "Herstel klank"
+    "write_review": "Skryf 'n resensie"
 }

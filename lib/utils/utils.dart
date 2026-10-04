@@ -23,7 +23,6 @@ import 'package:hive/hive.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:path/path.dart' as path;
 import 'package:http/http.dart' as http;
-import 'package:encrypt/encrypt.dart' as crypto;
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:html/parser.dart' show parse;
 import 'package:path_provider/path_provider.dart';
@@ -160,12 +159,10 @@ class Utils {
         printLog(
           "getVdoCipherOTP message =======> ${cipherMediaDetails.result?.message}",
         );
-        if (context.mounted) {
-          if (cipherMediaDetails.status == 400) {
-            Utils.showToast(context, cipherMediaDetails.message ?? "");
-          } else {
-            Utils.showToast(context, cipherMediaDetails.result?.message ?? "");
-          }
+        if (cipherMediaDetails.status == 400) {
+          Utils.showToast(cipherMediaDetails.message ?? "");
+        } else {
+          Utils.showToast(cipherMediaDetails.result?.message ?? "");
         }
       }
       LoadingOverlay().hide(); // Stop Loading...
@@ -191,7 +188,7 @@ class Utils {
     }
   }
 
-  static void showToast(BuildContext context, String msg) {
+  static void showToast(String msg) {
     Fluttertoast.showToast(
       msg: msg,
       toastLength: kIsWeb ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT,
@@ -1296,7 +1293,7 @@ class Utils {
       if (!context.mounted) return;
       if (profileProvider.deviceLogoutModel.status == 200) {
         if (kIsWeb) {
-          showToast(context, profileProvider.deviceLogoutModel.message ?? "");
+          showToast(profileProvider.deviceLogoutModel.message ?? "");
         } else {
           showSnackbar(
             context,
@@ -1314,7 +1311,7 @@ class Utils {
         );
       } else {
         if (kIsWeb) {
-          showToast(context, profileProvider.deviceLogoutModel.message ?? "");
+          showToast(profileProvider.deviceLogoutModel.message ?? "");
         } else {
           showSnackbar(
             context,
@@ -1727,23 +1724,19 @@ class Utils {
                           );
                           if (isNameReq && fullName.isEmpty) {
                             Utils.showToast(
-                              context,
                               Locales.string(context, "enter_name"),
                             );
                           } else if (isEmailReq && emailAddress.isEmpty) {
                             Utils.showToast(
-                              context,
                               Locales.string(context, "enter_email"),
                             );
                           } else if (isMobileReq && mobileNumber.isEmpty) {
                             Utils.showToast(
-                              context,
                               Locales.string(context, "enter_mobile_toast"),
                             );
                           } else if (isEmailReq &&
                               !EmailValidator.validate(emailAddress)) {
                             Utils.showToast(
-                              context,
                               Locales.string(context, "enter_valid_email"),
                             );
                           } else {
@@ -1793,12 +1786,9 @@ class Utils {
                                   }
                                 }
                               } else {
-                                if (context.mounted) {
-                                  Utils.showToast(
-                                    context,
-                                    "${profileEditProvider.successModel.message}",
-                                  );
-                                }
+                                Utils.showToast(
+                                  "${profileEditProvider.successModel.message}",
+                                );
                               }
                             }
                           }
@@ -3234,7 +3224,7 @@ Let's watch together! 🍿✨
       if (kIsWeb) {
         printLog("referCode WEB");
         Clipboard.setData(ClipboardData(text: shareMessage));
-        Utils.showToast(context, Locales.string(context, "copied_success"));
+        Utils.showToast(Locales.string(context, "copied_success"));
       } else {
         printLog("referCode OTHER");
         SharePlus.instance.share(
@@ -3447,15 +3437,12 @@ Let's watch together! 🍿✨
     File inputFile = args[0] as File;
     String generateKey = args[1] as String;
     String generateIVKey = args[2] as String;
-    BuildContext context = args[3] as BuildContext;
-    String vExtension = args[4] as String;
     printLog("encryptUsingFFMPEG generateKey =====> $generateKey");
     printLog("encryptUsingFFMPEG generateIVKey ===> $generateIVKey");
-    printLog("encryptUsingFFMPEG vExtension ======> $vExtension");
 
     // Get the ProgressProvider
     final downloadProvider = Provider.of<VideoDownloadProvider>(
-      context,
+      args[3],
       listen: false,
     );
 
@@ -3463,7 +3450,7 @@ Let's watch together! 🍿✨
 
     // Create a temporary file for the encrypted output
     File tempFile = File(
-      (inputFile.path.replaceAll(".$vExtension", "aes.$vExtension")).toString(),
+      (inputFile.path.replaceAll(".mp4", "aes.mp4")).toString(),
     );
     printLog("encryptUsingFFMPEG tempFile ===> $tempFile");
 
@@ -3561,10 +3548,9 @@ Let's watch together! 🍿✨
     File inFile = args[0] as File;
     String generateKey = args[1] as String;
     String generateIVKey = args[2] as String;
-    BuildContext context = args[3] as BuildContext;
 
     // Get the ProgressProvider
-    final playerProvider = Provider.of<PlayerProvider>(context, listen: false);
+    final playerProvider = Provider.of<PlayerProvider>(args[3], listen: false);
 
     printLog("decryptUsingFFMPEG generateKey =====> $generateKey");
     printLog("decryptUsingFFMPEG generateIVKey ===> $generateIVKey");
@@ -3615,10 +3601,8 @@ Let's watch together! 🍿✨
       }
       /* DURATION FETCHING */
       // FFmpeg command for decryption
-      // String command =
-      //     '-decryption_key $generateKey -i ${inFile.path} -c:v copy -c:a copy ${decryptedFile.path}';
       String command =
-          '-decryption_key $generateKey -i "${inFile.path}" -c:v copy -c:a copy "${decryptedFile.path}"';
+          '-decryption_key $generateKey -i ${inFile.path} -c:v copy -c:a copy ${decryptedFile.path}';
       await FFmpegKit.executeAsync(
         command,
         (session) async {
@@ -3672,155 +3656,6 @@ Let's watch together! 🍿✨
     return completer.future;
   }
 
-  static Future<File?> encryptMKV(List<dynamic> args) async {
-    File inputFile = args[0] as File;
-    String generateKey = args[1] as String;
-    String generateIVKey = args[2] as String;
-    BuildContext context = args[3] as BuildContext;
-    String vExtension = args[4] as String;
-    printLog("encryptMKV generateKey =====> $generateKey");
-    printLog("encryptMKV generateIVKey ===> $generateIVKey");
-    printLog("encryptMKV vExtension ======> $vExtension");
-
-    final downloadProvider = Provider.of<VideoDownloadProvider>(
-      context,
-      listen: false,
-    );
-    downloadProvider.setEncryptProgress(0.0);
-
-    // Setup keys matching AES standards (padded to 32 bytes and 16 bytes respectively)
-    final key = crypto.Key.fromUtf8(
-      generateKey.padRight(32, '0').substring(0, 32),
-    );
-    final iv = crypto.IV.fromUtf8(
-      generateIVKey.padRight(16, '0').substring(0, 16),
-    );
-
-    // Using AES-CTR mode because it allows direct chunk processing without manual block padding handling
-    final encrypter = crypto.Encrypter(
-      crypto.AES(key, mode: crypto.AESMode.ctr, padding: null),
-    );
-
-    final tempDir = await getTemporaryDirectory();
-    File tempFile = File(
-      '${tempDir.path}/enc_${path.basename(inputFile.path)}',
-    );
-
-    try {
-      final totalBytes = await inputFile.length();
-      int processedBytes = 0;
-
-      final IOSink sink = tempFile.openWrite();
-
-      // Read the file in memory-safe 64KB chunks
-      await for (List<int> chunk in inputFile.openRead(0, totalBytes)) {
-        final encryptedChunk = encrypter.encryptBytes(chunk, iv: iv);
-        sink.add(encryptedChunk.bytes);
-
-        processedBytes += chunk.length;
-        downloadProvider.setEncryptProgress(processedBytes / totalBytes);
-      }
-
-      await sink.flush();
-      await sink.close();
-
-      // Overwrite the original video file with our newly encrypted temporary chunk file
-      if (await inputFile.exists()) {
-        await inputFile.delete();
-      }
-
-      // FIX: Handle cross-device moving safely
-      try {
-        // Attempt a quick rename pointer move first
-        await tempFile.rename(inputFile.path);
-      } catch (e) {
-        if (e is FileSystemException && e.osError?.hashCode == 18 ||
-            e.toString().contains('errno = 18')) {
-          printLog(
-            'Cross-device link detected. Falling back to copy-and-delete strategy...',
-          );
-          // Physically copy bytes across partitions
-          await tempFile.copy(inputFile.path);
-          // Safely clean up the temporary cache file
-          await tempFile.delete();
-        } else {
-          // Rethrow if it's a completely different file system issue
-          rethrow;
-        }
-      }
-
-      downloadProvider.setEncryptProgress(1.0);
-      printLog('Streaming Encryption and Cross-Partition Move Complete!');
-      return inputFile;
-    } catch (e) {
-      printLog('Streaming Encryption Failed: $e');
-      if (await tempFile.exists()) await tempFile.delete();
-      downloadProvider.setEncryptProgress(0.0);
-      return null;
-    }
-  }
-
-  static Future<File?> decryptMKV(List<dynamic> args) async {
-    File inFile = args[0] as File;
-    String generateKey = args[1] as String;
-    String generateIVKey = args[2] as String;
-    BuildContext context = args[3] as BuildContext;
-
-    final playerProvider = Provider.of<PlayerProvider>(context, listen: false);
-    playerProvider.setDecryptProgress(0.0);
-    await deleteCacheDir();
-
-    if (!await inFile.exists()) {
-      printLog("Encrypted source file missing.");
-      return null;
-    }
-
-    final key = crypto.Key.fromUtf8(
-      generateKey.padRight(32, '0').substring(0, 32),
-    );
-    final iv = crypto.IV.fromUtf8(
-      generateIVKey.padRight(16, '0').substring(0, 16),
-    );
-    final encrypter = crypto.Encrypter(
-      crypto.AES(key, mode: crypto.AESMode.ctr, padding: null),
-    );
-
-    final tempDir = await getTemporaryDirectory();
-    File decryptedFile = File(
-      '${tempDir.path}/decrypted_${path.basename(inFile.path)}',
-    );
-
-    try {
-      final totalBytes = await inFile.length();
-      int processedBytes = 0;
-
-      final IOSink sink = decryptedFile.openWrite();
-
-      // Read encrypted file sequentially in 64KB chunks
-      await for (List<int> chunk in inFile.openRead(0, totalBytes)) {
-        // FIX: Using crypto.Encrypted.fromBytes explicitly to convert the incoming stream array
-        final encryptedChunk = crypto.Encrypted(Uint8List.fromList(chunk));
-        final decryptedChunk = encrypter.decryptBytes(encryptedChunk, iv: iv);
-
-        sink.add(decryptedChunk);
-
-        processedBytes += chunk.length;
-        playerProvider.setDecryptProgress(processedBytes / totalBytes);
-      }
-
-      await sink.flush();
-      await sink.close();
-
-      playerProvider.setDecryptProgress(1.0);
-      printLog('Streaming Decryption Complete: ${decryptedFile.path}');
-      return decryptedFile;
-    } catch (e) {
-      printLog('Streaming Decryption Failed: $e');
-      if (await decryptedFile.exists()) await decryptedFile.delete();
-      playerProvider.setDecryptProgress(0.0);
-      return null;
-    }
-  }
   /* ***************** Download ***************** */
 
   /* ── Wallet ──────────────────────────────────────────────── */
@@ -3901,135 +3736,5 @@ Let's watch together! 🍿✨
       default:
         return Locales.string(context, 'tap_a_star_to_rate');
     }
-  }
-
-  static void showQualityDownloadDialog({
-    required BuildContext context,
-    required Map<String, String> qualities,
-    required void Function(String selectedUrl) onQualitySelected,
-  }) {
-    if (qualities.isEmpty) return;
-
-    if (qualities.length == 1) {
-      onQualitySelected(qualities.values.first);
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: lightBlack,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      builder: (BuildContext context) {
-        return Wrap(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(23),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  MyText(
-                    text: "select_download_quality",
-                    multilanguage: true,
-                    fontsizeNormal: 16,
-                    color: titleTextColor,
-                    fontstyle: FontStyle.normal,
-                    fontweight: FontWeight.w700,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.start,
-                  ),
-                  const SizedBox(height: 4),
-                  MyText(
-                    text: "select_quality_note",
-                    multilanguage: true,
-                    fontsizeNormal: 10,
-                    color: descTextColor,
-                    fontstyle: FontStyle.normal,
-                    fontweight: FontWeight.w500,
-                    maxline: 3,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.start,
-                  ),
-                  const SizedBox(height: 14),
-                  Divider(color: grayDark, height: 1),
-                  const SizedBox(height: 8),
-                  ...qualities.entries.map((entry) {
-                    final String label = entry.key;
-                    final String url = entry.value;
-                    final String localeKey =
-                        "quality_${label.replaceAll('.', '').toLowerCase()}";
-                    return InkWell(
-                      borderRadius: BorderRadius.circular(5),
-                      focusColor: white,
-                      onTap: () {
-                        Utils.exitDialog(context);
-                        onQualitySelected(url);
-                      },
-                      child: Container(
-                        height: Dimens.minHtDialogContent,
-                        padding: const EdgeInsets.fromLTRB(5, 5, 5, 5),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 28,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color: colorPrimary.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(6),
-                                border: Border.all(
-                                  color: colorPrimary.withValues(alpha: 0.35),
-                                  width: 1,
-                                ),
-                              ),
-                              child: MyText(
-                                text: label,
-                                multilanguage: false,
-                                fontsizeNormal: 12,
-                                color: colorPrimary,
-                                fontstyle: FontStyle.normal,
-                                fontweight: FontWeight.w700,
-                                maxline: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textalign: TextAlign.center,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: MyText(
-                                text: localeKey,
-                                multilanguage: true,
-                                fontsizeNormal: 14,
-                                color: titleTextColor,
-                                fontstyle: FontStyle.normal,
-                                fontweight: FontWeight.w600,
-                                maxline: 1,
-                                overflow: TextOverflow.ellipsis,
-                                textalign: TextAlign.start,
-                              ),
-                            ),
-                            const Icon(
-                              Icons.download_rounded,
-                              color: defaultIconColor,
-                              size: 20,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
   }
 }

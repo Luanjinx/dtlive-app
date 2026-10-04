@@ -6,7 +6,6 @@ import '../model/couponlistmodel.dart';
 import '../provider/paymentprovider.dart';
 import '../utils/color.dart';
 import '../utils/constant.dart';
-import '../utils/dimens.dart';
 import '../utils/utils.dart';
 import '../widget/mytext.dart';
 import '../widget/nodata.dart';
@@ -52,9 +51,6 @@ class _CouponListState extends State<CouponList> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isBig = Dimens.isBigScreen(context);
-    final double sw = MediaQuery.of(context).size.width;
-
     return Scaffold(
       backgroundColor: appBgColor,
       appBar: Utils.myAppBarWithBack(context, "available_coupons", true),
@@ -70,27 +66,14 @@ class _CouponListState extends State<CouponList> {
               child: NoData(title: "no_data", subTitle: "no_coupons_available"),
             );
           }
-          return SingleChildScrollView(
-            child: Center(
-              child: Container(
-                width: isBig ? sw * 0.45 : sw,
-                padding: EdgeInsets.fromLTRB(
-                  isBig ? 0 : 16,
-                  16,
-                  isBig ? 0 : 16,
-                  16,
-                ),
-                child: ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: coupons.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: 12),
-                  itemBuilder: (context, index) =>
-                      _buildCouponCard(coupons[index]),
-                ),
-              ),
-            ),
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: coupons.length,
+            separatorBuilder: (_, index) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final coupon = coupons[index];
+              return _buildCouponCard(coupon);
+            },
           );
         },
       ),

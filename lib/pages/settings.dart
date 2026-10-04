@@ -74,7 +74,6 @@ class SettingsState extends State<Settings> with RouteAware {
       userMobileNo,
       userDeviceType,
       brandImage,
-      brandName,
       userDeviceToken,
       webServerClientId;
   String? activeTvStatus,
@@ -173,7 +172,6 @@ class SettingsState extends State<Settings> with RouteAware {
     userDeviceType = await sharedPref.read("devicetype");
     userDeviceToken = await sharedPref.read("devicetoken");
     brandImage = await sharedPref.read(Constant.brandImageKey);
-    brandName = await sharedPref.read(Constant.brandTextKey);
     printLog('_getData userName ========> $userName');
     printLog('_getData userFullname ====> $userFullname');
     printLog('_getData userType ========> $userType');
@@ -1077,24 +1075,10 @@ class SettingsState extends State<Settings> with RouteAware {
                         fontstyle: FontStyle.normal,
                         letterSpacing: 2.0,
                       ),
-                      SizedBox(height: 8),
-                      MyText(
-                        color: colorAccent,
-                        multilanguage: false,
-                        text: brandName ?? "",
-                        fontweight: FontWeight.w700,
-                        fontsizeNormal: Dimens.textMedium,
-                        fontsizeWeb: Dimens.textMediumWeb,
-                        maxline: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textalign: TextAlign.center,
-                        fontstyle: FontStyle.normal,
-                        letterSpacing: 2.0,
-                      ),
                       Container(
                         height: Dimens.brandIconHeight,
                         width: Dimens.brandIconWidth,
-                        margin: const EdgeInsets.only(top: 5),
+                        margin: const EdgeInsets.only(top: 8),
                         alignment: Alignment.bottomCenter,
                         child: MyNetworkImage(
                           imageUrl: brandImage ?? "",
@@ -1472,7 +1456,7 @@ class SettingsState extends State<Settings> with RouteAware {
 
   Future<void> _checkPINAndChangeMode() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController =====> ${pinPutController.text}");
@@ -1482,8 +1466,7 @@ class SettingsState extends State<Settings> with RouteAware {
       if (mySpaceProvider.successModel.status == 200) {
         _clickToChangeProfiles(userIsKid: false, clickFrom: 'dialog');
       } else {
-        if (!mounted) return;
-        Utils.showToast(context, mySpaceProvider.successModel.message ?? "");
+        Utils.showToast(mySpaceProvider.successModel.message ?? "");
       }
     }
   }
@@ -1982,7 +1965,7 @@ class SettingsState extends State<Settings> with RouteAware {
 
   Future<void> _checkPINAndUpdate() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController ======> ${pinPutController.text}");
@@ -1991,7 +1974,7 @@ class SettingsState extends State<Settings> with RouteAware {
     if (!profileProvider.loadingPCCheck) {
       if (!mounted) return;
       Utils.exitDialog(context);
-      Utils.showToast(context, Locales.string(context, "pin_updated_success"));
+      Utils.showToast(Locales.string(context, "pin_updated_success"));
       profileProvider.getProfile(context);
     }
   }
@@ -2119,7 +2102,7 @@ class SettingsState extends State<Settings> with RouteAware {
 
   Future<void> _checkPINAndChange() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController ======> ${pinPutController.text}");
@@ -2128,7 +2111,7 @@ class SettingsState extends State<Settings> with RouteAware {
     if (!profileProvider.loadingPCCheck) {
       if (!mounted) return;
       Utils.exitDialog(context);
-      Utils.showToast(context, Locales.string(context, "pin_updated_success"));
+      Utils.showToast(Locales.string(context, "pin_updated_success"));
       profileProvider.getProfile(context);
     }
   }

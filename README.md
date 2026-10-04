@@ -1,11 +1,5 @@
 # yourappname
 
-## 🗓 Version 2.2 - 10 September 2026
-- **[Improve]** Codebase structure for better scalability and maintainability
-- **[Improve]** Application performance and responsiveness
-- **[BugFixed]** Fix IMA loads issue, it can now manage from Admin panel
-- **[BugFixed]** Minor bugs and stability issues
-
 ## 🗓 Version 2.1 - 13 May 2026
 - **[Add]** User Reviews & Ratings feature
 - **[Add]** Coupon & Promo Code feature with coupon list

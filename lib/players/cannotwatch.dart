@@ -25,10 +25,8 @@ class CannotWatchState extends State<CannotWatch> {
   @override
   void initState() {
     super.initState();
-    connectivityProvider = Provider.of<ConnectivityProvider>(
-      context,
-      listen: false,
-    );
+    connectivityProvider =
+        Provider.of<ConnectivityProvider>(context, listen: false);
     playerProvider = Provider.of<PlayerProvider>(context, listen: false);
   }
 
@@ -76,7 +74,9 @@ class CannotWatchState extends State<CannotWatch> {
             borderRadius: BorderRadius.circular(0),
             shape: BoxShape.rectangle,
           ),
-          child: SafeArea(child: _buildPage()),
+          child: SafeArea(
+            child: _buildPage(),
+          ),
         ),
       ),
     );
@@ -90,9 +90,9 @@ class CannotWatchState extends State<CannotWatch> {
           width: MediaQuery.of(context).size.width > 1080
               ? (MediaQuery.of(context).size.width * 0.35)
               : ((MediaQuery.of(context).size.width <= 1080 &&
-                        (MediaQuery.of(context).size.width > 720))
-                    ? (MediaQuery.of(context).size.width * 0.5)
-                    : MediaQuery.of(context).size.width),
+                      (MediaQuery.of(context).size.width > 720))
+                  ? (MediaQuery.of(context).size.width * 0.5)
+                  : MediaQuery.of(context).size.width),
           margin: EdgeInsets.fromLTRB(
             Dimens.isBigScreen(context) ? 70 : 15,
             Dimens.isBigScreen(context) ? 70 : 15,
@@ -178,11 +178,8 @@ class CannotWatchState extends State<CannotWatch> {
                   itemBuilder: (BuildContext context, int position) {
                     return MyText(
                       color: titleTextColor,
-                      text:
-                          playerProvider
-                              .deviceSyncModel
-                              .result?[position]
-                              .deviceName ??
+                      text: playerProvider
+                              .deviceSyncModel.result?[position].deviceName ??
                           "",
                       fontsizeNormal: 15,
                       fontsizeWeb: 17,
@@ -211,7 +208,7 @@ class CannotWatchState extends State<CannotWatch> {
       onTap: () async {
         /* ******* Check Device Sync ******* */
         if (connectivityProvider.isOnline && !playerProvider.loading) {
-          Utils.showToast(context, Locales.string(context, "checking"));
+          Utils.showToast(Locales.string(context, "checking"));
           await playerProvider.addRemoveDevice(1);
           if (playerProvider.isDeviceAdded) {
             if (mounted) {
@@ -226,28 +223,22 @@ class CannotWatchState extends State<CannotWatch> {
               }
             }
           } else {
-            if (!mounted) return;
-            Utils.showToast(
-              context,
-              playerProvider.deviceSyncModel.message ?? "",
-            );
+            Utils.showToast(playerProvider.deviceSyncModel.message ?? "");
           }
         }
         /* ************** */
       },
       child: Container(
         height: 45,
-        constraints: BoxConstraints(
-          minWidth: MediaQuery.of(context).size.width * 0.5,
-        ),
+        constraints:
+            BoxConstraints(minWidth: MediaQuery.of(context).size.width * 0.5),
         alignment: Alignment.center,
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
         decoration: Utils.setGradientBGWithCenter(
-          colorPrimary,
-          colorPrimary.withValues(alpha: 0.6),
-          colorPrimary.withValues(alpha: 0.4),
-          8,
-        ),
+            colorPrimary,
+            colorPrimary.withValues(alpha: 0.6),
+            colorPrimary.withValues(alpha: 0.4),
+            8),
         child: MyText(
           color: white,
           text: "retry",

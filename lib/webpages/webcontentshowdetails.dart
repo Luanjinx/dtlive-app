@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_locales/flutter_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/foundation.dart';
@@ -595,9 +594,6 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
         rentBuy: showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
         securityKey: "",
         securityIVKey: null,
-        imaAdsStatus: await Utils.configByStatus(
-          status: Constant.playerIMAAdsStatus,
-        ),
         cipherMediaDetails:
             (vdocipherDetails != null && vdocipherDetails.result != null)
             ? (vdocipherDetails.result)
@@ -703,9 +699,6 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
               showDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
           securityKey: "",
           securityIVKey: null,
-          imaAdsStatus: await Utils.configByStatus(
-            status: Constant.playerIMAAdsStatus,
-          ),
           currentEpiPos: showDetailsProvider.mCurrentEpiPos,
           episodeList: episodeProvider.episodeBySeasonModel.result,
         );
@@ -843,7 +836,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
     }
 
     final heroH = (screenW * 0.44).clamp(460.0, 640.0);
-    final contentW = (screenW * 0.85).clamp(0.0, 1080.0);
+    final contentW = (screenW * 0.42).clamp(0.0, 580.0);
 
     return SizedBox(
       width: screenW,
@@ -1154,27 +1147,17 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   }
 
   Widget _buildHeroDescription(Result item) {
-    final desc = (item.description ?? "")
-        .replaceAll(RegExp(r'\s*\n+\s*'), ' ')
-        .trim();
+    final desc = item.description ?? "";
     if (desc.isEmpty) return const SizedBox.shrink();
 
-    final screenW = MediaQuery.of(context).size.width;
-    final double contentW = (screenW * 0.85).clamp(0.0, 1080.0).toDouble();
-    final double maxDescWidth = Dimens.isBigScreen(context)
-        ? contentW * 0.65
-        : double.infinity;
-
     return Container(
-      constraints: BoxConstraints(maxWidth: maxDescWidth),
+      constraints: const BoxConstraints(maxWidth: 500),
       child: ExpandableText(
         desc,
-        expandText: Locales.string(context, "more"),
-        collapseText: Locales.string(context, "less"),
+        expandText: "",
+        collapseText: "",
         maxLines: 3,
-        linkColor: colorPrimary,
-        linkStyle: const TextStyle(fontWeight: FontWeight.w700),
-        animation: true,
+        linkColor: descTextColor,
         expandOnTextTap: true,
         collapseOnTextTap: true,
         style: kIsWeb
@@ -1207,23 +1190,18 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
               ? _buildWatchNowNew()
               : _buildWatchTrailerNew(),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                if (widget.videoType != Constant.upcomingContentType) ...[
-                  _buildSecondaryBtn(
-                    icon: Icons.play_circle_outline_rounded,
-                    label: "Trailer",
-                    onTap: () => openPlayer("Trailer"),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                _buildRentBtnNew(),
-                const SizedBox(width: 8),
-                _buildIconActions(),
-              ],
-            ),
+          Row(
+            children: [
+              if (widget.videoType != Constant.upcomingContentType)
+                _buildSecondaryBtn(
+                  icon: Icons.play_circle_outline_rounded,
+                  label: "Trailer",
+                  onTap: () => openPlayer("Trailer"),
+                ),
+              _buildRentBtnNew(),
+              const SizedBox(width: 8),
+              _buildIconActions(),
+            ],
           ),
         ],
       );
@@ -1241,14 +1219,12 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
                 : _buildWatchTrailerNew(),
           ),
           const SizedBox(width: 10),
-          if (widget.videoType != Constant.upcomingContentType) ...[
+          if (widget.videoType != Constant.upcomingContentType)
             _buildSecondaryBtn(
               icon: Icons.play_circle_outline_rounded,
               label: "Trailer",
               onTap: () => openPlayer("Trailer"),
             ),
-            const SizedBox(width: 14),
-          ],
           _buildRentBtnNew(),
           const SizedBox(width: 14),
           _buildIconActions(),

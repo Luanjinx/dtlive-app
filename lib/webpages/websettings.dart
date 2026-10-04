@@ -70,7 +70,6 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
       userType,
       userMobileNo,
       brandImage,
-      brandName,
       userDeviceType,
       userDeviceToken;
   String? activeTvStatus,
@@ -164,7 +163,6 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
     userDeviceType = await sharedPref.read("devicetype");
     userDeviceToken = await sharedPref.read("devicetoken");
     brandImage = await sharedPref.read(Constant.brandImageKey);
-    brandName = await sharedPref.read(Constant.brandTextKey);
     printLog('_getData userName ========> $userName');
     printLog('_getData userFullname ====> $userFullname');
     printLog('_getData userType ========> $userType');
@@ -825,20 +823,6 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
                     fontstyle: FontStyle.normal,
                     letterSpacing: 2.0,
                   ),
-                  SizedBox(height: 8),
-                  MyText(
-                    color: colorAccent,
-                    multilanguage: false,
-                    text: brandName ?? "",
-                    fontweight: FontWeight.w700,
-                    fontsizeNormal: Dimens.textMedium,
-                    fontsizeWeb: Dimens.textMediumWeb,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.center,
-                    fontstyle: FontStyle.normal,
-                    letterSpacing: 2.0,
-                  ),
                   Container(
                     height: Dimens.isBigScreen(context)
                         ? Dimens.brandIconHeightWeb
@@ -846,7 +830,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
                     width: Dimens.isBigScreen(context)
                         ? Dimens.brandIconWidthWeb
                         : Dimens.brandIconWidth,
-                    margin: const EdgeInsets.only(top: 5),
+                    margin: const EdgeInsets.only(top: 8),
                     alignment: Alignment.bottomCenter,
                     child: MyNetworkImage(
                       imageUrl: brandImage ?? "",
@@ -1263,18 +1247,17 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
 
   Future<void> _checkPINAndChangeMode() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController =====> ${pinPutController.text}");
     mySpaceProvider.setUpdateLoading(true);
     await mySpaceProvider.pcCheckPassword(pinPutController.text.toString());
     if (!mySpaceProvider.loadingPCCheck) {
-      if (!mounted) return;
       if (mySpaceProvider.successModel.status == 200) {
         await _clickToChangeProfiles(userIsKid: false, clickFrom: 'dialog');
       } else {
-        Utils.showToast(context, mySpaceProvider.successModel.message ?? "");
+        Utils.showToast(mySpaceProvider.successModel.message ?? "");
       }
     }
   }
@@ -1805,7 +1788,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
 
   Future<void> _checkPINAndUpdate() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController ======> ${pinPutController.text}");
@@ -1816,7 +1799,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
       if (context.canPop()) {
         context.pop();
       }
-      Utils.showToast(context, profileProvider.successModel.message ?? "");
+      Utils.showToast(profileProvider.successModel.message ?? "");
     }
   }
   /* ************ Set New PIN for Parent Control */
@@ -1974,7 +1957,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
 
   Future<void> _checkPINAndChange() async {
     if (pinPutController.text.toString().isEmpty) {
-      Utils.showToast(context, Locales.string(context, "enter_pin"));
+      Utils.showToast(Locales.string(context, "enter_pin"));
       return;
     }
     printLog("pinPutController ======> ${pinPutController.text}");
@@ -1985,7 +1968,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
       if (context.canPop()) {
         context.pop();
       }
-      Utils.showToast(context, profileProvider.successModel.message ?? "");
+      Utils.showToast(profileProvider.successModel.message ?? "");
       profileProvider.getProfile(context);
     }
   }

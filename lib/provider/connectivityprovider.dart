@@ -2,11 +2,9 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-
-import '../main.dart';
 import '../pages/nointernet.dart';
 import '../utils/utils.dart';
+import 'package:flutter/services.dart';
 
 class ConnectivityProvider extends ChangeNotifier {
   final Connectivity connectivity = Connectivity();
@@ -16,30 +14,33 @@ class ConnectivityProvider extends ChangeNotifier {
 
   Timer? _offlineTimer;
 
-  /// Initialize connectivity & start listening.
-  /// No BuildContext stored — navigation uses the top-level navigatorKey.
-  Future<void> initConnectivity() async {
+  /// Initialize connectivity & start listening
+  Future<void> initConnectivity(BuildContext context) async {
     try {
       final results = await connectivity.checkConnectivity();
-      await _handleStatus(results);
+      if (context.mounted) {
+        await _handleStatus(context, results);
+      }
     } on PlatformException catch (e) {
       printLog("Couldn't check connectivity status: $e");
     }
 
     connectivity.onConnectivityChanged.listen((results) {
-      _handleStatus(results);
+      if (context.mounted) {
+        _handleStatus(context, results);
+      }
     });
   }
 
-  Future<void> _handleStatus(List<ConnectivityResult> results) async {
+  /// Handle changes from connectivity_plus
+  Future<void> _handleStatus(
+      BuildContext context, List<ConnectivityResult> results) async {
     connectivityResults = results;
 
-    final bool hasConnection = results.any(
-      (r) =>
-          r == ConnectivityResult.mobile ||
-          r == ConnectivityResult.wifi ||
-          r == ConnectivityResult.ethernet,
-    );
+    final hasConnection = results.any((r) =>
+        (r == ConnectivityResult.mobile) ||
+        (r == ConnectivityResult.wifi) ||
+        (r == ConnectivityResult.ethernet));
 
     // --- ONLINE ---
     if (hasConnection) {
@@ -48,27 +49,34 @@ class ConnectivityProvider extends ChangeNotifier {
       if (!isOnline) {
         isOnline = true;
         printLog(
-          '_handleStatus Back online: ${results.map((e) => e.name).join(", ")}',
-        );
+            '_handleStatus Back online: ${results.map((e) => e.name).join(", ")}');
         notifyListeners();
       }
       return;
     }
 
-    // --- OFFLINE (3s delay to avoid false triggers) ---
+    // --- OFFLINE (schedule delay) ---
     _offlineTimer?.cancel();
     _offlineTimer = Timer(const Duration(seconds: 3), () {
       if (isOnline) {
         isOnline = false;
         printLog('Went offline');
         notifyListeners();
-
-        final NavigatorState? navigator = navigatorKey.currentState;
-        if (navigator == null) return;
-
-        navigator.pushAndRemoveUntil(
-          MaterialPageRoute(builder: (_) => const NoInternet()),
+        if (!context.mounted) return;
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+              builder: (BuildContext context) => const NoInternet()),
           (Route<dynamic> route) => false,
+        ).then(
+          (value) {
+            if (!context.mounted) return;
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (BuildContext context) => const NoInternet()),
+            );
+          },
         );
       }
     });

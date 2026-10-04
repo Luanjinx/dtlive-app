@@ -1,5 +1,6 @@
 // To parse this JSON data, do
-// final sectionBannerModel = sectionBannerModelFromJson(jsonString);
+//
+//     final sectionBannerModel = sectionBannerModelFromJson(jsonString);
 
 import 'dart:convert';
 

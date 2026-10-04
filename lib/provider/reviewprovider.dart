@@ -111,7 +111,7 @@ class ReviewProvider extends ChangeNotifier {
     required BuildContext context,
   }) async {
     if (selectedRating == 0) {
-      Utils.showToast(context, Locales.string(context, 'tap_a_star_to_rate'));
+      Utils.showToast(Locales.string(context, 'tap_a_star_to_rate'));
       return;
     }
     if (Constant.userID == null) return;
@@ -129,7 +129,6 @@ class ReviewProvider extends ChangeNotifier {
       if (!context.mounted) return;
       if (successModel.status == 200) {
         Utils.showToast(
-          context,
           successModel.message ??
               Locales.string(context, 'review_submit_success'),
         );
@@ -141,7 +140,6 @@ class ReviewProvider extends ChangeNotifier {
         );
       } else {
         Utils.showToast(
-          context,
           successModel.message ??
               Locales.string(context, 'something_went_wrong'),
         );
@@ -149,7 +147,7 @@ class ReviewProvider extends ChangeNotifier {
     } catch (e) {
       printLog('submitReview error: $e');
       if (!context.mounted) return;
-      Utils.showToast(context, Locales.string(context, 'something_went_wrong'));
+      Utils.showToast(Locales.string(context, 'something_went_wrong'));
     } finally {
       isSubmitting = false;
       notifyListeners();

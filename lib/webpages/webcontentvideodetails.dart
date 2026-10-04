@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:flutter_locales/flutter_locales.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:expandable_text/expandable_text.dart';
@@ -515,9 +514,6 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
       rentBuy: videoDetailsProvider.contentDetailModel.result?[0].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );
@@ -675,7 +671,7 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
 
     // ── Desktop layout: cinematic full-bleed ──
     final heroH = (screenW * 0.44).clamp(460.0, 640.0);
-    final contentW = (screenW * 0.85).clamp(0.0, 1080.0);
+    final contentW = (screenW * 0.42).clamp(0.0, 580.0);
 
     return SizedBox(
       width: screenW,
@@ -1007,27 +1003,17 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
   }
 
   Widget _buildHeroDescription(contents.Result item) {
-    final desc = (item.description ?? "")
-        .replaceAll(RegExp(r'\s*\n+\s*'), ' ')
-        .trim();
+    final desc = item.description ?? "";
     if (desc.isEmpty) return const SizedBox.shrink();
 
-    final screenW = MediaQuery.of(context).size.width;
-    final double contentW = (screenW * 0.85).clamp(0.0, 1080.0).toDouble();
-    final double maxDescWidth = Dimens.isBigScreen(context)
-        ? contentW * 0.65
-        : double.infinity;
-
     return Container(
-      constraints: BoxConstraints(maxWidth: maxDescWidth),
+      constraints: const BoxConstraints(maxWidth: 500),
       child: ExpandableText(
         desc,
-        expandText: Locales.string(context, "more"),
-        collapseText: Locales.string(context, "less"),
+        expandText: "",
+        collapseText: "",
         maxLines: 3,
-        linkColor: colorPrimary,
-        linkStyle: const TextStyle(fontWeight: FontWeight.w700),
-        animation: true,
+        linkColor: descTextColor,
         expandOnTextTap: true,
         collapseOnTextTap: true,
         style: kIsWeb
@@ -1061,38 +1047,32 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
               ? _buildWatchNowNew()
               : _buildWatchTrailerNew(),
           const SizedBox(height: 10),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                Consumer<VideoDetailsProvider>(
-                  builder: (context, vdp, child) {
-                    if ((vdp.contentDetailModel.result?[0].stopTime ?? 0) > 0 &&
-                        vdp.contentDetailModel.result?[0].videoDuration !=
-                            null) {
-                      return _buildSecondaryBtn(
-                        icon: Icons.replay_rounded,
-                        label: "Start Over",
-                        onTap: () => openPlayer("startOver"),
-                      );
-                    }
+          Row(
+            children: [
+              Consumer<VideoDetailsProvider>(
+                builder: (context, vdp, child) {
+                  if ((vdp.contentDetailModel.result?[0].stopTime ?? 0) > 0 &&
+                      vdp.contentDetailModel.result?[0].videoDuration != null) {
+                    return _buildSecondaryBtn(
+                      icon: Icons.replay_rounded,
+                      label: "Start Over",
+                      onTap: () => openPlayer("startOver"),
+                    );
+                  }
+                  if (widget.videoType == Constant.upcomingContentType) {
                     return SizedBox.shrink();
-                  },
-                ),
-                if (widget.videoType != Constant.upcomingContentType) ...[
-                  const SizedBox(width: 8),
-                  _buildSecondaryBtn(
+                  }
+                  return _buildSecondaryBtn(
                     icon: Icons.play_circle_outline_rounded,
                     label: "Trailer",
                     onTap: () => openPlayer("Trailer"),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                _buildRentBtnNew(),
-                const SizedBox(width: 8),
-                _buildIconActions(),
-              ],
-            ),
+                  );
+                },
+              ),
+              _buildRentBtnNew(),
+              const SizedBox(width: 8),
+              _buildIconActions(),
+            ],
           ),
         ],
       );
@@ -1121,18 +1101,16 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
                   onTap: () => openPlayer("startOver"),
                 );
               }
-              return SizedBox.shrink();
+              if (widget.videoType == Constant.upcomingContentType) {
+                return SizedBox.shrink();
+              }
+              return _buildSecondaryBtn(
+                icon: Icons.play_circle_outline_rounded,
+                label: "Trailer",
+                onTap: () => openPlayer("Trailer"),
+              );
             },
           ),
-          if (widget.videoType != Constant.upcomingContentType) ...[
-            const SizedBox(width: 14),
-            _buildSecondaryBtn(
-              icon: Icons.play_circle_outline_rounded,
-              label: "Trailer",
-              onTap: () => openPlayer("Trailer"),
-            ),
-            const SizedBox(width: 14),
-          ],
           _buildRentBtnNew(),
           const SizedBox(width: 14),
           _buildIconActions(),

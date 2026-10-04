@@ -502,13 +502,5 @@
     "language_singular": "Bahasa",
     "language_plural": "Bahasa",
     "see_all_reviews": "Lihat semua ulasan",
-    "write_review": "Tulis ulasan",
-    "select_download_quality": "Pilih kualitas unduhan",
-    "select_quality_note": "Pilih kualitas untuk diunduh. Kualitas lebih tinggi berarti ukuran file lebih besar.",
-    "quality_320p": "320p  •  Rendah",
-    "quality_480p": "480p  •  Standar",
-    "quality_720p": "720p  •  HD",
-    "quality_1080p": "1080p  •  Full HD",
-    "mute": "Bisukan",
-    "unmute": "Aktifkan Suara"
+    "write_review": "Tulis ulasan"
 }

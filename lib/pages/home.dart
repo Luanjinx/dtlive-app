@@ -383,9 +383,6 @@ class HomeState extends State<Home> {
       rentBuy: continueWatchingList?[position].rentBuy ?? 0,
       securityKey: "",
       securityIVKey: null,
-      imaAdsStatus: await Utils.configByStatus(
-        status: Constant.playerIMAAdsStatus,
-      ),
       currentEpiPos: 0,
       episodeList: null,
     );
@@ -984,8 +981,7 @@ class HomeState extends State<Home> {
         /* Banner */
         if (!sectionDataProvider.loadingBanner &&
             sectionDataProvider.sectionBannerModel.status == 200 &&
-            sectionDataProvider.sectionBannerModel.result != null &&
-            (sectionDataProvider.sectionBannerModel.result?.length ?? 0) > 0)
+            sectionDataProvider.sectionBannerModel.result != null)
           Container(
             alignment: Alignment.centerLeft,
             padding: EdgeInsets.only(
@@ -1015,8 +1011,7 @@ class HomeState extends State<Home> {
             child: ShimmerUtils.bannerMobile(context),
           )
         else if (sectionDataProvider.sectionBannerModel.status == 200 &&
-            sectionDataProvider.sectionBannerModel.result != null &&
-            (sectionDataProvider.sectionBannerModel.result?.length ?? 0) > 0)
+            sectionDataProvider.sectionBannerModel.result != null)
           _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result)
         else
           SafeArea(child: SizedBox(height: Dimens.homeTabHeightSmall)),

@@ -624,7 +624,6 @@ class _WebOTPVerifyState extends State<WebOTPVerify> {
                     onTap: () async {
                       if (pinPutController.text.isEmpty) {
                         Utils.showToast(
-                          context,
                           Locales.string(context, "enter_otp_toast"),
                         );
                       } else {
@@ -752,7 +751,7 @@ class _WebOTPVerifyState extends State<WebOTPVerify> {
       printLog("The phone number entered is invalid!");
       await generalProvider.setLoadingOTP(false);
       if (!mounted) return;
-      Utils.showToast(context, Locales.string(context, "invalid_phone_number"));
+      Utils.showToast(Locales.string(context, "invalid_phone_number"));
     }
   }
 
@@ -809,13 +808,12 @@ class _WebOTPVerifyState extends State<WebOTPVerify> {
       if (e.code == 'invalid-verification-code' ||
           e.code == 'invalid-verification-id') {
         if (!mounted) return;
-        Utils.showToast(context, Locales.string(context, "enter_valid_otp"));
+        Utils.showToast(Locales.string(context, "enter_valid_otp"));
         pinPutFocusNode.requestFocus();
         return;
       } else if (e.code == 'session-expired') {
         if (!mounted) return;
         Utils.showToast(
-          context,
           "Your OTP login session is expired, continue with other logins.",
         );
         return;
@@ -836,7 +834,7 @@ class _WebOTPVerifyState extends State<WebOTPVerify> {
     } else {
       if (!mounted) return;
       LoadingOverlay().hide();
-      Utils.showToast(context, Locales.string(context, "otp_login_fail"));
+      Utils.showToast(Locales.string(context, "otp_login_fail"));
     }
   }
 
@@ -917,7 +915,7 @@ class _WebOTPVerifyState extends State<WebOTPVerify> {
       } else {
         if (!mounted) return;
         LoadingOverlay().hide();
-        Utils.showToast(context, generalProvider.loginOTPModel.message ?? "");
+        Utils.showToast(generalProvider.loginOTPModel.message ?? "");
       }
     }
   }
