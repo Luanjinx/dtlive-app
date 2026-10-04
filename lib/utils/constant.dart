@@ -3,9 +3,9 @@ import '../model/subtitlemodel.dart';
 
 class Constant {
   static String baseUrl =
-      'Enter your API url...'; // Replace with your API Path (Get from Admin panel)
+      'https://nexstream.biz.id/public/api/'; // Replace with your API Path (Get from Admin panel)
   static String apiToken =
-      'Enter your API Token...'; // Replace with your API Token (Get from Admin panel)
+      'v25dcFLxPGg0MIGu7jkSDIJQTEEDqcZx'; // Replace with your API Token (Get from Admin panel)
 
   static String appName = "Javstory";
   static String appPackageName =
@@ -26,10 +26,10 @@ class Constant {
   static String? accessToken;
 
   /* Default Country Code */
-  static const String defaultCountryCode = "IN";
+  static const String defaultCountryCode = "US";
 
   /* Constant for TV check */
-  static bool isTV = false;
+  static bool isTV = true;
 
   /* Device Info */
   static String deviceName = "";
@@ -83,7 +83,7 @@ class Constant {
   /* Stripe Checkout fields */
   // static const String webDomainURL = 'http://localhost:8080/'; //Localhost
   static const String webDomainURL =
-      'https://dtlivefweb.divinetechs.com/'; //Normal Web Host
+      'https://demo.dramastream.cloud/'; //Normal Web Host
   static String? paymentMode =
       'subscription'; // Set paymentMode as 'payment' for Single Time purchase Packages (Not Recurring Packages)
   static String? publishableKey;
