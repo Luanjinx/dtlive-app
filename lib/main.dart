@@ -10,6 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_locales/flutter_locales.dart';
 import 'package:flutter_udid/flutter_udid.dart';
@@ -540,9 +541,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                       for (final platform in TargetPlatform.values)
                         platform: const NoTransitionsBuilder(),
                     }
-                  : const {
-                      TargetPlatform.android: ZoomPageTransitionsBuilder(),
-                      TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+                  : <TargetPlatform, PageTransitionsBuilder>{
+                      TargetPlatform.android: const ZoomPageTransitionsBuilder(),
+                      TargetPlatform.iOS: const CupertinoPageTransitionsBuilder(),
                     },
             ),
           ).copyWith(
