@@ -132,18 +132,25 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
     );
     printLog('getAllEpisode subscriptionStatus ===> $subscriptionStatus');
 
-    await Future.wait([
-      episodeProvider.getEpisodeBySeason(
-        widget.seasonList?[(widget.seasonPos ?? 0)].id ?? 0,
-        widget.videoId,
-        ((episodeProvider.currentPage ?? 0) + 1),
-      ),
-      showDetailsProvider.setEpisodeBySeason(episodeProvider.episodeList),
-    ]);
+    await episodeProvider.getEpisodeBySeason(
+      widget.seasonList?[(widget.seasonPos ?? 0)].id ?? 0,
+      widget.videoId,
+      ((episodeProvider.currentPage ?? 0) + 1),
+    );
+    await showDetailsProvider.setEpisodeBySeason(episodeProvider.episodeList);
     Future.delayed(Duration.zero).then((value) {
       if (!mounted) return;
       setState(() {});
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant EpisodeBySeason oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if ((episodeProvider.episodeList == null || (episodeProvider.episodeList?.isEmpty ?? true)) &&
+        (widget.seasonList != null && (widget.seasonList?.isNotEmpty ?? false))) {
+      getAllEpisode();
+    }
   }
 
   @override

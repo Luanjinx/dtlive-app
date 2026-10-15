@@ -2213,8 +2213,18 @@ class ContentShowDetailsState extends State<ContentShowDetails>
   /* ========= Open Player ========= */
   Future<void> openPlayer(String playType) async {
     printLog("mCurrentEpiPos ========> ${showDetailsProvider.mCurrentEpiPos}");
+    if ((episodeProvider.episodeList?.length ?? 0) == 0 &&
+        playType != "Trailer" &&
+        (showDetailsProvider.contentDetailModel.result?[0].season?.length ?? 0) > 0) {
+      await getAllEpisode(
+        showDetailsProvider.seasonPos,
+        showDetailsProvider.contentDetailModel.result?[0].season,
+      );
+    }
     if ((episodeProvider.episodeList?.length ?? 0) > 0) {
-      if (showDetailsProvider.mCurrentEpiPos == -1) return;
+      if (showDetailsProvider.mCurrentEpiPos == -1) {
+        showDetailsProvider.mCurrentEpiPos = 0;
+      }
       /* CHECK SUBSCRIPTION */
       if (playType != "Trailer") {
         bool? isPrimiumUser = await Utils.checkSubsRentLogin(
@@ -2349,11 +2359,20 @@ class ContentShowDetailsState extends State<ContentShowDetails>
               ""),
         );
 
-        vUrl =
-            (episodeProvider
-                .episodeList?[showDetailsProvider.mCurrentEpiPos]
-                .video320 ??
-            "");
+        vUrl = Utils.getPrimaryVideoUrl(
+          video320: episodeProvider
+              .episodeList?[showDetailsProvider.mCurrentEpiPos]
+              .video320,
+          video480: episodeProvider
+              .episodeList?[showDetailsProvider.mCurrentEpiPos]
+              .video480,
+          video720: episodeProvider
+              .episodeList?[showDetailsProvider.mCurrentEpiPos]
+              .video720,
+          video1080: episodeProvider
+              .episodeList?[showDetailsProvider.mCurrentEpiPos]
+              .video1080,
+        );
         vUploadType =
             (episodeProvider
                 .episodeList?[showDetailsProvider.mCurrentEpiPos]
