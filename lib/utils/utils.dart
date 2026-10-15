@@ -1479,6 +1479,20 @@ class Utils {
   }
   /* ========= Open Player ========= */
 
+  /* ========= Get Primary/Fallback Video URL ========= */
+  static String getPrimaryVideoUrl({
+    String? video320,
+    String? video480,
+    String? video720,
+    String? video1080,
+  }) {
+    if ((video320 ?? "").trim().isNotEmpty) return video320!.trim();
+    if ((video720 ?? "").trim().isNotEmpty) return video720!.trim();
+    if ((video1080 ?? "").trim().isNotEmpty) return video1080!.trim();
+    if ((video480 ?? "").trim().isNotEmpty) return video480!.trim();
+    return "";
+  }
+
   /* ========= Set-up Quality URL START ========= */
   static void setQualityURLs({
     required String video320,

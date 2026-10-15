@@ -849,9 +849,8 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                 "server_video" ||
             episodeProvider.episodeList?[position].videoUploadType ==
                 "external") &&
-        (episodeProvider.episodeList?[position].videoExtension ?? "").contains(
-          "mp4",
-        )) {
+        (episodeProvider.episodeList?[position].videoExtension ?? "") !=
+            "m3u8") {
       return Consumer2<ShowDetailsProvider, VideoDownloadProvider>(
         builder: (context, showDetailsProvider, downloadProvider, child) {
           bool isInDownload = false;
@@ -964,10 +963,15 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       Utils.showSnackbar(context, "fail", "no_internet", true);
       return;
     }
-    printLog(
-      "video320 ----------> ${episodeProvider.episodeList?[position].video320}",
+    final episode = episodeProvider.episodeList?[position];
+    String epiDownloadUrl = Utils.getPrimaryVideoUrl(
+      video320: episode?.video320,
+      video480: episode?.video480,
+      video720: episode?.video720,
+      video1080: episode?.video1080,
     );
-    if ((episodeProvider.episodeList?[position].video320 ?? "").isNotEmpty) {
+    printLog("epiDownloadUrl ----------> $epiDownloadUrl");
+    if (epiDownloadUrl.isNotEmpty) {
       printLog("seasonPos ---------> ${showDetailsProvider.seasonPos}");
       printLog("episode Length ----> ${episodeProvider.episodeList?.length}");
       if (!mounted) return;
@@ -976,7 +980,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         contentDetails: showDetailsProvider.contentDetailModel.result?[0],
         seasonPos: showDetailsProvider.seasonPos,
         episodePos: position,
-        episodeDetails: episodeProvider.episodeList?[position],
+        episodeDetails: episode,
       );
     } else {
       if (!mounted) return;
@@ -1406,7 +1410,12 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       int? stopTime = (episodeList?[epiPos].stopTime ?? 0);
       String? vUploadType = (episodeList?[epiPos].videoUploadType ?? "");
       String? videoThumb = (episodeList?[epiPos].landscape ?? "");
-      String? epiUrl = (episodeList?[epiPos].video320 ?? "");
+      String? epiUrl = Utils.getPrimaryVideoUrl(
+        video320: episodeList?[epiPos].video320,
+        video480: episodeList?[epiPos].video480,
+        video720: episodeList?[epiPos].video720,
+        video1080: episodeList?[epiPos].video1080,
+      );
       printLog("epiID ========> $epiID");
       printLog("showID =======> $showID");
       printLog("vType ========> $vType");

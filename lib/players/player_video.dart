@@ -849,6 +849,21 @@ class _PlayerVideoState extends State<PlayerVideo>
 
     final ep = list[index];
 
+    String jumpVideoUrl = Utils.getPrimaryVideoUrl(
+      video320: ep.video320,
+      video480: ep.video480,
+      video720: ep.video720,
+      video1080: ep.video1080,
+    );
+
+    /* Set-up Quality URLs */
+    Utils.setQualityURLs(
+      video320: ep.video320 ?? "",
+      video480: ep.video480 ?? "",
+      video720: ep.video720 ?? "",
+      video1080: ep.video1080 ?? "",
+    );
+
     /* VdoCipher OTP */
     VdoCipherModel? vdocipherDetails;
     if ((ep.videoUploadType ?? "") == Constant.vdocipherPlayType &&
@@ -856,7 +871,7 @@ class _PlayerVideoState extends State<PlayerVideo>
       if (!mounted) return;
       vdocipherDetails = await Utils.getVdoCipherOTP(
         context: context,
-        videoId: ep.video320 ?? "",
+        videoId: (ep.video320 ?? "").isNotEmpty ? (ep.video320 ?? "") : jumpVideoUrl,
       );
       if (kDebugMode) {
         printLog(
@@ -875,7 +890,7 @@ class _PlayerVideoState extends State<PlayerVideo>
       subVideoType: 0,
       typeId: widget.playerModel.typeId ?? 0,
       episodeId: ep.id ?? 0,
-      videoUrl: ep.video320 ?? "",
+      videoUrl: jumpVideoUrl,
       cipherMediaDetails: (vdocipherDetails?.result != null)
           ? vdocipherDetails!.result
           : null,

@@ -200,6 +200,22 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
       video1080: (continueWatchingList?[position].video1080 ?? ""),
     );
 
+    final currentItem = continueWatchingList?[position];
+    final currentEpi = currentItem?.episode;
+    String validUrl = (currentEpi != null)
+        ? Utils.getPrimaryVideoUrl(
+            video320: currentEpi.video320,
+            video480: currentEpi.video480,
+            video720: currentEpi.video720,
+            video1080: currentEpi.video1080,
+          )
+        : Utils.getPrimaryVideoUrl(
+            video320: currentItem?.video320,
+            video480: currentItem?.video480,
+            video720: currentItem?.video720,
+            video1080: currentItem?.video1080,
+          );
+
     /* VdoCipher OTP */
     vdocipher.VdoCipherModel? vdocipherDetails;
     if ((continueWatchingList?[position].videoUploadType ?? "") ==
@@ -208,9 +224,7 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
       if (!mounted) return;
       vdocipherDetails = await Utils.getVdoCipherOTP(
         context: context,
-        videoId: (continueWatchingList?[position].episode != null)
-            ? (continueWatchingList?[position].episode?.video320 ?? "")
-            : (continueWatchingList?[position].video320 ?? ""),
+        videoId: validUrl,
       );
       printLog(
         "openPlayer vdocipherDetails ======> ${vdocipherDetails?.result?.otp}",
@@ -238,9 +252,7 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
       episodeId: (continueWatchingList?[position].episode != null)
           ? (continueWatchingList?[position].episode?.id ?? 0)
           : 0,
-      videoUrl: (continueWatchingList?[position].episode != null)
-          ? (continueWatchingList?[position].episode?.video320 ?? "")
-          : (continueWatchingList?[position].video320 ?? ""),
+      videoUrl: validUrl,
       cipherMediaDetails:
           (vdocipherDetails != null && vdocipherDetails.result != null)
           ? (vdocipherDetails.result)

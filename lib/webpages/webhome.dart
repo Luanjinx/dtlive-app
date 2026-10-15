@@ -239,6 +239,22 @@ class WebHomeState extends State<WebHome> {
       video1080: (sectionList?[index].video1080 ?? ""),
     );
 
+    final currentItem = sectionList?[index];
+    final currentEpi = currentItem?.episode;
+    String validUrl = (currentEpi != null)
+        ? Utils.getPrimaryVideoUrl(
+            video320: currentEpi.video320,
+            video480: currentEpi.video480,
+            video720: currentEpi.video720,
+            video1080: currentEpi.video1080,
+          )
+        : Utils.getPrimaryVideoUrl(
+            video320: currentItem?.video320,
+            video480: currentItem?.video480,
+            video720: currentItem?.video720,
+            video1080: currentItem?.video1080,
+          );
+
     /* VdoCipher OTP */
     VdoCipherModel? vdocipherDetails;
     if ((sectionList?[index].videoUploadType ?? "") ==
@@ -247,9 +263,7 @@ class WebHomeState extends State<WebHome> {
       if (!mounted) return;
       vdocipherDetails = await Utils.getVdoCipherOTP(
         context: context,
-        videoId: (sectionList?[index].episode != null)
-            ? (sectionList?[index].episode?.video320 ?? "")
-            : (sectionList?[index].video320 ?? ""),
+        videoId: validUrl,
       );
       printLog(
         "openPlayer vdocipherDetails ======> ${vdocipherDetails?.result?.otp}",
@@ -277,9 +291,7 @@ class WebHomeState extends State<WebHome> {
       episodeId: (sectionList?[index].episode != null)
           ? (sectionList?[index].episode?.id ?? 0)
           : 0,
-      videoUrl: (sectionList?[index].episode != null)
-          ? (sectionList?[index].episode?.video320 ?? "")
-          : (sectionList?[index].video320 ?? ""),
+      videoUrl: validUrl,
       cipherMediaDetails:
           (vdocipherDetails != null && vdocipherDetails.result != null)
           ? (vdocipherDetails.result)

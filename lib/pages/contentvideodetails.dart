@@ -1952,8 +1952,8 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
                     .videoUploadType ==
                 "external") &&
         (videoDetailsProvider.contentDetailModel.result?[0].videoExtension ??
-                "")
-            .contains("mp4")) {
+                "") !=
+            "m3u8") {
       return Consumer2<VideoDetailsProvider, VideoDownloadProvider>(
         builder: (context, videoDetailsProvider, downloadProvider, child) {
           bool isInDownload = false;
@@ -2155,12 +2155,18 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
       Utils.showSnackbar(context, "fail", "no_internet", true);
       return;
     }
-    if ((videoDetailsProvider.contentDetailModel.result?[0].video320 ?? "")
-        .isNotEmpty) {
+    final content = videoDetailsProvider.contentDetailModel.result?[0];
+    String downloadUrl = Utils.getPrimaryVideoUrl(
+      video320: content?.video320,
+      video480: content?.video480,
+      video720: content?.video720,
+      video1080: content?.video1080,
+    );
+    if (downloadUrl.isNotEmpty) {
       try {
         prepareVideoDownload(
           context,
-          videoDetailsProvider.contentDetailModel.result?[0],
+          content,
         );
       } catch (e) {
         printLog("Downloading... Exception ======> $e");
@@ -2553,8 +2559,12 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
             ""),
       );
 
-      vUrl =
-          (videoDetailsProvider.contentDetailModel.result?[0].video320 ?? "");
+      vUrl = Utils.getPrimaryVideoUrl(
+        video320: videoDetailsProvider.contentDetailModel.result?[0].video320,
+        video480: videoDetailsProvider.contentDetailModel.result?[0].video480,
+        video720: videoDetailsProvider.contentDetailModel.result?[0].video720,
+        video1080: videoDetailsProvider.contentDetailModel.result?[0].video1080,
+      );
       vUploadType =
           (videoDetailsProvider.contentDetailModel.result?[0].videoUploadType ??
           "");

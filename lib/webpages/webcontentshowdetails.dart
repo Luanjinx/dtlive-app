@@ -521,11 +521,13 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
               ""),
         );
 
-        vUrl =
-            (episodeProvider
-                .episodeList?[showDetailsProvider.mCurrentEpiPos]
-                .video320 ??
-            "");
+        final currentEp = episodeProvider.episodeList?[showDetailsProvider.mCurrentEpiPos];
+        vUrl = Utils.getPrimaryVideoUrl(
+          video320: currentEp?.video320,
+          video480: currentEp?.video480,
+          video720: currentEp?.video720,
+          video1080: currentEp?.video1080,
+        );
         vUploadType =
             (episodeProvider
                 .episodeList?[showDetailsProvider.mCurrentEpiPos]
@@ -550,13 +552,12 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
       VdoCipherModel? vdocipherDetails;
       if (vUploadType == Constant.vdocipherPlayType && playType != "Trailer") {
         if (!mounted) return;
+        final currentEp = episodeProvider.episodeList?[showDetailsProvider.mCurrentEpiPos];
         vdocipherDetails = await Utils.getVdoCipherOTP(
           context: context,
-          videoId:
-              (episodeProvider
-                  .episodeList?[showDetailsProvider.mCurrentEpiPos]
-                  .video320 ??
-              ""),
+          videoId: (currentEp?.video320 ?? "").isNotEmpty
+              ? (currentEp?.video320 ?? "")
+              : vUrl,
         );
         printLog(
           "openPlayer vdocipherDetails ======> ${vdocipherDetails?.result?.otp}",
