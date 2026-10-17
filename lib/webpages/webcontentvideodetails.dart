@@ -1,6 +1,6 @@
+import 'dart:async';
 import 'dart:io';
-
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:flutter/foundation.dart';
 import 'package:expandable_text/expandable_text.dart';
 import 'package:flutter/material.dart';
@@ -62,6 +62,7 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
   /* Trailer init */
   VideoPlayerController? _trailerNormalController;
   YoutubePlayerController? _trailerYoutubeController;
+  StreamSubscription<YoutubePlayerValue>? _trailerYoutubeSubscription;
 
   late VideoDetailsProvider videoDetailsProvider;
   late HomeProvider homeProvider;
@@ -208,11 +209,8 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
           videoDetailsProvider.contentDetailModel.result?[0].trailerType ?? "",
         );
       } else {
-        if (_trailerYoutubeController != null &&
-            _trailerYoutubeController?.value.playerState != PlayerState.ended) {
-          _trailerYoutubeController?.seekTo(Duration.zero);
-          _trailerYoutubeController?.play();
-        }
+        _trailerYoutubeController?.seekTo(seconds: 0.0);
+        _trailerYoutubeController?.playVideo();
       }
     } else {
       if (_trailerNormalController == null) {
@@ -234,8 +232,9 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
   @override
   void didPushNext() {
     printLog("didPushNext");
+    _trailerYoutubeSubscription?.cancel();
     if (_trailerYoutubeController != null) {
-      _trailerYoutubeController?.dispose();
+      _trailerYoutubeController?.close();
       _trailerYoutubeController = null;
     }
     if (_trailerNormalController != null) {
@@ -265,7 +264,7 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
                 "",
           );
         } else {
-          _trailerYoutubeController?.seekTo(Duration.zero);
+          _trailerYoutubeController?.seekTo(seconds: 0.0);
         }
       } else {
         if (_trailerNormalController == null) {
@@ -288,22 +287,25 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
     printLog("loadTrailer isAutoPlay ===> $isAutoPlay");
     if (isAutoPlay && trailerUrl != null && trailerUrl.toString().isNotEmpty) {
       if (trailerType == "youtube") {
-        var videoId = YoutubePlayer.convertUrlToId(trailerUrl ?? "");
+        var videoId = YoutubePlayerController.convertUrlToId(trailerUrl ?? "");
         printLog("Youtube Trailer videoId :====> $videoId");
-        _trailerYoutubeController = YoutubePlayerController(
-          initialVideoId: videoId ?? '',
-          flags: YoutubePlayerFlags(
-            mute: false,
-            autoPlay: true,
-            disableDragSeek: false,
-            loop: false,
-            isLive: false,
-            forceHD: false,
-            enableCaption: true,
+        _trailerYoutubeController = YoutubePlayerController.fromVideoId(
+          videoId: videoId ?? '',
+          autoPlay: true,
+          params: const YoutubePlayerParams(
+            showControls: false,
+            mute: true,
+            showFullscreenButton: false,
+            loop: true,
+            enableCaption: false,
           ),
         );
-        _trailerYoutubeController?.play();
-        _trailerYoutubeController?.addListener(listener);
+        _trailerYoutubeSubscription?.cancel();
+        _trailerYoutubeSubscription = _trailerYoutubeController?.listen((value) {
+          if (mounted && value.playerState == PlayerState.ended) {
+            setState(() {});
+          }
+        });
         Future.delayed(Duration.zero).then((value) {
           if (!mounted) return;
           setState(() {});
@@ -323,6 +325,7 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
                   printLog(
                     "isPlaying =========> ${_trailerNormalController?.value.isPlaying}",
                   );
+                  _trailerNormalController?.setVolume(0.0);
                   _trailerNormalController?.play();
                 });
               });
@@ -338,14 +341,6 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
           }
         });
       }
-    }
-  }
-
-  void listener() {
-    if (mounted &&
-        _trailerYoutubeController != null &&
-        _trailerYoutubeController?.value.playerState == PlayerState.ended) {
-      setState(() {});
     }
   }
   /* ********* Trailer Set-Up & Loading END *********** */
@@ -539,8 +534,9 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
   void dispose() {
     super.dispose();
     routeObserver.unsubscribe(this);
+    _trailerYoutubeSubscription?.cancel();
     if (_trailerYoutubeController != null) {
-      _trailerYoutubeController?.dispose();
+      _trailerYoutubeController?.close();
       _trailerYoutubeController = null;
     }
     if (_trailerNormalController != null) {
@@ -1984,14 +1980,10 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
             "") ==
         "youtube") {
       if (_trailerYoutubeController != null) {
-        if (_trailerYoutubeController?.value.playerState != PlayerState.ended) {
-          return _buildTrailerView(
-            videoDetailsProvider.contentDetailModel.result?[0].trailerType ??
-                "",
-          );
-        } else {
-          return _buildMobilePoster();
-        }
+        return _buildTrailerView(
+          videoDetailsProvider.contentDetailModel.result?[0].trailerType ??
+              "",
+        );
       } else {
         return _buildMobilePoster();
       }
@@ -2024,13 +2016,10 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
             '=========== Widget ${visibilityInfo.key} is $visiblePercentage% visible===========',
           );
           if (_trailerYoutubeController != null) {
-            if (_trailerYoutubeController?.value.playerState !=
-                PlayerState.ended) {
-              if (visiblePercentage > 50.0) {
-                _trailerYoutubeController?.play();
-              } else {
-                _trailerYoutubeController?.pause();
-              }
+            if (visiblePercentage > 50.0) {
+              _trailerYoutubeController?.playVideo();
+            } else {
+              _trailerYoutubeController?.pauseVideo();
             }
           }
         },

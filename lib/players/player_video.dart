@@ -409,6 +409,7 @@ class _PlayerVideoState extends State<PlayerVideo>
       listen: false,
     );
     _volumeController = kIsWeb ? null : VolumeController.instance;
+    _volumeController?.showSystemUI = false;
 
     // Required for didChangeAppLifecycleState (ad pause/resume on background).
     WidgetsBinding.instance.addObserver(this);
@@ -420,6 +421,10 @@ class _PlayerVideoState extends State<PlayerVideo>
       if (!kIsWeb) {
         OrientationManager.forceLandscape();
         await Future.delayed(const Duration(milliseconds: 80));
+      } else {
+        if (mounted) {
+          _enterWebFullscreen();
+        }
       }
       // Step 2: [FIX] Await controller init BEFORE anything else touches it
       await _setVideoURL();
@@ -529,6 +534,7 @@ class _PlayerVideoState extends State<PlayerVideo>
 
     /* Volume Change */
     if (!kIsWeb) {
+      _volumeController?.showSystemUI = false;
       _volumeController?.getVolume().then((v) {
         playerProvider.volumeLevel = v;
         playerProvider.lastVolumeLevel = playerProvider.volumeLevel;
@@ -536,6 +542,12 @@ class _PlayerVideoState extends State<PlayerVideo>
       _volumeController?.isMuted().then((isMuted) {
         playerProvider.isVolMuted = isMuted;
       });
+      _volumeController?.addListener((v) {
+        if (!mounted) return;
+        playerProvider.volumeLevel = v;
+        playerProvider.isVolMuted = (v <= 0);
+        playerProvider.notifyProvider();
+      }, fetchInitialVolume: false);
 
       /* Brightness Change */
       ScreenBrightness().application.then((b) {
@@ -782,6 +794,8 @@ class _PlayerVideoState extends State<PlayerVideo>
     WidgetsBinding.instance.removeObserver(this);
     _stopContentProgressUpdates();
     if (!kIsWeb) {
+      _volumeController?.removeListener();
+      _volumeController?.showSystemUI = true;
       if (_isControllerReady) _updateVideoState(isPlaying: false); // [FIX]
       _adsManager?.pause();
       _adsManager?.destroy();
@@ -945,7 +959,7 @@ class _PlayerVideoState extends State<PlayerVideo>
     }
   }
 
-  // Modern right-docked side sheet helper for Episode, Subtitle, Quality, and Settings
+  // Modern right-docked side sheet helper for Episode, Subtitle, and Quality
   Future<T?> _showRightSideSheet<T>({
     required String title,
     Widget? titleTrailing,
@@ -959,13 +973,19 @@ class _PlayerVideoState extends State<PlayerVideo>
       barrierColor: Colors.black.withValues(alpha: 0.55),
       transitionDuration: const Duration(milliseconds: 280),
       pageBuilder: (sheetCtx, anim1, anim2) {
-        final size = MediaQuery.of(sheetCtx).size;
-        final isLandscape = size.width > size.height;
+        final mq = MediaQuery.of(sheetCtx);
+        final size = mq.size;
+        final isPortrait = mq.orientation == Orientation.portrait;
+        final bool shouldRotateSheet = kIsWeb && _isWebFullscreen && isPortrait;
+        final double screenW = shouldRotateSheet ? size.height : size.width;
+        final double screenH = shouldRotateSheet ? size.width : size.height;
+        final isLandscape = screenW > screenH;
+        // Narrower, compact width (230-260px) so it does not cover the video
         final double panelWidth = isLandscape
-            ? (size.width * 0.42).clamp(280.0, 380.0)
-            : (size.width * 0.85).clamp(280.0, 420.0);
+            ? (screenW * 0.28).clamp(230.0, 260.0)
+            : (screenW * 0.70).clamp(230.0, 280.0);
 
-        return Align(
+        Widget sheetContent = Align(
           alignment: Alignment.centerRight,
           child: Material(
             color: Colors.transparent,
@@ -973,15 +993,17 @@ class _PlayerVideoState extends State<PlayerVideo>
               width: panelWidth,
               height: double.infinity,
               decoration: BoxDecoration(
+                // Solid, 100% opaque background (no transparency) based on appBgColor
+                color: appBgColor,
                 gradient: LinearGradient(
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                   colors: [
-                    colorAccent.withValues(alpha: 0.32),
-                    secondaryBgColor.withValues(alpha: 0.96),
-                    appBgColor.withValues(alpha: 0.98),
+                    Color.lerp(appBgColor, colorPrimary, 0.26)!,
+                    Color.lerp(appBgColor, colorPrimaryDark, 0.12)!,
+                    appBgColor,
                   ],
-                  stops: const [0.0, 0.40, 1.0],
+                  stops: const [0.0, 0.35, 0.85],
                 ),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(20),
@@ -989,16 +1011,16 @@ class _PlayerVideoState extends State<PlayerVideo>
                 ),
                 border: Border(
                   left: BorderSide(
-                    color: colorAccent.withValues(alpha: 0.35),
+                    color: colorPrimary.withValues(alpha: 0.45),
                     width: 1.2,
                   ),
                 ),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: black.withValues(alpha: 0.70),
-                    blurRadius: 24,
+                    color: Colors.black,
+                    blurRadius: 20,
                     spreadRadius: 2,
-                    offset: const Offset(-6, 0),
+                    offset: Offset(-6, 0),
                   ),
                 ],
               ),
@@ -1012,7 +1034,7 @@ class _PlayerVideoState extends State<PlayerVideo>
                   children: [
                     // Header
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 16, 14, 14),
+                      padding: const EdgeInsets.fromLTRB(16, 14, 12, 12),
                       child: Row(
                         children: [
                           Expanded(
@@ -1023,7 +1045,7 @@ class _PlayerVideoState extends State<PlayerVideo>
                                     title,
                                     style: GoogleFonts.inter(
                                       color: white,
-                                      fontSize: 16,
+                                      fontSize: 15,
                                       fontWeight: FontWeight.w700,
                                       letterSpacing: 0.3,
                                     ),
@@ -1032,7 +1054,7 @@ class _PlayerVideoState extends State<PlayerVideo>
                                   ),
                                 ),
                                 if (titleTrailing != null) ...[
-                                  const SizedBox(width: 8),
+                                  const SizedBox(width: 6),
                                   titleTrailing,
                                 ],
                               ],
@@ -1042,7 +1064,7 @@ class _PlayerVideoState extends State<PlayerVideo>
                             borderRadius: BorderRadius.circular(20),
                             onTap: () => Navigator.of(sheetCtx).pop(),
                             child: Container(
-                              padding: const EdgeInsets.all(6),
+                              padding: const EdgeInsets.all(5),
                               decoration: BoxDecoration(
                                 color: white.withValues(alpha: 0.08),
                                 shape: BoxShape.circle,
@@ -1050,7 +1072,7 @@ class _PlayerVideoState extends State<PlayerVideo>
                               child: const Icon(
                                 Icons.close,
                                 color: white,
-                                size: 18,
+                                size: 17,
                               ),
                             ),
                           ),
@@ -1072,11 +1094,41 @@ class _PlayerVideoState extends State<PlayerVideo>
             ),
           ),
         );
+
+        if (shouldRotateSheet) {
+          sheetContent = SizedBox(
+            width: size.width,
+            height: size.height,
+            child: RotatedBox(
+              quarterTurns: 1,
+              child: SizedBox(
+                width: size.height,
+                height: size.width,
+                child: MediaQuery(
+                  data: mq.copyWith(
+                    size: Size(size.height, size.width),
+                  ),
+                  child: sheetContent,
+                ),
+              ),
+            ),
+          );
+        }
+        return sheetContent;
       },
       transitionBuilder: (sheetCtx, anim1, anim2, child) {
+        final mq = MediaQuery.of(sheetCtx);
+        final isPortrait = mq.orientation == Orientation.portrait;
+        final bool shouldRotateSheet = kIsWeb && _isWebFullscreen && isPortrait;
         final curved = Curves.easeOutCubic.transform(anim1.value);
+        if (shouldRotateSheet) {
+          return Transform.translate(
+            offset: Offset(0, (1.0 - curved) * 260),
+            child: child,
+          );
+        }
         return Transform.translate(
-          offset: Offset((1.0 - curved) * 380, 0),
+          offset: Offset((1.0 - curved) * 260, 0),
           child: child,
         );
       },
@@ -1100,20 +1152,20 @@ class _PlayerVideoState extends State<PlayerVideo>
       title: "Daftar Episode",
       titleTrailing: epList.isNotEmpty
           ? Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               decoration: BoxDecoration(
-                color: colorAccent.withValues(alpha: 0.18),
+                color: colorPrimary.withValues(alpha: 0.18),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
-                  color: colorAccent.withValues(alpha: 0.4),
+                  color: colorPrimary.withValues(alpha: 0.5),
                   width: 0.8,
                 ),
               ),
               child: Text(
                 "${epList.length}",
                 style: GoogleFonts.inter(
-                  color: colorAccent,
-                  fontSize: 11,
+                  color: colorPrimary,
+                  fontSize: 10,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -1126,13 +1178,13 @@ class _PlayerVideoState extends State<PlayerVideo>
               "Tidak ada episode",
               style: GoogleFonts.inter(
                 color: white.withValues(alpha: 0.6),
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           itemCount: epList.length,
           separatorBuilder: (_, index) => Divider(
             color: white.withValues(alpha: 0.06),
@@ -1148,7 +1200,7 @@ class _PlayerVideoState extends State<PlayerVideo>
             return Material(
               color: Colors.transparent,
               child: InkWell(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(8),
                 onTap: isCurrent
                     ? null
                     : () {
@@ -1157,17 +1209,17 @@ class _PlayerVideoState extends State<PlayerVideo>
                       },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 8,
+                    horizontal: 8,
+                    vertical: 7,
                   ),
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     color: isCurrent
-                        ? colorAccent.withValues(alpha: 0.14)
+                        ? colorPrimary.withValues(alpha: 0.14)
                         : Colors.transparent,
                     border: isCurrent
                         ? Border.all(
-                            color: colorAccent.withValues(alpha: 0.4),
+                            color: colorPrimary.withValues(alpha: 0.5),
                             width: 1,
                           )
                         : null,
@@ -1178,31 +1230,31 @@ class _PlayerVideoState extends State<PlayerVideo>
                         alignment: Alignment.center,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(5),
                             child: MyNetworkImage(
                               imageUrl: epImg,
-                              width: 76,
-                              height: 48,
+                              width: 60,
+                              height: 38,
                               fit: BoxFit.cover,
                             ),
                           ),
                           if (isCurrent)
                             Container(
-                              width: 76,
-                              height: 48,
+                              width: 60,
+                              height: 38,
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(5),
                                 color: black.withValues(alpha: 0.45),
                               ),
                               child: const Icon(
                                 Icons.play_arrow_rounded,
-                                color: colorAccent,
-                                size: 26,
+                                color: colorPrimary,
+                                size: 22,
                               ),
                             ),
                         ],
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1210,8 +1262,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                             Text(
                               ep.name ?? ep.description ?? "Episode ${i + 1}",
                               style: GoogleFonts.inter(
-                                color: isCurrent ? colorAccent : white,
-                                fontSize: 13,
+                                color: isCurrent ? colorPrimary : white,
+                                fontSize: 12,
                                 fontWeight: isCurrent
                                     ? FontWeight.w700
                                     : FontWeight.w500,
@@ -1219,14 +1271,14 @@ class _PlayerVideoState extends State<PlayerVideo>
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: 3),
                             Text(
                               isCurrent ? "Sedang diputar" : "Episode ${i + 1}",
                               style: GoogleFonts.inter(
                                 color: isCurrent
-                                    ? colorAccent.withValues(alpha: 0.85)
+                                    ? colorPrimary.withValues(alpha: 0.85)
                                     : white.withValues(alpha: 0.45),
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: isCurrent
                                     ? FontWeight.w600
                                     : FontWeight.w400,
@@ -1236,11 +1288,11 @@ class _PlayerVideoState extends State<PlayerVideo>
                         ),
                       ),
                       if (isCurrent) ...[
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         const Icon(
                           Icons.check,
-                          color: colorAccent,
-                          size: 20,
+                          color: colorPrimary,
+                          size: 18,
                         ),
                       ],
                     ],
@@ -1327,13 +1379,32 @@ class _PlayerVideoState extends State<PlayerVideo>
     _startHideTimer(); // [OPT] OPT-1: always restart countdown after cancel
   }
 
-  // [WEB-2] Toggle browser fullscreen independently of BoxFit state
-  void _toggleWebFullscreen() {
+  // [WEB-2] Browser fullscreen & landscape orientation functions with Web API + UI fallback
+  Future<void> _enterWebFullscreen() async {
     if (!kIsWeb) return;
-    _isWebFullscreen = !_isWebFullscreen;
-    _jsHelper.callBrowserFullscreen(_isWebFullscreen);
+    if (_isWebFullscreen) return;
+    _isWebFullscreen = true;
+    await _jsHelper.callBrowserFullscreen(true);
     if (mounted) setState(() {});
     _startHideTimer();
+  }
+
+  Future<void> _exitWebFullscreen() async {
+    if (!kIsWeb) return;
+    if (!_isWebFullscreen) return;
+    _isWebFullscreen = false;
+    await _jsHelper.callBrowserFullscreen(false);
+    if (mounted) setState(() {});
+    _startHideTimer();
+  }
+
+  Future<void> _toggleWebFullscreen() async {
+    if (!kIsWeb) return;
+    if (_isWebFullscreen) {
+      await _exitWebFullscreen();
+    } else {
+      await _enterWebFullscreen();
+    }
   }
 
   Future<void> _startHideTimer() async {
@@ -1411,6 +1482,7 @@ class _PlayerVideoState extends State<PlayerVideo>
     playerProvider.volumeLevel = newVolume.clamp(0.0, 1.0);
     final bool shouldMute = playerProvider.volumeLevel <= 0;
     if (!kIsWeb) {
+      _volumeController?.showSystemUI = false;
       await _volumeController?.setVolume(playerProvider.volumeLevel);
       await _volumeController?.setMute(shouldMute);
       playerProvider.isVolMuted = (_volumeController != null)
@@ -1443,6 +1515,7 @@ class _PlayerVideoState extends State<PlayerVideo>
           : 0.5;
     }
     if (!kIsWeb) {
+      _volumeController?.showSystemUI = false;
       await _volumeController?.setVolume(playerProvider.volumeLevel);
       await _volumeController?.setMute(isMute);
       if (Platform.isIOS) {
@@ -1561,7 +1634,245 @@ class _PlayerVideoState extends State<PlayerVideo>
 
   @override
   Widget build(BuildContext context) {
-    // [NEW] FEATURE-9: Wrap in enter/exit animation
+    final mediaQuery = MediaQuery.of(context);
+    final isPortrait = mediaQuery.orientation == Orientation.portrait;
+    final bool shouldRotateWeb = kIsWeb && _isWebFullscreen && isPortrait;
+    final screenWidth = mediaQuery.size.width;
+    final screenHeight = mediaQuery.size.height;
+
+    Widget playerBody = Focus(
+      autofocus: kIsWeb, // [WEB-2] auto-focus only on web for key events
+      onKeyEvent:
+          kIsWeb // [WEB-2]
+          ? (node, event) {
+              if (event is! KeyDownEvent) return KeyEventResult.ignored;
+              // Space = play/pause
+              if (event.logicalKey == LogicalKeyboardKey.space) {
+                if (!_isControllerReady || !_shouldShowContentVideo) {
+                  return KeyEventResult.ignored;
+                }
+                _videoPlayerController.value.isPlaying
+                    ? _videoPlayerController.pause()
+                    : _videoPlayerController.play();
+                playerProvider.notifyProvider();
+                return KeyEventResult.handled;
+              }
+              // F = toggle fullscreen
+              if (event.logicalKey == LogicalKeyboardKey.keyF) {
+                _toggleWebFullscreen();
+                return KeyEventResult.handled;
+              }
+              // ArrowLeft = seek backward 10s
+              if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
+                if (!_isControllerReady || !_shouldShowContentVideo) {
+                  return KeyEventResult.ignored;
+                }
+                _seekBackward();
+                return KeyEventResult.handled;
+              }
+              // ArrowRight = seek forward 10s
+              if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
+                if (!_isControllerReady || !_shouldShowContentVideo) {
+                  return KeyEventResult.ignored;
+                }
+                _seekForward();
+                return KeyEventResult.handled;
+              }
+              // Escape = exit fullscreen if in fullscreen
+              if (event.logicalKey == LogicalKeyboardKey.escape) {
+                if (_isWebFullscreen) {
+                  _exitWebFullscreen();
+                }
+                return KeyEventResult.handled;
+              }
+              return KeyEventResult.ignored;
+            }
+          : null,
+      child: MouseRegion(
+        cursor: kIsWeb
+            ? (_isWebCursorVisible // [FIX-CUR] use dedicated flag, NOT _showControls
+                  ? SystemMouseCursors.basic
+                  : SystemMouseCursors.none)
+            : MouseCursor.defer,
+        onEnter:
+            kIsWeb // [WEB-1]
+            ? (event) {
+                if (_isScreenLocked) return;
+                _isMouseOverPlayer = true; // [WEB-1]
+                _isWebCursorVisible =
+                    true; // [FIX-CUR] cursor ON immediately on enter
+                _hideTimer?.cancel(); // [WEB-1] cancel any pending hide
+                _showControlsAnimated(); // [WEB-1] show controls immediately
+              }
+            : (event) {
+                if (!_isScreenLocked) _cancelAndRestartTimer();
+              },
+        onHover:
+            kIsWeb // [WEB-1] continuous movement — keep controls visible
+            ? (event) {
+                if (_isScreenLocked) return;
+                // [FIX-CUR] Set cursor visible directly — no setState, no notifyProvider
+                // This avoids 60fps rebuilds from mouse movement
+                if (!_isWebCursorVisible) {
+                  _isWebCursorVisible = true;
+                  if (mounted) setState(() {});
+                }
+                // Show controls only if currently hidden (not on every move)
+                if (!_showControls) _showControlsAnimated();
+                _hideTimer
+                    ?.cancel(); // [WEB-1] reset any pending hide on movement
+              }
+            : null,
+        onExit:
+            kIsWeb // [WEB-1]
+            ? (event) {
+                if (_isScreenLocked) return;
+                _isMouseOverPlayer = false; // [WEB-1]
+                _isWebCursorVisible =
+                    true; // [FIX-CUR] always restore cursor on exit
+                // Only start hide timer when mouse leaves AND video is playing
+                if (_isControllerReady &&
+                    _videoPlayerController.value.isPlaying) {
+                  _startHideTimer(); // [WEB-1] short delay then hide
+                }
+                // If paused: keep controls visible after mouse leaves
+              }
+            : (event) {
+                if (!_isScreenLocked) _startHideTimer();
+              },
+        child: GestureDetector(
+          onTap: _isScreenLocked
+              ? null
+              : kIsWeb // [WEB-1]
+              ? () async {
+                  // Web: single tap = play/pause (controls always via hover)
+                  if (!_isControllerReady || !_shouldShowContentVideo) {
+                    return;
+                  }
+                  if (_isAdActuallyPlaying) return;
+                  if (!_isWebFullscreen) {
+                    _enterWebFullscreen();
+                  }
+                  _videoPlayerController.value.isPlaying
+                      ? await _videoPlayerController.pause()
+                      : await _videoPlayerController.play();
+                  if (!mounted) return;
+                  playerProvider.notifyProvider();
+                  if (_videoPlayerController.value.isPlaying) {
+                    if (!_isMouseOverPlayer) _startHideTimer();
+                  } else {
+                    _hideTimer?.cancel();
+                    _showControlsAnimated(); // [WEB-1] keep visible when paused
+                  }
+                }
+              : _toggleControls, // mobile: tap = toggle controls
+          onDoubleTapDown: _isScreenLocked
+              ? null
+              : (details) async {
+                  final effectiveWidth =
+                      shouldRotateWeb ? screenHeight : screenWidth;
+                  final dx = details.localPosition.dx;
+                  final isFinished =
+                      (_videoPlayerController.value.position >=
+                          _videoPlayerController.value.duration) &&
+                      _videoPlayerController.value.duration.inSeconds > 0;
+                  if (widget.playerModel.isLive == true ||
+                      !_shouldShowContentVideo ||
+                      isFinished) {
+                    return;
+                  }
+                  if (dx < effectiveWidth / 2) {
+                    _handleDoubleTap(false);
+                  } else {
+                    _handleDoubleTap(true);
+                  }
+                },
+          // [NEW] FEATURE-1: Long-press speed boost
+          onLongPressStart: _isScreenLocked
+              ? null
+              : (details) {
+                  if (!_shouldShowContentVideo || _isAdActuallyPlaying) {
+                    return;
+                  }
+                  if (widget.playerModel.isLive == true) return;
+                  _speedBeforeLongPress = _playbackSpeed;
+                  _isLongPressSpeed = true;
+                  _videoPlayerController.setPlaybackSpeed(2.0);
+                  _hideTimer?.cancel();
+                  if (mounted) playerProvider.notifyProvider();
+                },
+          onLongPressEnd: _isScreenLocked
+              ? null
+              : (details) {
+                  if (!_isLongPressSpeed) return;
+                  _isLongPressSpeed = false;
+                  _videoPlayerController.setPlaybackSpeed(
+                    _speedBeforeLongPress,
+                  );
+                  if (mounted) {
+                    playerProvider.notifyProvider();
+                    if (_videoPlayerController.value.isPlaying) {
+                      _startHideTimer();
+                    }
+                  }
+                },
+          child: Scaffold(
+            backgroundColor: black, // [IMP-4]
+            body: Consumer<PlayerProvider>(
+              builder: (context, playerProvider, child) {
+                return Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    // Always renders player/loading — fills full screen
+                    _setBuildPlayer(),
+
+                    // Ad container overlaid on top
+                    if (_shouldShowAds() && _adDisplayContainer != null)
+                      Visibility(
+                        visible: _isAdActuallyPlaying,
+                        maintainState: true,
+                        child: _adDisplayContainer!,
+                      ),
+
+                    // Initial spinner when neither ad nor content is ready
+                    if (!_isAdActuallyPlaying &&
+                        !_shouldShowContentVideo &&
+                        (!_isControllerReady || // [FIX]
+                            !_videoPlayerController.value.isInitialized))
+                      Center(child: Utils.pageLoader()),
+
+                    // [NEW] FEATURE-2: Lock screen overlay — absorbs all input when locked
+                    if (_isScreenLocked) _buildLockOverlay(),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
+    ); // [WEB-2] Focus close
+
+    // Fallback UI rotation for Web mobile/tablet in portrait when fullscreen is requested
+    if (shouldRotateWeb) {
+      playerBody = SizedBox(
+        width: screenWidth,
+        height: screenHeight,
+        child: RotatedBox(
+          quarterTurns: 1,
+          child: SizedBox(
+            width: screenHeight,
+            height: screenWidth,
+            child: MediaQuery(
+              data: mediaQuery.copyWith(
+                size: Size(screenHeight, screenWidth),
+              ),
+              child: playerBody,
+            ),
+          ),
+        ),
+      );
+    }
+
     return FadeTransition(
       opacity: _enterFade,
       child: ScaleTransition(
@@ -1571,215 +1882,7 @@ class _PlayerVideoState extends State<PlayerVideo>
           onPopInvokedWithResult: (didPop, result) async {
             await onBackPressed(didPop);
           },
-          child: Focus(
-            autofocus: kIsWeb, // [WEB-2] auto-focus only on web for key events
-            onKeyEvent:
-                kIsWeb // [WEB-2]
-                ? (node, event) {
-                    if (event is! KeyDownEvent) return KeyEventResult.ignored;
-                    // Space = play/pause
-                    if (event.logicalKey == LogicalKeyboardKey.space) {
-                      if (!_isControllerReady || !_shouldShowContentVideo) {
-                        return KeyEventResult.ignored;
-                      }
-                      _videoPlayerController.value.isPlaying
-                          ? _videoPlayerController.pause()
-                          : _videoPlayerController.play();
-                      playerProvider.notifyProvider();
-                      return KeyEventResult.handled;
-                    }
-                    // F = toggle fullscreen
-                    if (event.logicalKey == LogicalKeyboardKey.keyF) {
-                      _toggleWebFullscreen();
-                      return KeyEventResult.handled;
-                    }
-                    // ArrowLeft = seek backward 10s
-                    if (event.logicalKey == LogicalKeyboardKey.arrowLeft) {
-                      if (!_isControllerReady || !_shouldShowContentVideo) {
-                        return KeyEventResult.ignored;
-                      }
-                      _seekBackward();
-                      return KeyEventResult.handled;
-                    }
-                    // ArrowRight = seek forward 10s
-                    if (event.logicalKey == LogicalKeyboardKey.arrowRight) {
-                      if (!_isControllerReady || !_shouldShowContentVideo) {
-                        return KeyEventResult.ignored;
-                      }
-                      _seekForward();
-                      return KeyEventResult.handled;
-                    }
-                    // Escape = exit fullscreen if in fullscreen
-                    if (event.logicalKey == LogicalKeyboardKey.escape) {
-                      if (_isWebFullscreen) {
-                        _isWebFullscreen = false;
-                        _jsHelper.callBrowserFullscreen(false);
-                        if (mounted) setState(() {});
-                      }
-                      return KeyEventResult.handled;
-                    }
-                    return KeyEventResult.ignored;
-                  }
-                : null,
-            child: MouseRegion(
-              cursor: kIsWeb
-                  ? (_isWebCursorVisible // [FIX-CUR] use dedicated flag, NOT _showControls
-                        ? SystemMouseCursors.basic
-                        : SystemMouseCursors.none)
-                  : MouseCursor.defer,
-              onEnter:
-                  kIsWeb // [WEB-1]
-                  ? (event) {
-                      if (_isScreenLocked) return;
-                      _isMouseOverPlayer = true; // [WEB-1]
-                      _isWebCursorVisible =
-                          true; // [FIX-CUR] cursor ON immediately on enter
-                      _hideTimer?.cancel(); // [WEB-1] cancel any pending hide
-                      _showControlsAnimated(); // [WEB-1] show controls immediately
-                    }
-                  : (event) {
-                      if (!_isScreenLocked) _cancelAndRestartTimer();
-                    },
-              onHover:
-                  kIsWeb // [WEB-1] continuous movement — keep controls visible
-                  ? (event) {
-                      if (_isScreenLocked) return;
-                      // [FIX-CUR] Set cursor visible directly — no setState, no notifyProvider
-                      // This avoids 60fps rebuilds from mouse movement
-                      if (!_isWebCursorVisible) {
-                        _isWebCursorVisible = true;
-                        if (mounted) setState(() {});
-                      }
-                      // Show controls only if currently hidden (not on every move)
-                      if (!_showControls) _showControlsAnimated();
-                      _hideTimer
-                          ?.cancel(); // [WEB-1] reset any pending hide on movement
-                    }
-                  : null,
-              onExit:
-                  kIsWeb // [WEB-1]
-                  ? (event) {
-                      if (_isScreenLocked) return;
-                      _isMouseOverPlayer = false; // [WEB-1]
-                      _isWebCursorVisible =
-                          true; // [FIX-CUR] always restore cursor on exit
-                      // Only start hide timer when mouse leaves AND video is playing
-                      if (_isControllerReady &&
-                          _videoPlayerController.value.isPlaying) {
-                        _startHideTimer(); // [WEB-1] short delay then hide
-                      }
-                      // If paused: keep controls visible after mouse leaves
-                    }
-                  : (event) {
-                      if (!_isScreenLocked) _startHideTimer();
-                    },
-              child: GestureDetector(
-                onTap: _isScreenLocked
-                    ? null
-                    : kIsWeb // [WEB-1]
-                    ? () async {
-                        // Web: single tap = play/pause (controls always via hover)
-                        if (!_isControllerReady || !_shouldShowContentVideo) {
-                          return;
-                        }
-                        if (_isAdActuallyPlaying) return;
-                        _videoPlayerController.value.isPlaying
-                            ? await _videoPlayerController.pause()
-                            : await _videoPlayerController.play();
-                        if (!mounted) return;
-                        playerProvider.notifyProvider();
-                        if (_videoPlayerController.value.isPlaying) {
-                          if (!_isMouseOverPlayer) _startHideTimer();
-                        } else {
-                          _hideTimer?.cancel();
-                          _showControlsAnimated(); // [WEB-1] keep visible when paused
-                        }
-                      }
-                    : _toggleControls, // mobile: tap = toggle controls
-                onDoubleTapDown: _isScreenLocked
-                    ? null
-                    : (details) async {
-                        final screenWidth = MediaQuery.of(context).size.width;
-                        final dx = details.globalPosition.dx;
-                        final isFinished =
-                            (_videoPlayerController.value.position >=
-                                _videoPlayerController.value.duration) &&
-                            _videoPlayerController.value.duration.inSeconds > 0;
-                        if (widget.playerModel.isLive == true ||
-                            !_shouldShowContentVideo ||
-                            isFinished) {
-                          return;
-                        }
-                        if (dx < screenWidth / 2) {
-                          _handleDoubleTap(false);
-                        } else {
-                          _handleDoubleTap(true);
-                        }
-                      },
-                // [NEW] FEATURE-1: Long-press speed boost
-                onLongPressStart: _isScreenLocked
-                    ? null
-                    : (details) {
-                        if (!_shouldShowContentVideo || _isAdActuallyPlaying) {
-                          return;
-                        }
-                        if (widget.playerModel.isLive == true) return;
-                        _speedBeforeLongPress = _playbackSpeed;
-                        _isLongPressSpeed = true;
-                        _videoPlayerController.setPlaybackSpeed(2.0);
-                        _hideTimer?.cancel();
-                        if (mounted) playerProvider.notifyProvider();
-                      },
-                onLongPressEnd: _isScreenLocked
-                    ? null
-                    : (details) {
-                        if (!_isLongPressSpeed) return;
-                        _isLongPressSpeed = false;
-                        _videoPlayerController.setPlaybackSpeed(
-                          _speedBeforeLongPress,
-                        );
-                        if (mounted) {
-                          playerProvider.notifyProvider();
-                          if (_videoPlayerController.value.isPlaying) {
-                            _startHideTimer();
-                          }
-                        }
-                      },
-                child: Scaffold(
-                  backgroundColor: black, // [IMP-4]
-                  body: Consumer<PlayerProvider>(
-                    builder: (context, playerProvider, child) {
-                      return Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Always renders player/loading — fills full screen
-                          _setBuildPlayer(),
-
-                          // Ad container overlaid on top
-                          if (_shouldShowAds() && _adDisplayContainer != null)
-                            Visibility(
-                              visible: _isAdActuallyPlaying,
-                              maintainState: true,
-                              child: _adDisplayContainer!,
-                            ),
-
-                          // Initial spinner when neither ad nor content is ready
-                          if (!_isAdActuallyPlaying &&
-                              !_shouldShowContentVideo &&
-                              (!_isControllerReady || // [FIX]
-                                  !_videoPlayerController.value.isInitialized))
-                            Center(child: Utils.pageLoader()),
-
-                          // [NEW] FEATURE-2: Lock screen overlay — absorbs all input when locked
-                          if (_isScreenLocked) _buildLockOverlay(),
-                        ],
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ),
-          ), // [WEB-2] Focus close
+          child: playerBody,
         ),
       ),
     );
@@ -2069,19 +2172,20 @@ class _PlayerVideoState extends State<PlayerVideo>
             ),
 
           // Right Side: Volume Control UI
-          Positioned(
-            right: 16,
-            top: 0,
-            bottom: 0,
-            child: SafeArea(
-              child: IgnorePointer(
-                ignoring: !_showControls,
-                child: Center(
-                  child: _buildVolumeControlUI(),
+          if (!kIsWeb)
+            Positioned(
+              right: 16,
+              top: 0,
+              bottom: 0,
+              child: SafeArea(
+                child: IgnorePointer(
+                  ignoring: !_showControls,
+                  child: Center(
+                    child: _buildVolumeControlUI(),
+                  ),
                 ),
               ),
             ),
-          ),
 
           // Center controls (play/pause + seek)
           if (!isFinished || widget.playerModel.isLive == true)
@@ -2149,6 +2253,9 @@ class _PlayerVideoState extends State<PlayerVideo>
           isBuffering // [IMP-2] disable tap while buffering
           ? null
           : () async {
+              if (kIsWeb && !_isWebFullscreen) {
+                _enterWebFullscreen();
+              }
               if (isFinished) {
                 await _videoPlayerController.seekTo(Duration.zero);
                 await _videoPlayerController.play();
@@ -2504,6 +2611,9 @@ class _PlayerVideoState extends State<PlayerVideo>
                     size: 24,
                   ),
                   onPressed: () async {
+                    if (kIsWeb && !_isWebFullscreen) {
+                      _enterWebFullscreen();
+                    }
                     _videoPlayerController.value.isPlaying
                         ? await _videoPlayerController.pause()
                         : await _videoPlayerController.play();
@@ -2522,30 +2632,31 @@ class _PlayerVideoState extends State<PlayerVideo>
                   constraints: const BoxConstraints(),
                 ),
 
-                const SizedBox(width: 8),
-
-                // Inline volume button
-                IconButton(
-                  icon: Icon(
-                    playerProvider.isVolMuted || playerProvider.volumeLevel <= 0
-                        ? Icons.volume_off_rounded
-                        : playerProvider.volumeLevel < 0.5
-                            ? Icons.volume_down_rounded
-                            : Icons.volume_up_rounded,
-                    color: (playerProvider.isVolMuted ||
-                            playerProvider.volumeLevel <= 0)
-                        ? colorAccent
-                        : white,
-                    size: 22,
+                // Inline volume button (mobile only)
+                if (!kIsWeb) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: Icon(
+                      playerProvider.isVolMuted || playerProvider.volumeLevel <= 0
+                          ? Icons.volume_off_rounded
+                          : playerProvider.volumeLevel < 0.5
+                              ? Icons.volume_down_rounded
+                              : Icons.volume_up_rounded,
+                      color: (playerProvider.isVolMuted ||
+                              playerProvider.volumeLevel <= 0)
+                          ? colorAccent
+                          : white,
+                      size: 22,
+                    ),
+                    onPressed: () async {
+                      _cancelAndRestartTimer();
+                      await updateMuteStatus(!playerProvider.isVolMuted);
+                    },
+                    tooltip: playerProvider.isVolMuted ? 'Unmute' : 'Mute',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                   ),
-                  onPressed: () async {
-                    _cancelAndRestartTimer();
-                    await updateMuteStatus(!playerProvider.isVolMuted);
-                  },
-                  tooltip: playerProvider.isVolMuted ? 'Unmute' : 'Mute',
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
+                ],
 
                 const SizedBox(width: 8),
 
@@ -2799,7 +2910,7 @@ class _PlayerVideoState extends State<PlayerVideo>
           padding: const EdgeInsets.only(left: 6.0, right: 6.0),
           child: Icon(
             playerProvider.subtitleOn ? Icons.subtitles : Icons.subtitles_off,
-            color: playerProvider.subtitleOn ? colorAccent : white, // [IMP-4]
+            color: playerProvider.subtitleOn ? colorPrimary : white, // [IMP-4]
             size: 24.0,
           ),
         ),
@@ -3180,11 +3291,11 @@ class _PlayerVideoState extends State<PlayerVideo>
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                    horizontal: 16,
+                    vertical: 13,
                   ),
                   color: isOff
-                      ? colorAccent.withValues(alpha: 0.08)
+                      ? colorPrimary.withValues(alpha: 0.12)
                       : Colors.transparent,
                   child: Row(
                     children: [
@@ -3192,8 +3303,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                         child: Text(
                           "Nonaktif",
                           style: GoogleFonts.inter(
-                            color: isOff ? colorAccent : white,
-                            fontSize: 15,
+                            color: isOff ? colorPrimary : white,
+                            fontSize: 14,
                             fontWeight:
                                 isOff ? FontWeight.w700 : FontWeight.w500,
                           ),
@@ -3202,8 +3313,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                       if (isOff)
                         const Icon(
                           Icons.check,
-                          color: colorAccent,
-                          size: 22,
+                          color: colorPrimary,
+                          size: 20,
                         ),
                     ],
                   ),
@@ -3231,11 +3342,11 @@ class _PlayerVideoState extends State<PlayerVideo>
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
+                          horizontal: 16,
+                          vertical: 13,
                         ),
                         color: isSelected
-                            ? colorAccent.withValues(alpha: 0.08)
+                            ? colorPrimary.withValues(alpha: 0.12)
                             : Colors.transparent,
                         child: Row(
                           children: [
@@ -3243,8 +3354,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                               child: Text(
                                 option.subtitleLang,
                                 style: GoogleFonts.inter(
-                                  color: isSelected ? colorAccent : white,
-                                  fontSize: 15,
+                                  color: isSelected ? colorPrimary : white,
+                                  fontSize: 14,
                                   fontWeight: isSelected
                                       ? FontWeight.w700
                                       : FontWeight.w500,
@@ -3254,8 +3365,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                             if (isSelected)
                               const Icon(
                                 Icons.check,
-                                color: colorAccent,
-                                size: 22,
+                                color: colorPrimary,
+                                size: 20,
                               ),
                           ],
                         ),
@@ -3292,13 +3403,13 @@ class _PlayerVideoState extends State<PlayerVideo>
               "Kualitas bawaan",
               style: GoogleFonts.inter(
                 color: white.withValues(alpha: 0.6),
-                fontSize: 14,
+                fontSize: 13,
               ),
             ),
           );
         }
         return ListView.separated(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6),
           itemCount: resolutions.length,
           separatorBuilder: (_, index) => Divider(
             color: white.withValues(alpha: 0.08),
@@ -3320,11 +3431,11 @@ class _PlayerVideoState extends State<PlayerVideo>
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 16,
+                    horizontal: 16,
+                    vertical: 13,
                   ),
                   color: isSelected
-                      ? colorAccent.withValues(alpha: 0.08)
+                      ? colorPrimary.withValues(alpha: 0.12)
                       : Colors.transparent,
                   child: Row(
                     children: [
@@ -3332,8 +3443,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                         child: Text(
                           option.qualityName,
                           style: GoogleFonts.inter(
-                            color: isSelected ? colorAccent : white,
-                            fontSize: 15,
+                            color: isSelected ? colorPrimary : white,
+                            fontSize: 14,
                             fontWeight: isSelected
                                 ? FontWeight.w700
                                 : FontWeight.w500,
@@ -3343,8 +3454,8 @@ class _PlayerVideoState extends State<PlayerVideo>
                       if (isSelected)
                         const Icon(
                           Icons.check,
-                          color: colorAccent,
-                          size: 22,
+                          color: colorPrimary,
+                          size: 20,
                         ),
                     ],
                   ),

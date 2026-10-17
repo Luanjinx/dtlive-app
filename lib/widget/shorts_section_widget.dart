@@ -44,7 +44,9 @@ class ShortsSectionWidget extends StatelessWidget {
       child: SingleChildScrollView(
         controller: scrollController,
         scrollDirection: Axis.horizontal,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         child: AlignedGridView.count(
           itemCount: count,
           shrinkWrap: true,

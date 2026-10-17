@@ -52,11 +52,30 @@ class JSHelper {
     if (isFullscreen) {
       final element = document.documentElement;
       if (element != null) {
-        await element.requestFullscreen().toDart;
+        try {
+          await element.requestFullscreen().toDart;
+        } catch (e) {
+          printLog("requestFullscreen failed: $e");
+        }
+      }
+      try {
+        await window.screen.orientation.lock('landscape').toDart;
+        printLog("screen.orientation.lock('landscape') succeeded");
+      } catch (e) {
+        printLog("screen.orientation.lock('landscape') failed or not supported: $e");
       }
     } else {
+      try {
+        window.screen.orientation.unlock();
+      } catch (e) {
+        printLog("screen.orientation.unlock failed: $e");
+      }
       if (document.fullscreenElement != null) {
-        await document.exitFullscreen().toDart;
+        try {
+          await document.exitFullscreen().toDart;
+        } catch (e) {
+          printLog("exitFullscreen failed: $e");
+        }
       }
     }
   }

@@ -565,22 +565,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return ResponsiveBreakpoints.builder(
           child: child!,
           breakpoints: [
-            const Breakpoint(start: 0, end: 360, name: MOBILE),
-            const Breakpoint(start: 361, end: 800, name: TABLET),
-            const Breakpoint(start: 801, end: 1000, name: DESKTOP),
-            const Breakpoint(start: 1001, end: double.infinity, name: '4K'),
+            const Breakpoint(start: 0, end: 450, name: MOBILE),
+            const Breakpoint(start: 451, end: 900, name: TABLET),
+            const Breakpoint(start: 901, end: 1920, name: DESKTOP),
+            const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
           ],
         );
       },
-      scrollBehavior: const MaterialScrollBehavior().copyWith(
-        dragDevices: {
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.touch,
-          PointerDeviceKind.stylus,
-          PointerDeviceKind.unknown,
-          PointerDeviceKind.trackpad,
-        },
-      ),
+      scrollBehavior: const SmoothAppScrollBehavior(),
     );
   }
 
@@ -615,22 +607,14 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           child: child!,
           breakpoints: [
             const Breakpoint(start: 0, end: 450, name: MOBILE),
-            const Breakpoint(start: 451, end: 800, name: TABLET),
-            const Breakpoint(start: 801, end: 1920, name: DESKTOP),
+            const Breakpoint(start: 451, end: 900, name: TABLET),
+            const Breakpoint(start: 901, end: 1920, name: DESKTOP),
             const Breakpoint(start: 1921, end: double.infinity, name: '4K'),
           ],
         );
       },
       home: const Splash(),
-      scrollBehavior: const MaterialScrollBehavior().copyWith(
-        dragDevices: {
-          PointerDeviceKind.mouse,
-          PointerDeviceKind.touch,
-          PointerDeviceKind.stylus,
-          PointerDeviceKind.unknown,
-          PointerDeviceKind.trackpad,
-        },
-      ),
+      scrollBehavior: const SmoothAppScrollBehavior(),
     );
   }
 
@@ -743,3 +727,22 @@ class NoTransitionsBuilder extends PageTransitionsBuilder {
     return child!;
   }
 }
+
+class SmoothAppScrollBehavior extends MaterialScrollBehavior {
+  const SmoothAppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.touch,
+    PointerDeviceKind.stylus,
+    PointerDeviceKind.unknown,
+    PointerDeviceKind.trackpad,
+  };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+  }
+}
+

@@ -27,6 +27,8 @@ import '../utils/constant.dart';
 import '../utils/dimens.dart';
 import '../utils/utils.dart';
 import '../widget/myimage.dart';
+import 'package:google_fonts/google_fonts.dart';
+
 import '../widget/mynetworkimg.dart';
 import '../webwidget/web_hover_card.dart';
 import '../widget/mytext.dart';
@@ -172,7 +174,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
     if (episodeProvider.loading && !episodeProvider.loadMore) {
       return ShimmerUtils.buildEpisodeShimmer(context, 5);
     }
-    if (Constant.isTV) {
+    if (kIsWeb || Constant.isTV) {
       return _buildTVUI();
     } else {
       return _buildWebUI();
@@ -465,55 +467,198 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
   }
 
   Widget _buildTVUI() {
+    if (episodeProvider.episodeList == null ||
+        (episodeProvider.episodeList?.isEmpty ?? true)) {
+      return const SizedBox.shrink();
+    }
+
+    final double screenW = MediaQuery.of(context).size.width;
+    final bool isBig = Dimens.isBigScreen(context);
+    final bool isTablet = !isBig && screenW >= 550;
+
+    // Proportional 16:9 thumbnail dimensions across all screens
+    final double cardW = isBig
+        ? 250.0
+        : (isTablet ? 200.0 : 160.0);
+    final double cardH = isBig
+        ? 140.0
+        : (isTablet ? 112.0 : 90.0);
+    // Container height: thumbnail (140/112/90) + gap (8/6/6) + title (~18/16/15) + gap (3) + meta (~16/15/14) + hover buffer
+    final double containerH = isBig
+        ? 210.0
+        : (isTablet ? 172.0 : 148.0);
+    final double itemGap = isBig ? 14.0 : (isTablet ? 12.0 : 10.0);
+
     return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: Dimens.heightLand,
+      width: screenW,
+      height: containerH,
       child: ListView.separated(
         itemCount: episodeProvider.episodeList?.length ?? 0,
         shrinkWrap: true,
         scrollDirection: Axis.horizontal,
+        clipBehavior: Clip.none,
         physics: const BouncingScrollPhysics(),
-        separatorBuilder: (context, position) => const SizedBox(width: 5),
+        separatorBuilder: (context, position) => SizedBox(width: itemGap),
         itemBuilder: (BuildContext context, int position) {
-          return kIsWeb
-              ? WebHoverCard(
-                  cardW: Dimens.isBigScreen(context)
-                      ? Dimens.widthLandWeb
-                      : Dimens.widthLand,
-                  cardH: Dimens.isBigScreen(context)
-                      ? Dimens.heightLandWeb
-                      : Dimens.heightLand,
-                  borderRadius: 4,
-                  imageUrl: _getEpisodeLandscape(position),
-                  onTap: () {
-                    printLog("===> position $position");
-                    openPlayer("Show", position, episodeProvider.episodeList);
-                  },
-                )
-              : InkWell(
-                  borderRadius: BorderRadius.circular(4),
-                  focusColor: white,
-                  onTap: () {
-                    printLog("===> position $position");
-                    openPlayer("Show", position, episodeProvider.episodeList);
-                  },
-                  child: Container(
-                    width: Dimens.widthLand,
-                    height: Dimens.heightLand,
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(2.0),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      clipBehavior: Clip.antiAliasWithSaveLayer,
-                      child: MyNetworkImage(
-                        imageUrl: _getEpisodeLandscape(position),
-                        fit: BoxFit.cover,
-                        height: MediaQuery.of(context).size.height,
-                        width: MediaQuery.of(context).size.width,
+          final episodeItem = episodeProvider.episodeList?[position];
+          final String rawName = (episodeItem?.name ?? "").trim();
+          final String titleText =
+              rawName.isNotEmpty ? rawName : "Episode ${position + 1}";
+
+          final int durationSec = episodeItem?.videoDuration ?? 0;
+          final String durationStr =
+              durationSec > 0 ? Utils.convertInMin(durationSec) : "";
+          final bool isPremium = (episodeItem?.isPremium ?? 0) == 1;
+          final int epNum = position + 1;
+
+          final bool hasEpInTitle =
+              titleText.toLowerCase().startsWith("episode") ||
+                  titleText.toLowerCase().startsWith("ep ") ||
+                  titleText.toLowerCase().startsWith("ep.");
+
+          String subText = "";
+          if (!hasEpInTitle) {
+            subText = "EP $epNum";
+            if (durationStr.isNotEmpty) {
+              subText += " • $durationStr";
+            }
+          } else {
+            if (durationStr.isNotEmpty) {
+              subText = durationStr;
+            }
+          }
+
+          final int stopTime = episodeItem?.stopTime ?? 0;
+          final Widget? progressOverlay =
+              (stopTime > 0 && durationSec > 0)
+                  ? Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: SizedBox(
+                        height: 3,
+                        child: LinearPercentIndicator(
+                          padding: EdgeInsets.zero,
+                          lineHeight: 3,
+                          percent: Utils.getPercentage(durationSec, stopTime),
+                          backgroundColor: Colors.white24,
+                          progressColor: colorPrimary,
+                        ),
                       ),
+                    )
+                  : null;
+
+          return SizedBox(
+            width: cardW,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(6),
+              focusColor: white.withValues(alpha: 0.1),
+              onTap: () {
+                printLog("===> position $position");
+                openPlayer("Show", position, episodeProvider.episodeList);
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  kIsWeb
+                      ? WebHoverCard(
+                          cardW: cardW,
+                          cardH: cardH,
+                          borderRadius: 6,
+                          imageUrl: _getEpisodeLandscape(position),
+                          overlay: progressOverlay,
+                          onTap: () {
+                            printLog("===> position $position");
+                            openPlayer(
+                              "Show",
+                              position,
+                              episodeProvider.episodeList,
+                            );
+                          },
+                        )
+                      : Container(
+                          width: cardW,
+                          height: cardH,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            clipBehavior: Clip.antiAliasWithSaveLayer,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                MyNetworkImage(
+                                  imageUrl: _getEpisodeLandscape(position),
+                                  fit: BoxFit.cover,
+                                  height: cardH,
+                                  width: cardW,
+                                ),
+                                ?progressOverlay,
+                              ],
+                            ),
+                          ),
+                        ),
+                  SizedBox(height: isBig ? 8 : 6),
+                  Text(
+                    titleText,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.inter(
+                      fontSize: isBig ? 13.5 : (isTablet ? 12.5 : 11.5),
+                      fontWeight: FontWeight.w600,
+                      color: white,
+                      letterSpacing: 0.1,
                     ),
                   ),
-                );
+                  if (subText.isNotEmpty || isPremium) ...[
+                    const SizedBox(height: 3),
+                    Row(
+                      children: [
+                        if (subText.isNotEmpty)
+                          Text(
+                            subText,
+                            style: GoogleFonts.inter(
+                              fontSize: isBig ? 11.5 : (isTablet ? 11.0 : 10.0),
+                              color: descTextColor,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        if (isPremium) ...[
+                          if (subText.isNotEmpty) const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: colorPrimary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(3),
+                              border: Border.all(
+                                color: colorPrimary.withValues(alpha: 0.5),
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              "PRIME",
+                              style: GoogleFonts.inter(
+                                color: colorPrimary,
+                                fontSize: isBig ? 9.5 : 8.5,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
         },
       ),
     );

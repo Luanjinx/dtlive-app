@@ -13,6 +13,7 @@ import '../routes/routes_constant.dart';
 import '../utils/color.dart';
 import '../utils/constant.dart';
 import '../utils/utils.dart';
+import '../web_js/js_helper.dart';
 
 class PlayerYoutubeWeb extends StatefulWidget {
   final PlayerModel playerModel;
@@ -68,6 +69,9 @@ class PlayerYoutubeWebState extends State<PlayerYoutubeWeb>
     playerProvider = Provider.of<PlayerProvider>(context, listen: false);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: []);
     OrientationManager.forceLandscape();
+    if (kIsWeb) {
+      JSHelper().callBrowserFullscreen(true);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _playerInit();
     });
@@ -249,6 +253,8 @@ class PlayerYoutubeWebState extends State<PlayerYoutubeWeb>
     controller?.close();
     if (!kIsWeb) {
       OrientationManager.forcePortrait();
+    } else {
+      JSHelper().callBrowserFullscreen(false);
     }
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -261,6 +267,8 @@ class PlayerYoutubeWebState extends State<PlayerYoutubeWeb>
     if (didPop) return;
     if (!kIsWeb) {
       OrientationManager.forcePortrait();
+    } else {
+      JSHelper().callBrowserFullscreen(false);
     }
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,

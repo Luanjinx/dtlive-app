@@ -287,130 +287,98 @@ class BottombarState extends State<Bottombar> with RouteAware {
           final double leftInset = MediaQuery.of(context).padding.left;
           final double rightInset = MediaQuery.of(context).padding.right;
 
+          int navIndex = 0;
+          final List<Widget> navItems = [];
+
+          // 0: Home
+          final int homeIdx = navIndex++;
+          navItems.add(_buildNavItem(
+            index: homeIdx,
+            currentIndex: bottombarProvider.bottomNavIndex,
+            title: "bottommenu1",
+            isTitleMultilang: true,
+            iconName: 'ic_home',
+          ));
+
+          // 1: Find
+          final int findIdx = navIndex++;
+          navItems.add(_buildNavItem(
+            index: findIdx,
+            currentIndex: bottombarProvider.bottomNavIndex,
+            title: "bottommenu2",
+            isTitleMultilang: true,
+            iconName: 'ic_find',
+          ));
+
+          // 2: Clips (if not kid)
+          if (Constant.userIsKid == false) {
+            final int clipsIdx = navIndex++;
+            navItems.add(_buildNavItem(
+              index: clipsIdx,
+              currentIndex: bottombarProvider.bottomNavIndex,
+              title: "bottommenu3",
+              isTitleMultilang: true,
+              iconName: 'ic_clips',
+            ));
+          }
+
+          // 3: Store (if active and not kid)
+          if ((rentMenuStatus != null && rentMenuStatus == "1") &&
+              Constant.userIsKid == false) {
+            final int storeIdx = navIndex++;
+            navItems.add(_buildNavItem(
+              index: storeIdx,
+              currentIndex: bottombarProvider.bottomNavIndex,
+              title: "bottommenu4",
+              isTitleMultilang: true,
+              iconName: 'ic_store',
+            ));
+          }
+
+          // Last: Profile / MySpace
+          final int profileIdx = navIndex++;
+          navItems.add(_buildProfileNavItem(
+            index: profileIdx,
+            currentIndex: bottombarProvider.bottomNavIndex,
+          ));
+
           return Visibility(
             visible: bottombarProvider.isShowBottombar,
             maintainAnimation: true,
             maintainState: true,
             child: AnimatedOpacity(
               opacity: bottombarProvider.isShowBottombar ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 800),
+              duration: const Duration(milliseconds: 400),
               curve: Curves.easeInOut,
               child: IgnorePointer(
                 ignoring: !bottombarProvider.isShowBottombar,
                 child: Container(
+                  height: 50,
                   margin: EdgeInsets.only(
-                    left: 16 + leftInset,
-                    right: 16 + rightInset,
-                    bottom: bottomInset > 0 ? bottomInset : 14,
+                    left: 20 + leftInset,
+                    right: 20 + rightInset,
+                    bottom: bottomInset > 0 ? bottomInset + 12 : 24,
                   ),
                   decoration: BoxDecoration(
-                    color: secondaryBgColor,
-                    borderRadius: BorderRadius.circular(28),
+                    color: const Color(0xF216181F),
+                    borderRadius: BorderRadius.circular(25),
                     border: Border.all(
-                      color: white.withValues(alpha: 0.08),
+                      color: white.withValues(alpha: 0.10),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: black.withValues(alpha: 0.45),
-                        blurRadius: 18,
+                        color: black.withValues(alpha: 0.50),
+                        blurRadius: 16,
                         spreadRadius: 1,
-                        offset: const Offset(0, 6),
+                        offset: const Offset(0, 4),
                       ),
                     ],
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(28),
-                    child: MediaQuery.removePadding(
-                      context: context,
-                      removeBottom: true,
-                      child: BottomNavigationBar(
-                        elevation: 0,
-                        showSelectedLabels: false,
-                        showUnselectedLabels: false,
-                        currentIndex: bottombarProvider.bottomNavIndex,
-                        backgroundColor: Colors.transparent,
-                        landscapeLayout:
-                            BottomNavigationBarLandscapeLayout.centered,
-                        type: BottomNavigationBarType.fixed,
-                        items: [
-                          BottomNavigationBarItem(
-                            label: "",
-                            activeIcon: _buildBottomNavIcon(
-                              title: "bottommenu1",
-                              isTitleMultilang: true,
-                              iconName: 'ic_home',
-                              iconColor: colorPrimary,
-                            ),
-                            icon: _buildBottomNavIcon(
-                              title: "bottommenu1",
-                              isTitleMultilang: true,
-                              iconName: 'ic_home',
-                              iconColor: defaultIconColor,
-                            ),
-                          ),
-                          BottomNavigationBarItem(
-                            label: "",
-                            activeIcon: _buildBottomNavIcon(
-                              title: "bottommenu2",
-                              isTitleMultilang: true,
-                              iconName: 'ic_find',
-                              iconColor: colorPrimary,
-                            ),
-                            icon: _buildBottomNavIcon(
-                              title: "bottommenu2",
-                              isTitleMultilang: true,
-                              iconName: 'ic_find',
-                              iconColor: defaultIconColor,
-                            ),
-                          ),
-                          if (Constant.userIsKid == false)
-                            BottomNavigationBarItem(
-                              label: "",
-                              activeIcon: _buildBottomNavIcon(
-                                title: "bottommenu3",
-                                isTitleMultilang: true,
-                                iconName: 'ic_clips',
-                                iconColor: colorPrimary,
-                              ),
-                              icon: _buildBottomNavIcon(
-                                title: "bottommenu3",
-                                isTitleMultilang: true,
-                                iconName: 'ic_clips',
-                                iconColor: defaultIconColor,
-                              ),
-                            ),
-                          if ((rentMenuStatus != null &&
-                                  rentMenuStatus == "1") &&
-                              Constant.userIsKid == false)
-                            BottomNavigationBarItem(
-                              label: "",
-                              activeIcon: _buildBottomNavIcon(
-                                title: "bottommenu4",
-                                isTitleMultilang: true,
-                                iconName: 'ic_store',
-                                iconColor: colorPrimary,
-                              ),
-                              icon: _buildBottomNavIcon(
-                                title: "bottommenu4",
-                                isTitleMultilang: true,
-                                iconName: 'ic_store',
-                                iconColor: defaultIconColor,
-                              ),
-                            ),
-                          BottomNavigationBarItem(
-                            label: "",
-                            activeIcon: _buildBottomNavProfileIcon(
-                              iconColor: colorPrimary,
-                            ),
-                            icon: _buildBottomNavProfileIcon(
-                              iconColor: defaultIconColor,
-                            ),
-                          ),
-                        ],
-                        onTap: _onItemTapped,
-                      ),
-                    ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: navItems,
                   ),
                 ),
               ),
@@ -421,114 +389,155 @@ class BottombarState extends State<Bottombar> with RouteAware {
     );
   }
 
-  Widget _buildBottomNavIcon({
+  Widget _buildNavItem({
+    required int index,
+    required int currentIndex,
     required String title,
     required bool isTitleMultilang,
     required String iconName,
-    required Color? iconColor,
   }) {
-    return Align(
-      alignment: Alignment.center,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            alignment: Alignment.center,
-            child: MyImage(
-              imagePath: "$iconName.png",
-              width: 18,
-              height: 18,
-              color: iconColor,
-              fit: BoxFit.contain,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Container(
-            alignment: Alignment.center,
-            child: MyText(
-              color: iconColor,
-              multilanguage: isTitleMultilang,
-              text: title,
-              fontsizeNormal: 12,
-              fontsizeWeb: 14,
-              fontweight: FontWeight.w500,
-              maxline: 1,
-              overflow: TextOverflow.ellipsis,
-              textalign: TextAlign.center,
-              fontstyle: FontStyle.normal,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+    final bool isSelected = currentIndex == index;
+    final Color itemColor =
+        isSelected ? colorPrimary : const Color(0xFF8E9299);
 
-  Widget _buildBottomNavProfileIcon({required Color? iconColor}) {
-    return Consumer<ProfileProvider>(
-      builder: (context, profileProvider, child) {
-        if (profileProvider.profileModel.result != null &&
-            (profileProvider.profileModel.result?.length ?? 0) > 0) {
-          return Align(
+    return Expanded(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          splashColor: transparent,
+          highlightColor: transparent,
+          onTap: () => _onItemTapped(index),
+          child: Container(
             alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  alignment: Alignment.center,
-                  child: (Constant.userIsKid == true)
-                      ? ClipRRect(
-                          borderRadius: BorderRadiusGeometry.circular(10),
-                          child: MyImage(
-                            imagePath: 'kids.png',
-                            fit: BoxFit.cover,
-                            width: 18,
-                            height: 18,
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadiusGeometry.circular(10),
-                          child: MyUserNetworkImage(
-                            imageUrl:
-                                profileProvider.profileModel.result?[0].image ??
-                                "",
-                            fit: BoxFit.cover,
-                            width: 18,
-                            height: 18,
-                          ),
-                        ),
+                MyImage(
+                  imagePath: "$iconName.png",
+                  width: 17,
+                  height: 17,
+                  color: itemColor,
+                  fit: BoxFit.contain,
                 ),
                 const SizedBox(height: 2),
-                Container(
-                  alignment: Alignment.center,
-                  child: MyText(
-                    color: iconColor,
-                    multilanguage: true,
-                    text: "bottommenu5",
-                    fontsizeNormal: 12,
-                    fontsizeWeb: 14,
-                    fontweight: FontWeight.w500,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.center,
-                    fontstyle: FontStyle.normal,
-                  ),
+                MyText(
+                  color: itemColor,
+                  multilanguage: isTitleMultilang,
+                  text: title,
+                  fontsizeNormal: 10,
+                  fontsizeWeb: 11,
+                  fontweight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  maxline: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textalign: TextAlign.center,
+                  fontstyle: FontStyle.normal,
                 ),
               ],
             ),
-          );
-        } else {
-          return _buildBottomNavIcon(
-            title: "bottommenu5",
-            isTitleMultilang: true,
-            iconName: 'ic_stuff',
-            iconColor: iconColor,
-          );
-        }
-      },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfileNavItem({
+    required int index,
+    required int currentIndex,
+  }) {
+    final bool isSelected = currentIndex == index;
+    final Color itemColor =
+        isSelected ? colorPrimary : const Color(0xFF8E9299);
+
+    return Expanded(
+      child: Material(
+        type: MaterialType.transparency,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(25),
+          splashColor: transparent,
+          highlightColor: transparent,
+          onTap: () => _onItemTapped(index),
+          child: Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Consumer<ProfileProvider>(
+              builder: (context, profileProvider, child) {
+                final bool hasProfile =
+                    profileProvider.profileModel.result != null &&
+                    (profileProvider.profileModel.result?.length ?? 0) > 0;
+                final String userImage = hasProfile
+                    ? (profileProvider.profileModel.result?[0].image ?? "")
+                    : "";
+
+                Widget profileIconWidget;
+                if (Constant.userIsKid == true) {
+                  profileIconWidget = ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: MyImage(
+                      imagePath: 'kids.png',
+                      fit: BoxFit.cover,
+                      width: 17,
+                      height: 17,
+                    ),
+                  );
+                } else if (hasProfile && userImage.isNotEmpty) {
+                  profileIconWidget = ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: isSelected
+                            ? Border.all(color: colorPrimary, width: 1.2)
+                            : null,
+                        borderRadius: BorderRadius.circular(9),
+                      ),
+                      child: MyUserNetworkImage(
+                        imageUrl: userImage,
+                        fit: BoxFit.cover,
+                        width: 17,
+                        height: 17,
+                      ),
+                    ),
+                  );
+                } else {
+                  profileIconWidget = MyImage(
+                    imagePath: 'ic_stuff.png',
+                    fit: BoxFit.contain,
+                    width: 17,
+                    height: 17,
+                    color: itemColor,
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    profileIconWidget,
+                    const SizedBox(height: 2),
+                    MyText(
+                      color: itemColor,
+                      multilanguage: true,
+                      text: "bottommenu5",
+                      fontsizeNormal: 10,
+                      fontsizeWeb: 11,
+                      fontweight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      maxline: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textalign: TextAlign.center,
+                      fontstyle: FontStyle.normal,
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ),
+      ),
     );
   }
 

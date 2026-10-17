@@ -365,6 +365,9 @@ class _AISectionWidgetState extends State<AISectionWidget>
       height: cardH + 20,
       child: ListView.separated(
         clipBehavior: Clip.none,
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         itemCount: items.length,

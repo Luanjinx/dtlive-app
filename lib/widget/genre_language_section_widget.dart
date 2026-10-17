@@ -63,7 +63,9 @@ class GenreLangSectionWidget extends StatelessWidget {
         itemCount: count,
         shrinkWrap: true,
         clipBehavior: Clip.none,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         padding: EdgeInsets.only(left: hPad, right: hPad),
         scrollDirection: Axis.horizontal,
         separatorBuilder: (context, i) => SizedBox(width: gap),
@@ -111,7 +113,9 @@ class GenreLangSectionWidget extends StatelessWidget {
         mainAxisSpacing: gap,
         padding: EdgeInsets.only(left: hPad, right: hPad),
         scrollDirection: Axis.horizontal,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         itemBuilder: (context, index) {
           final list.Datum datum = items![index];
           return _ChannelCard(

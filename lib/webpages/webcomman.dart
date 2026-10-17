@@ -1,7 +1,7 @@
-import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/findprovider.dart';
@@ -51,6 +51,7 @@ class WebComman extends StatefulWidget {
 }
 
 class _WebCommanState extends State<WebComman> with RouteAware {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   SharedPre sharePref = SharedPre();
   final JSHelper jsHelper = JSHelper();
 
@@ -621,9 +622,13 @@ class _WebCommanState extends State<WebComman> with RouteAware {
 
   @override
   Widget build(BuildContext context) {
+    final bool isBig = Dimens.isBigScreen(context);
+
     return Scaffold(
+      key: _scaffoldKey,
+      drawer: !isBig ? _buildMobileDrawer() : null,
       backgroundColor: appBgColor,
-      floatingActionButton: (widget.newPage != RoutesConstant.clipsEpisodesPage)
+      floatingActionButton: (isBig && widget.newPage != RoutesConstant.clipsEpisodesPage)
           ? FloatingActionButton.small(
               backgroundColor: colorAccent,
               shape: const CircleBorder(),
@@ -709,8 +714,9 @@ class _WebCommanState extends State<WebComman> with RouteAware {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          /* Hamburger (mobile) */
-          if (!isBig) _buildMobileMenuButton(),
+          /* Hamburger (mobile) — only on home page */
+          if (!isBig && currentPage == RoutesConstant.homePage)
+            _buildMobileMenuButton(),
 
           /* Logo or Back */
           if (currentPage == RoutesConstant.homePage)
@@ -737,89 +743,36 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   }
 
   Widget _buildMobileMenuButton() {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 25),
-      padding: const EdgeInsets.fromLTRB(0, 10, 12, 10),
-      child: Consumer<HomeProvider>(
-        builder: (context, homeProvider, child) {
-          return DropdownButtonHideUnderline(
-            child: DropdownButton2(
-              isDense: true,
-              isExpanded: true,
-              customButton: MyImage(
-                height: 30,
-                imagePath: "ic_menu.png",
-                fit: BoxFit.contain,
-                color: white,
-              ),
-              items: _buildWebDropDownItems(),
-              onChanged: (type.Result? value) async {
-                if (value?.id == -1) {
-                  await getTabData(-1, homeProvider.sectionTypeModel.result);
-                  if (widget.newPage != RoutesConstant.homePage) {
-                    if (!context.mounted) return;
-                    context.go('/', extra: widget.newPage ?? "");
-                  }
-                } else if (value?.id == -2) {
-                  printLog("<===============================>");
-                  printLog("storePage oldPage ======> ${widget.oldPage}");
-                  printLog("storePage newPage ======> ${widget.newPage}");
-                  printLog("<===============================>");
-                  if (!context.mounted) return;
-                  context.go(
-                    '/${RoutesConstant.storePage}',
-                    extra: widget.newPage ?? "",
-                  );
-                } else {
-                  final index = homeProvider.sectionTypeModel.result
-                      ?.indexWhere((item) => item.id == value?.id);
-                  printLog("<===============================>");
-                  printLog("sectionType index ======> $index");
-                  printLog("<===============================>");
-
-                  if (index != null && index != -1 && index != -2) {
-                    await getTabData(
-                      index,
-                      homeProvider.sectionTypeModel.result,
-                    );
-                  }
-                  if (widget.newPage != RoutesConstant.homePage) {
-                    if (!context.mounted) return;
-                    context.go('/', extra: widget.newPage ?? "");
-                  }
-                }
-              },
-              dropdownStyleData: DropdownStyleData(
-                width: MediaQuery.of(context).size.width * 0.55,
-                useSafeArea: true,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                decoration: BoxDecoration(
-                  color: lightBlack,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: white.withValues(alpha: 0.08),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: black.withValues(alpha: 0.50),
-                      blurRadius: 20,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
-                ),
-                elevation: 0,
-              ),
-              menuItemStyleData: const MenuItemStyleData(
-                padding: EdgeInsets.symmetric(horizontal: 4),
-              ),
-              buttonStyleData: ButtonStyleData(
-                decoration: BoxDecoration(color: transparent),
-                overlayColor: WidgetStateProperty.all(transparent),
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(8),
+        onTap: () {
+          _scaffoldKey.currentState?.openDrawer();
+        },
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(0, 8, 12, 8),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: white.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: white.withValues(alpha: 0.12),
+                width: 1,
               ),
             ),
-          );
-        },
+            child: MyImage(
+              height: 20,
+              width: 20,
+              imagePath: "ic_menu.png",
+              fit: BoxFit.contain,
+              color: white,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1067,78 +1020,454 @@ class _WebCommanState extends State<WebComman> with RouteAware {
     );
   }
 
-  List<DropdownMenuItem<type.Result>>? _buildWebDropDownItems() {
-    final List<type.Result> typeDropDownList = [];
+  Widget _buildMobileDrawer() {
+    final List<type.Result> sectionTypes =
+        homeProvider.sectionTypeModel.result ?? [];
 
-    // 1. Add static "Home" at first position
-    typeDropDownList.add(
-      type.Result()
-        ..id =
-            -1 // use unique ID for static item
-        ..name = "Home",
+    return Drawer(
+      backgroundColor: appBgColor,
+      surfaceTintColor: transparent,
+      width: (MediaQuery.of(context).size.width * 0.82).clamp(270.0, 320.0),
+      child: SafeArea(
+        child: Column(
+          children: [
+            // Drawer Header: App Logo + Name + Close Button
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: white.withValues(alpha: 0.08),
+                    width: 1,
+                  ),
+                ),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: MyImage(
+                      width: 36,
+                      height: 36,
+                      imagePath: "appicon.png",
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      Constant.appName,
+                      style: GoogleFonts.inter(
+                        color: white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: white,
+                      size: 22,
+                    ),
+                    splashRadius: 20,
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+
+            // User Info / Login Banner Card
+            _buildDrawerUserCard(),
+
+            // Navigation Items List
+            Expanded(
+              child: ListView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+                children: [
+                  // Home item
+                  _buildDrawerNavItem(
+                    icon: Icons.home_rounded,
+                    title: "Home",
+                    isActive: widget.newPage == RoutesConstant.homePage &&
+                        homeProvider.selectedIndex == 0,
+                    onTap: () async {
+                      Navigator.of(context).pop();
+                      await getTabData(-1, homeProvider.sectionTypeModel.result);
+                      if (widget.newPage != RoutesConstant.homePage) {
+                        if (!mounted) return;
+                        context.go('/', extra: widget.newPage ?? "");
+                      }
+                    },
+                  ),
+
+                  // Dynamic Section Types (e.g. Movies, Series, Anime, etc.)
+                  for (int i = 0; i < sectionTypes.length; i++) ...[
+                    _buildDrawerNavItem(
+                      icon: _getCategoryIcon(sectionTypes[i].name ?? ""),
+                      title: sectionTypes[i].name ?? "",
+                      isActive: widget.newPage == RoutesConstant.homePage &&
+                          homeProvider.selectedIndex == (i + 1),
+                      onTap: () async {
+                        Navigator.of(context).pop();
+                        await getTabData(
+                          i,
+                          homeProvider.sectionTypeModel.result,
+                        );
+                        if (widget.newPage != RoutesConstant.homePage) {
+                          if (!mounted) return;
+                          context.go('/', extra: widget.newPage ?? "");
+                        }
+                      },
+                    ),
+                  ],
+
+                  // Store (if enabled)
+                  if ((rentMenuStatus != null && rentMenuStatus == "1") &&
+                      Constant.userIsKid == false)
+                    _buildDrawerNavItem(
+                      icon: Icons.storefront_rounded,
+                      title: "Store",
+                      isActive: widget.newPage == RoutesConstant.storePage,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        context.go(
+                          '/${RoutesConstant.storePage}',
+                          extra: widget.newPage ?? "",
+                        );
+                      },
+                    ),
+
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Divider(color: Colors.white12, height: 1),
+                  ),
+
+                  // Search
+                  _buildDrawerNavItem(
+                    icon: Icons.search_rounded,
+                    title: "Search",
+                    isActive: widget.newPage == RoutesConstant.searchPage,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      findProvider.setSearchLoading(true);
+                      context.go(
+                        '/${RoutesConstant.searchPage}',
+                        extra: widget.newPage ?? "",
+                      );
+                    },
+                  ),
+
+                  // My Space / Profile (if logged in)
+                  if (Constant.userID != null) ...[
+                    _buildDrawerNavItem(
+                      icon: Icons.person_rounded,
+                      title: "My Space",
+                      isActive: widget.newPage == RoutesConstant.mySpacePage,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        context.go(
+                          "/${RoutesConstant.mySpacePage}",
+                          extra: widget.newPage ?? "",
+                        );
+                      },
+                    ),
+                    _buildDrawerNavItem(
+                      icon: Icons.bookmark_border_rounded,
+                      title: "Watchlist",
+                      isActive: widget.newPage == RoutesConstant.myWatchlistPage,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        context.go(
+                          "/${RoutesConstant.myWatchlistPage}",
+                          extra: widget.newPage ?? "",
+                        );
+                      },
+                    ),
+                  ],
+
+                  // Subscribe plan
+                  _buildDrawerNavItem(
+                    icon: Icons.workspace_premium_rounded,
+                    title: "Berlangganan",
+                    isActive: widget.newPage == RoutesConstant.subscriptionPage,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.go(
+                        '/${RoutesConstant.subscriptionPage}',
+                        extra: widget.newPage ?? "",
+                      );
+                    },
+                  ),
+
+                  // Settings
+                  _buildDrawerNavItem(
+                    icon: Icons.settings_rounded,
+                    title: "Settings",
+                    isActive: widget.newPage == RoutesConstant.settingsPage,
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      context.go(
+                        '/${RoutesConstant.settingsPage}',
+                        extra: widget.newPage ?? "",
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            // Footer version info
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              alignment: Alignment.centerLeft,
+              child: Text(
+                "v${Constant.appVersion}",
+                style: GoogleFonts.inter(
+                  color: white.withValues(alpha: 0.35),
+                  fontSize: 11,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
+  }
 
-    // 2. Add API data in middle
-    final apiData = homeProvider.sectionTypeModel.result ?? [];
-    typeDropDownList.addAll(apiData);
+  Widget _buildDrawerUserCard() {
+    return Consumer<ProfileProvider>(
+      builder: (context, profileProvider, child) {
+        if (Constant.userID != null) {
+          final profileResult = profileProvider.profileModel.result;
+          final userName = (profileResult != null && profileResult.isNotEmpty)
+              ? (profileResult[0].fullName ?? profileResult[0].userName ?? "User")
+              : "User";
+          final userEmail = (profileResult != null && profileResult.isNotEmpty)
+              ? (profileResult[0].email ?? "")
+              : "";
+          final userImage = (profileResult != null && profileResult.isNotEmpty)
+              ? (profileResult[0].image ?? "")
+              : "";
 
-    // 3. Add static "Store" at last position
-    if ((rentMenuStatus != null && rentMenuStatus == "1") &&
-        Constant.userIsKid == false) {
-      typeDropDownList.add(
-        type.Result()
-          ..id =
-              -2 // use unique ID for static item
-          ..name = "Store",
-      );
-    }
+          return InkWell(
+            onTap: () {
+              Navigator.of(context).pop();
+              context.go(
+                "/${RoutesConstant.mySpacePage}",
+                extra: widget.newPage ?? "",
+              );
+            },
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: lightBlack,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: white.withValues(alpha: 0.08),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: (Constant.userIsKid == true)
+                        ? MyImage(
+                            imagePath: "kids.png",
+                            fit: BoxFit.cover,
+                            height: 40,
+                            width: 40,
+                          )
+                        : MyNetworkImage(
+                            imageUrl: userImage,
+                            fit: BoxFit.cover,
+                            height: 40,
+                            width: 40,
+                          ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userName,
+                          style: GoogleFonts.inter(
+                            color: white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        if (userEmail.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            userEmail,
+                            style: GoogleFonts.inter(
+                              color: white.withValues(alpha: 0.6),
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    color: white.withValues(alpha: 0.4),
+                    size: 14,
+                  ),
+                ],
+              ),
+            ),
+          );
+        } else {
+          return Container(
+            margin: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: lightBlack,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: white.withValues(alpha: 0.08),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Selamat Datang!",
+                        style: GoogleFonts.inter(
+                          color: white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Masuk untuk akses penuh",
+                        style: GoogleFonts.inter(
+                          color: white.withValues(alpha: 0.6),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                InkWell(
+                  onTap: () async {
+                    Navigator.of(context).pop();
+                    await Utils.openLogin(
+                      context: context,
+                      newPage: RoutesConstant.loginSocialPage,
+                    );
+                    _getData();
+                    if (!mounted) return;
+                    setState(() {});
+                  },
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: colorPrimary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      "Login",
+                      style: GoogleFonts.inter(
+                        color: appBgColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
 
-    // 4. Build DropdownMenuItem list
-    return typeDropDownList.map((type.Result value) {
-      final bool isRentSelected =
-          (value.id == -2 && widget.newPage == RoutesConstant.storePage);
-      final bool isHomeSelected =
-          (value.id == -1 &&
-          widget.newPage != RoutesConstant.storePage &&
-          homeProvider.selectedIndex == 0);
-      final bool isOtherTabSelected =
-          widget.newPage != RoutesConstant.storePage &&
-          (homeProvider.selectedIndex != -1) &&
-          (typeDropDownList[homeProvider.selectedIndex].id ?? 0) ==
-              (value.id ?? 0) &&
-          value.id != -1 &&
-          value.id != -2;
-
-      final bool isSelected =
-          isHomeSelected || isRentSelected || isOtherTabSelected;
-
-      return DropdownMenuItem<type.Result>(
-        value: value,
-        alignment: Alignment.center,
-        child: Container(
-          width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 36),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: isSelected ? white.withValues(alpha: 0.10) : transparent,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          alignment: Alignment.centerLeft,
-          child: MyText(
-            color: isSelected ? white : white.withValues(alpha: 0.75),
-            multilanguage: false,
-            text: value.name ?? "",
-            fontsizeNormal: 13,
-            fontweight: isSelected ? FontWeight.w600 : FontWeight.w400,
-            fontsizeWeb: 14,
-            maxline: 1,
-            overflow: TextOverflow.ellipsis,
-            textalign: TextAlign.start,
-            fontstyle: FontStyle.normal,
+  Widget _buildDrawerNavItem({
+    required IconData icon,
+    required String title,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 4),
+      decoration: BoxDecoration(
+        color: isActive ? colorPrimary.withValues(alpha: 0.15) : transparent,
+        borderRadius: BorderRadius.circular(10),
+        border: isActive
+            ? Border.all(color: colorPrimary.withValues(alpha: 0.5), width: 1)
+            : null,
+      ),
+      child: ListTile(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
+        leading: Icon(
+          icon,
+          size: 20,
+          color: isActive ? colorPrimary : white.withValues(alpha: 0.75),
+        ),
+        title: Text(
+          title,
+          style: GoogleFonts.inter(
+            color: isActive ? colorPrimary : white,
+            fontSize: 14,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
-      );
-    }).toList();
+        onTap: onTap,
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String name) {
+    final lower = name.toLowerCase();
+    if (lower.contains("movie") || lower.contains("film")) {
+      return Icons.movie_outlined;
+    } else if (lower.contains("series") ||
+        lower.contains("show") ||
+        lower.contains("drama")) {
+      return Icons.tv_rounded;
+    } else if (lower.contains("anime") ||
+        lower.contains("cartoon") ||
+        lower.contains("animasi")) {
+      return Icons.auto_awesome_rounded;
+    } else if (lower.contains("clip") || lower.contains("short")) {
+      return Icons.play_circle_outline_rounded;
+    } else if (lower.contains("live") || lower.contains("stream")) {
+      return Icons.live_tv_rounded;
+    } else if (lower.contains("music") || lower.contains("audio")) {
+      return Icons.music_note_rounded;
+    }
+    return Icons.video_library_outlined;
   }
 
   Widget _buildUserLogin() {
@@ -1310,7 +1639,9 @@ class _WebCommanState extends State<WebComman> with RouteAware {
         scrollController: _mainScrollController,
         childToScroll: SingleChildScrollView(
           controller: _mainScrollController,
-          physics: const AlwaysScrollableScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,

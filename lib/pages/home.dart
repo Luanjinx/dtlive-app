@@ -42,6 +42,7 @@ import '../widget/mynetworkimg.dart';
 import '../widget/ai_section_widget.dart';
 import '../widget/content_section_widget.dart';
 import '../widget/genre_language_section_widget.dart';
+import '../widget/animated_subscribe_button.dart';
 import '../widget/shorts_section_widget.dart';
 
 class Home extends StatefulWidget {
@@ -559,110 +560,55 @@ class HomeState extends State<Home> {
       builder: (context, profileProvider, child) {
         if (Constant.userIsKid == false &&
             (subscriptionStatus != null && subscriptionStatus == "1")) {
+          final bool isBuy = profileProvider.profileModel.result != null &&
+              (profileProvider.profileModel.result?.length ?? 0) > 0 &&
+              (profileProvider.profileModel.result?[0].isBuy ?? 0) == 1;
+          final String packageName = (profileProvider.profileModel.result != null &&
+                  (profileProvider.profileModel.result?.length ?? 0) > 0)
+              ? (profileProvider.profileModel.result?[0].packageName ?? "")
+              : "";
+
           return Container(
             alignment: Alignment.centerLeft,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(40),
-              onTap: () async {
-                if (Constant.userID != null) {
-                  Utils.openSubscription(
-                    context: context,
-                    oldPage: RoutesConstant.homePage,
-                  );
-                } else {
-                  Utils.openLogin(context: context, newPage: "");
-                }
-              },
-              child: FittedBox(
-                child: Container(
-                  height: 30,
-                  alignment: Alignment.centerLeft,
-                  decoration: Utils.subscribeGradBorderBG(
-                    (profileProvider.profileModel.result != null &&
-                        (profileProvider.profileModel.result?.length ?? 0) >
-                            0 &&
-                        (profileProvider.profileModel.result?[0].isBuy ?? 0) ==
-                            1),
-                    40,
-                    1,
-                  ),
-                  padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      if (profileProvider.profileModel.result != null &&
-                          (profileProvider.profileModel.result?.length ?? 0) >
-                              0 &&
-                          (profileProvider.profileModel.result?[0].isBuy ??
-                                  0) !=
-                              1)
-                        MyImage(
-                          width: 15,
-                          height: 15,
-                          imagePath: "ic_subscribe.png",
-                          withShaderMask: true,
-                        ),
-                      if (profileProvider.profileModel.result != null &&
-                          (profileProvider.profileModel.result?.length ?? 0) >
-                              0 &&
-                          (profileProvider.profileModel.result?[0].isBuy ??
-                                  0) !=
-                              1)
-                        const SizedBox(width: 4),
-                      MyText(
-                        color:
-                            (profileProvider.profileModel.result != null &&
-                                (profileProvider.profileModel.result?.length ??
-                                        0) >
-                                    0 &&
-                                (profileProvider
-                                            .profileModel
-                                            .result?[0]
-                                            .isBuy ??
-                                        0) ==
-                                    1)
-                            ? white
-                            : colorPrimary,
-                        text:
-                            (profileProvider.profileModel.result != null &&
-                                (profileProvider.profileModel.result?.length ??
-                                        0) >
-                                    0 &&
-                                (profileProvider
-                                            .profileModel
-                                            .result?[0]
-                                            .isBuy ??
-                                        0) ==
-                                    1)
-                            ? (profileProvider
-                                      .profileModel
-                                      .result?[0]
-                                      .packageName ??
-                                  "")
-                            : "subscribe",
-                        multilanguage:
-                            (profileProvider.profileModel.result != null &&
-                                (profileProvider.profileModel.result?.length ??
-                                        0) >
-                                    0 &&
-                                (profileProvider
-                                            .profileModel
-                                            .result?[0]
-                                            .isBuy ??
-                                        0) ==
-                                    1)
-                            ? false
-                            : true,
-                        fontsizeNormal: 12,
-                        fontsizeWeb: 15,
-                        maxline: 1,
-                        fontweight: FontWeight.w700,
-                        textalign: TextAlign.start,
-                        overflow: TextOverflow.ellipsis,
-                        fontstyle: FontStyle.normal,
+            child: FittedBox(
+              child: AnimatedSubscribeButton(
+                isBuy: isBuy,
+                onTap: () async {
+                  if (Constant.userID != null) {
+                    Utils.openSubscription(
+                      context: context,
+                      oldPage: RoutesConstant.homePage,
+                    );
+                  } else {
+                    Utils.openLogin(context: context, newPage: "");
+                  }
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (!isBuy) ...[
+                      MyImage(
+                        width: 15,
+                        height: 15,
+                        imagePath: "ic_subscribe.png",
+                        withShaderMask: true,
                       ),
+                      const SizedBox(width: 5),
                     ],
-                  ),
+                    MyText(
+                      color: isBuy ? white : colorPrimary,
+                      text: isBuy ? packageName : "subscribe",
+                      multilanguage: isBuy ? false : true,
+                      fontsizeNormal: 12,
+                      fontsizeWeb: 15,
+                      maxline: 1,
+                      fontweight: FontWeight.w700,
+                      textalign: TextAlign.start,
+                      overflow: TextOverflow.ellipsis,
+                      fontstyle: FontStyle.normal,
+                    ),
+                  ],
                 ),
               ),
             ),

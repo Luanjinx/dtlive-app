@@ -54,37 +54,111 @@ class ContentSectionWidget extends StatelessWidget {
       layout == ContentCardLayout.indexLandscape ||
       layout == ContentCardLayout.indexPortrait;
 
-  double _cardW(bool big) {
+  double _cardW(BuildContext context, bool big) {
+    if (big) {
+      switch (layout) {
+        case ContentCardLayout.landscape:
+        case ContentCardLayout.indexLandscape:
+          return Dimens.widthLandWeb;
+        case ContentCardLayout.bigLandscape:
+          return Dimens.widthLandBigWeb;
+        case ContentCardLayout.portrait:
+        case ContentCardLayout.indexPortrait:
+          return Dimens.widthPortWeb;
+        case ContentCardLayout.bigPortrait:
+          return Dimens.widthPortBigWeb;
+        case ContentCardLayout.square:
+          return Dimens.widthSquareWeb;
+      }
+    }
+
+    final double screenW = MediaQuery.of(context).size.width;
+    final bool isTablet = screenW >= 550;
+
+    if (isTablet) {
+      switch (layout) {
+        case ContentCardLayout.landscape:
+        case ContentCardLayout.indexLandscape:
+          return 240.0;
+        case ContentCardLayout.bigLandscape:
+          return 320.0;
+        case ContentCardLayout.portrait:
+        case ContentCardLayout.indexPortrait:
+          return 150.0;
+        case ContentCardLayout.bigPortrait:
+          return 190.0;
+        case ContentCardLayout.square:
+          return 180.0;
+      }
+    }
+
     switch (layout) {
       case ContentCardLayout.landscape:
       case ContentCardLayout.indexLandscape:
-        return big ? Dimens.widthLandWeb : Dimens.widthLand;
+        return Dimens.widthLand;
       case ContentCardLayout.bigLandscape:
-        return big ? Dimens.widthLandBigWeb : Dimens.widthLandBig;
+        return Dimens.widthLandBig;
       case ContentCardLayout.portrait:
       case ContentCardLayout.indexPortrait:
-        return big ? Dimens.widthPortWeb : Dimens.widthPort;
+        return Dimens.widthPort;
       case ContentCardLayout.bigPortrait:
-        return big ? Dimens.widthPortBigWeb : Dimens.widthPortBig;
+        return Dimens.widthPortBig;
       case ContentCardLayout.square:
-        return big ? Dimens.widthSquareWeb : Dimens.widthSquare;
+        return Dimens.widthSquare;
     }
   }
 
-  double _cardH(bool big) {
+  double _cardH(BuildContext context, bool big) {
+    if (big) {
+      switch (layout) {
+        case ContentCardLayout.landscape:
+        case ContentCardLayout.indexLandscape:
+          return Dimens.heightLandWeb;
+        case ContentCardLayout.bigLandscape:
+          return Dimens.heightLandBigWeb;
+        case ContentCardLayout.portrait:
+        case ContentCardLayout.indexPortrait:
+          return Dimens.heightPortWeb;
+        case ContentCardLayout.bigPortrait:
+          return Dimens.heightPortBigWeb;
+        case ContentCardLayout.square:
+          return Dimens.heightSquareWeb;
+      }
+    }
+
+    final double screenW = MediaQuery.of(context).size.width;
+    final bool isTablet = screenW >= 550;
+
+    if (isTablet) {
+      switch (layout) {
+        case ContentCardLayout.landscape:
+        case ContentCardLayout.indexLandscape:
+          return 140.0;
+        case ContentCardLayout.bigLandscape:
+          return 180.0;
+        case ContentCardLayout.portrait:
+        case ContentCardLayout.indexPortrait:
+          return 220.0;
+        case ContentCardLayout.bigPortrait:
+          return 280.0;
+        case ContentCardLayout.square:
+          return 180.0;
+      }
+    }
+
     switch (layout) {
       case ContentCardLayout.landscape:
       case ContentCardLayout.indexLandscape:
-        return big ? Dimens.heightLandWeb : Dimens.heightLand;
+        return Dimens.heightLand;
       case ContentCardLayout.bigLandscape:
-        return big ? Dimens.heightLandBigWeb : Dimens.heightLandBig;
+        return Dimens.heightLandBig;
       case ContentCardLayout.portrait:
       case ContentCardLayout.indexPortrait:
-        return big ? Dimens.heightPortWeb : Dimens.heightPort;
+        return Dimens.heightPort;
       case ContentCardLayout.bigPortrait:
-        return big ? Dimens.heightPortBigWeb : Dimens.heightPortBig;
+        return Dimens.heightPortBig;
       case ContentCardLayout.square:
-        return big ? Dimens.heightSquareWeb : Dimens.heightSquare;
+        return Dimens.heightSquare;
     }
   }
 
@@ -95,14 +169,18 @@ class ContentSectionWidget extends StatelessWidget {
     return datum.landscape?.toString() ?? "";
   }
 
-  double _indexedLeftPad(bool big) {
+  double _indexedLeftPad(BuildContext context, bool big) {
     if (big) return _isPortrait ? 56.0 : 55.0;
+    final double screenW = MediaQuery.of(context).size.width;
+    if (screenW >= 550) return _isPortrait ? 42.0 : 46.0;
     if (kIsWeb) return _isPortrait ? 35.0 : 40.0;
     return _isPortrait ? 28.0 : 34.0;
   }
 
-  double _indexMainSpacing(bool big) {
+  double _indexMainSpacing(BuildContext context, bool big) {
     if (big) return _isPortrait ? 35.0 : 40.0;
+    final double screenW = MediaQuery.of(context).size.width;
+    if (screenW >= 550) return _isPortrait ? 30.0 : 34.0;
     if (kIsWeb) return _isPortrait ? 30.0 : 35.0;
     return _isPortrait ? 25.0 : 30.0;
   }
@@ -117,18 +195,25 @@ class ContentSectionWidget extends StatelessWidget {
     return big ? 20.0 : 15.0;
   }
 
-  double _numFontSize(bool big) {
-    if (_isPortrait) return big ? 80.0 : 55.0;
-    return big ? 85.0 : 60.0;
+  double _numFontSize(BuildContext context, bool big) {
+    if (big) return _isPortrait ? 80.0 : 85.0;
+    final double screenW = MediaQuery.of(context).size.width;
+    if (screenW >= 550) return _isPortrait ? 68.0 : 72.0;
+    return _isPortrait ? 55.0 : 60.0;
   }
 
-  double _numStroke(bool big) => big ? 8.0 : 6.0;
+  double _numStroke(BuildContext context, bool big) {
+    if (big) return 8.0;
+    final double screenW = MediaQuery.of(context).size.width;
+    if (screenW >= 550) return 7.0;
+    return 6.0;
+  }
 
   @override
   Widget build(BuildContext context) {
     final bool big = Dimens.isBigScreen(context);
-    final double cardW = _cardW(big);
-    final double cardH = _cardH(big);
+    final double cardW = _cardW(context, big);
+    final double cardH = _cardH(context, big);
     final double hPad = horizontalPadding ?? (big ? 35.0 : 20.0);
     final double gap = big
         ? Dimens.spaceBetweenCardsWeb
@@ -173,7 +258,9 @@ class ContentSectionWidget extends StatelessWidget {
         itemCount: count,
         shrinkWrap: true,
         clipBehavior: Clip.none,
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         padding: EdgeInsets.only(left: hPad, right: hPad),
         scrollDirection: Axis.horizontal,
         separatorBuilder: (ctx, i) => SizedBox(width: gap),
@@ -202,10 +289,10 @@ class ContentSectionWidget extends StatelessWidget {
     required double hPad,
     required int count,
   }) {
-    final double leftPad = _indexedLeftPad(big);
-    final double mainSpacing = _indexMainSpacing(big);
-    final double fontSize = _numFontSize(big);
-    final double strokeW = _numStroke(big);
+    final double leftPad = _indexedLeftPad(context, big);
+    final double mainSpacing = _indexMainSpacing(context, big);
+    final double fontSize = _numFontSize(context, big);
+    final double strokeW = _numStroke(context, big);
     final double offsetX = _numOffsetX(big);
     final double offsetY = _numOffsetY(big);
 
@@ -220,7 +307,9 @@ class ContentSectionWidget extends StatelessWidget {
         crossAxisCount: 1,
         mainAxisSpacing: mainSpacing,
         padding: EdgeInsets.only(left: leftPad, right: hPad),
-        physics: const AlwaysScrollableScrollPhysics(),
+        physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics(),
+        ),
         scrollDirection: Axis.horizontal,
         itemBuilder: (ctx, index) {
           final list.Datum datum = items![index];

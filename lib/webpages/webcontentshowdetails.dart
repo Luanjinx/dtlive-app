@@ -8,9 +8,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 import 'package:video_player/video_player.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import 'package:youtube_player_flutter/youtube_player_flutter.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 import 'package:pointer_interceptor/pointer_interceptor.dart';
 
 import '../main.dart';
@@ -62,6 +63,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   /* Trailer init */
   VideoPlayerController? _trailerNormalController;
   YoutubePlayerController? _trailerYoutubeController;
+  StreamSubscription<YoutubePlayerValue>? _trailerYoutubeSubscription;
 
   late ShowDetailsProvider showDetailsProvider;
   late EpisodeProvider episodeProvider;
@@ -157,8 +159,9 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   void dispose() {
     super.dispose();
     routeObserver.unsubscribe(this);
+    _trailerYoutubeSubscription?.cancel();
     if (_trailerYoutubeController != null) {
-      _trailerYoutubeController?.dispose();
+      _trailerYoutubeController?.close();
       _trailerYoutubeController = null;
     }
     if (_trailerNormalController != null) {
@@ -243,10 +246,8 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
           showDetailsProvider.contentDetailModel.result?[0].trailerType ?? "",
         );
       } else {
-        if (_trailerYoutubeController != null) {
-          _trailerYoutubeController?.seekTo(Duration.zero);
-          _trailerYoutubeController?.play();
-        }
+        _trailerYoutubeController?.seekTo(seconds: 0.0);
+        _trailerYoutubeController?.playVideo();
       }
     } else {
       if (_trailerNormalController == null) {
@@ -268,8 +269,9 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   @override
   void didPushNext() {
     printLog("didPushNext");
+    _trailerYoutubeSubscription?.cancel();
     if (_trailerYoutubeController != null) {
-      _trailerYoutubeController?.dispose();
+      _trailerYoutubeController?.close();
       _trailerYoutubeController = null;
     }
     if (_trailerNormalController != null) {
@@ -298,7 +300,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
             showDetailsProvider.contentDetailModel.result?[0].trailerType ?? "",
           );
         } else {
-          _trailerYoutubeController?.seekTo(Duration.zero);
+          _trailerYoutubeController?.seekTo(seconds: 0.0);
         }
       } else {
         if (_trailerNormalController == null) {
@@ -320,22 +322,25 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
     printLog("loadTrailer isAutoPlay ===> $isAutoPlay");
     if (isAutoPlay && trailerUrl != null && trailerUrl.toString().isNotEmpty) {
       if (trailerType == "youtube") {
-        var videoId = YoutubePlayer.convertUrlToId(trailerUrl ?? "");
+        var videoId = YoutubePlayerController.convertUrlToId(trailerUrl ?? "");
         printLog("Youtube Trailer videoId :====> $videoId");
-        _trailerYoutubeController = YoutubePlayerController(
-          initialVideoId: videoId ?? '',
-          flags: const YoutubePlayerFlags(
-            mute: false,
-            autoPlay: true,
-            disableDragSeek: false,
-            loop: false,
-            isLive: false,
-            forceHD: false,
-            enableCaption: true,
+        _trailerYoutubeController = YoutubePlayerController.fromVideoId(
+          videoId: videoId ?? '',
+          autoPlay: true,
+          params: const YoutubePlayerParams(
+            showControls: false,
+            mute: true,
+            showFullscreenButton: false,
+            loop: true,
+            enableCaption: false,
           ),
         );
-        _trailerYoutubeController?.play();
-        _trailerYoutubeController?.addListener(listener);
+        _trailerYoutubeSubscription?.cancel();
+        _trailerYoutubeSubscription = _trailerYoutubeController?.listen((value) {
+          if (mounted && value.playerState == PlayerState.ended) {
+            setState(() {});
+          }
+        });
         Future.delayed(Duration.zero).then((value) {
           if (!mounted) return;
           setState(() {});
@@ -355,6 +360,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
                   printLog(
                     "isPlaying =========> ${_trailerNormalController?.value.isPlaying}",
                   );
+                  _trailerNormalController?.setVolume(0.0);
                   _trailerNormalController?.play();
                 });
               });
@@ -370,14 +376,6 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
           }
         });
       }
-    }
-  }
-
-  void listener() {
-    if (mounted &&
-        _trailerYoutubeController != null &&
-        _trailerYoutubeController?.value.playerState == PlayerState.ended) {
-      setState(() {});
     }
   }
   /* ********* Trailer Set-Up & Loading END *********** */
@@ -761,11 +759,9 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   Widget _buildTVWebData() {
     final item = showDetailsProvider.contentDetailModel.result?[0];
     if (item == null) return const NoData(title: '', subTitle: '');
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [_buildHero(item), _buildBody(item)],
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [_buildHero(item), _buildBody(item)],
     );
   }
 
@@ -1749,6 +1745,7 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
             ),
             /* Season tabs */
             _buildSeasonBtn(),
+            const SizedBox(height: 12),
             /* Episode list — full width */
             Container(
               width: double.infinity,
@@ -2259,13 +2256,9 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
     if ((showDetailsProvider.contentDetailModel.result?[0].trailerType ?? "") ==
         "youtube") {
       if (_trailerYoutubeController != null) {
-        if (_trailerYoutubeController?.value.playerState != PlayerState.ended) {
-          return _buildTrailerView(
-            showDetailsProvider.contentDetailModel.result?[0].trailerType ?? "",
-          );
-        } else {
-          return _buildMobilePoster();
-        }
+        return _buildTrailerView(
+          showDetailsProvider.contentDetailModel.result?[0].trailerType ?? "",
+        );
       } else {
         return _buildMobilePoster();
       }
@@ -2297,13 +2290,10 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
             '=========== Widget ${visibilityInfo.key} is $visiblePercentage% visible===========',
           );
           if (_trailerYoutubeController != null) {
-            if (_trailerYoutubeController?.value.playerState !=
-                PlayerState.ended) {
-              if (visiblePercentage > 50.0) {
-                _trailerYoutubeController?.play();
-              } else {
-                _trailerYoutubeController?.pause();
-              }
+            if (visiblePercentage > 50.0) {
+              _trailerYoutubeController?.playVideo();
+            } else {
+              _trailerYoutubeController?.pauseVideo();
             }
           }
         },

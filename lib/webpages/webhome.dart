@@ -62,6 +62,7 @@ class WebHomeState extends State<WebHome> {
 
   final TextEditingController searchController = TextEditingController();
   CarouselSliderController carouselController = CarouselSliderController();
+  final tabScrollController = ScrollController();
 
   bool isSearchEnable = false;
   String? currentPage,
@@ -327,7 +328,17 @@ class WebHomeState extends State<WebHome> {
 
   @override
   void dispose() {
+    tabScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollToCurrent(int index) {
+    if (!tabScrollController.hasClients) return;
+    tabScrollController.animateTo(
+      (index * 95.0).clamp(0.0, tabScrollController.position.maxScrollExtent),
+      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
@@ -370,61 +381,60 @@ class WebHomeState extends State<WebHome> {
             child: NoData(title: 'no_data', subTitle: 'no_video_show'),
           );
         } else {
-          return _buildBannerSections();
+          return _buildBannerSections(sectionTypeList);
         }
       },
     );
   }
 
-  Widget _buildBannerSections() {
+  Widget _buildBannerSections(List<type.Result>? sectionTypeList) {
+    final bool isBig = Dimens.isBigScreen(context);
+    final bool hasTypes = sectionTypeList != null && sectionTypeList.isNotEmpty;
+
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
+          /* Top spacer for mobile web to sit right below the AppBar */
+          if (!isBig) SizedBox(height: Dimens.homeTabHeight),
+
           /* Banner */
-          if (!sectionDataProvider.loadingBanner &&
-              !Dimens.isBigScreen(context) &&
-              sectionDataProvider.sectionBannerModel.status == 200 &&
-              sectionDataProvider.sectionBannerModel.result != null)
-            Container(
-              alignment: Alignment.centerLeft,
-              padding: EdgeInsets.only(
-                left: 13,
-                right: 13,
-                top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
-                bottom: 12,
-              ),
-              child: MyText(
-                color: titleTextColor,
-                text: "for_you",
-                textalign: TextAlign.start,
-                fontsizeNormal: 17,
-                fontweight: FontWeight.w600,
-                fontsizeWeb: 19,
-                multilanguage: true,
-                maxline: 1,
-                overflow: TextOverflow.ellipsis,
-                fontstyle: FontStyle.normal,
-              ),
-            ),
           if (sectionDataProvider.loadingBanner)
-            if (Dimens.isBigScreen(context))
+            if (isBig)
               ShimmerUtils.bannerWeb(context)
             else
-              Padding(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
-                ),
-                child: ShimmerUtils.bannerMobile(context),
+              Stack(
+                children: [
+                  ShimmerUtils.bannerMobile(
+                    context,
+                    showCategoryPills: !hasTypes,
+                  ),
+                  if (hasTypes)
+                    Positioned(
+                      top: 8,
+                      left: 0,
+                      right: 0,
+                      child: _buildCategoryPillsRow(sectionTypeList),
+                    ),
+                ],
               )
           else if (sectionDataProvider.sectionBannerModel.status == 200 &&
-              sectionDataProvider.sectionBannerModel.result != null)
-            if (Dimens.isBigScreen(context))
+              sectionDataProvider.sectionBannerModel.result != null &&
+              (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false))
+            if (isBig)
               _tvHomeBanner(sectionDataProvider.sectionBannerModel.result)
             else
-              _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result)
+              _mobileHomeBanner(
+                sectionDataProvider.sectionBannerModel.result,
+                categoryList: hasTypes ? sectionTypeList : null,
+              )
+          else if (!isBig && hasTypes)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: _buildCategoryPillsRow(sectionTypeList),
+            )
           else
-            SizedBox(height: Dimens.homeTabHeight),
+            SizedBox(height: isBig ? 0 : Dimens.homeTabHeight),
 
           /* Continue Watching & Remaining Sections */
           if (sectionDataProvider.loadingSection &&
@@ -891,177 +901,463 @@ class WebHomeState extends State<WebHome> {
     );
   }
 
-  Widget _mobileHomeBanner(List<banner.Result>? sectionBannerList) {
+  Widget _mobileHomeBanner(
+    List<banner.Result>? sectionBannerList, {
+    List<type.Result>? categoryList,
+  }) {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
-    return SizedBox(
-      height: Dimens.getBannerHeight(context),
-      child: CarouselSlider.builder(
-        itemCount: list.length,
-        carouselController: carouselController,
-        options: CarouselOptions(
-          initialPage: 0,
-          height: Dimens.getBannerHeight(context),
-          enlargeCenterPage: true,
-          enlargeFactor: 0.2,
-          enlargeStrategy: CenterPageEnlargeStrategy.scale,
-          enableInfiniteScroll: list.length > 1,
-          autoPlay: true,
-          autoPlayCurve: Curves.easeInOutCubic,
-          autoPlayInterval: Duration(milliseconds: Constant.bannerDuration),
-          autoPlayAnimationDuration: Duration(
-            milliseconds: Constant.animationDuration,
-          ),
-          viewportFraction: 0.88,
-          padEnds: true,
-          onPageChanged: (val, _) async {
-            sectionDataProvider.setCurrentBanner(val);
-          },
-        ),
-        itemBuilder: (BuildContext context, int index, int pageViewIndex) {
-          final imageUrl =
-              (list[index].thumbnail == null ||
-                  (list[index].thumbnail ?? "").isEmpty ||
-                  (list[index].thumbnail ?? "").contains("no_img"))
-              ? (list[index].landscape ?? "")
-              : (list[index].thumbnail ?? "");
-          final isLive =
-              (list[index].videoUploadType ?? "") == "live_stream_url";
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: InkWell(
-              focusColor: white,
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                openDetailPage(
-                  list[index].id ?? 0,
-                  list[index].subVideoType ?? 0,
-                  list[index].videoType ?? 0,
-                  list[index].typeId ?? 0,
+    final double screenW = MediaQuery.of(context).size.width;
+    final double imageH = (screenW * 0.62).clamp(240.0, 480.0);
+    final double carouselH = imageH + 30.0;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        /* ── Landscape Carousel Slider with Category Tabs embedded ── */
+        Stack(
+          children: [
+            CarouselSlider.builder(
+              itemCount: list.length,
+              carouselController: carouselController,
+              options: CarouselOptions(
+                initialPage: 0,
+                height: carouselH,
+                viewportFraction: 1.0,
+                enlargeCenterPage: false,
+                padEnds: false,
+                enableInfiniteScroll: list.length > 1,
+                autoPlay: true,
+                autoPlayCurve: Curves.easeInOutCubic,
+                autoPlayInterval: Duration(
+                  milliseconds: Constant.bannerDuration,
+                ),
+                autoPlayAnimationDuration: Duration(
+                  milliseconds: Constant.animationDuration,
+                ),
+                onPageChanged: (val, _) async {
+                  sectionDataProvider.setCurrentBanner(val);
+                },
+              ),
+              itemBuilder: (BuildContext context, int index, int pageViewIndex) {
+                final item = list[index];
+                final imageUrl = (item.landscape != null &&
+                        (item.landscape ?? "").trim().isNotEmpty &&
+                        !(item.landscape ?? "").contains("no_img"))
+                    ? (item.landscape ?? "")
+                    : (item.thumbnail ?? "");
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    /* 16:9 Landscape Banner Image */
+                    InkWell(
+                      onTap: () {
+                        openDetailPage(
+                          item.id ?? 0,
+                          item.subVideoType ?? 0,
+                          item.videoType ?? 0,
+                          item.typeId ?? 0,
+                        );
+                      },
+                      child: SizedBox(
+                        width: screenW,
+                        height: imageH,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            MyNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                              width: screenW,
+                              height: imageH,
+                            ),
+
+                            /* Top gradient to darken behind category tabs */
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: 110,
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: const [0.0, 0.40, 0.75, 1.0],
+                                      colors: [
+                                        appBgColor.withValues(alpha: 0.95),
+                                        appBgColor.withValues(alpha: 0.70),
+                                        appBgColor.withValues(alpha: 0.30),
+                                        transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            /* Subtle bottom gradient to blend image into dark background */
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 52,
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        transparent,
+                                        appBgColor.withValues(alpha: 0.85),
+                                        appBgColor,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            /* Badge (top-left, below floating tabs) */
+                            Positioned(
+                              top: 50,
+                              left: 14,
+                              child: _buildBannerBadge(item),
+                            ),
+
+                            /* Optional Title if isTitle == 1 */
+                            if ((item.isTitle ?? 0) == 1 &&
+                                (item.name ?? "").trim().isNotEmpty)
+                              Positioned(
+                                bottom: 6,
+                                left: 16,
+                                right: 16,
+                                child: MyText(
+                                  color: white,
+                                  text: item.name ?? "",
+                                  textalign: TextAlign.center,
+                                  fontsizeNormal: 18,
+                                  fontsizeWeb: 20,
+                                  fontweight: FontWeight.w800,
+                                  multilanguage: false,
+                                  maxline: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  fontstyle: FontStyle.normal,
+                                  isShadowText: true,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    /* Genres: e.g. Action • Adventure */
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildBannerGenres(item),
+                    ),
+                  ],
                 );
               },
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  /* Poster image */
-                  MyNetworkImage(imageUrl: imageUrl, fit: BoxFit.cover),
-                  /* Top gradient */
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.center,
-                        colors: [
-                          black.withValues(alpha: 0.45),
-                          black.withValues(alpha: 0.20),
-                          black.withValues(alpha: 0.05),
-                          transparent,
-                        ],
-                        stops: const [0.0, 0.25, 0.50, 1.0],
-                      ),
+            ),
+
+            /* Floating Category Tabs Row inside Banner (at the top over the dark gradient) */
+            if (categoryList != null && categoryList.isNotEmpty)
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: _buildCategoryPillsRow(categoryList),
+              ),
+          ],
+        ),
+
+        const SizedBox(height: 12),
+
+        /* ── Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] (Static, does not slide with carousel) ── */
+        Consumer<SectionDataProvider>(
+          builder: (context, sdp, _) {
+            final int activeIndex =
+                (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
+            final activeItem = list[activeIndex];
+            final isLive =
+                (activeItem.videoUploadType ?? "") == "live_stream_url";
+
+            return Center(
+              child: _buildBannerActionButtons(
+                activeItem,
+                activeIndex,
+                isLive,
+                screenW,
+              ),
+            );
+          },
+        ),
+
+        /* ── Dot indicator ── */
+        if (list.length > 1) ...[
+          const SizedBox(height: 10),
+          Center(
+            child: Consumer<SectionDataProvider>(
+              builder: (context, sdp, _) {
+                final int activeIndex =
+                    (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
+                return AnimatedSmoothIndicator(
+                  count: list.length,
+                  activeIndex: activeIndex,
+                  effect: ScrollingDotsEffect(
+                    spacing: 7,
+                    radius: 4,
+                    activeDotScale: 1.25,
+                    activeDotColor: white,
+                    dotColor: white.withValues(alpha: 0.30),
+                    dotHeight: 5,
+                    dotWidth: 5,
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 4),
+        ],
+      ],
+    );
+  }
+
+  /* Category Pills START (HiTV themed style) ************** */
+  Widget _buildCategoryPillsRow(List<type.Result>? sectionTypeList) {
+    return Consumer<HomeProvider>(
+      builder: (context, homeProvider, child) {
+        final list = sectionTypeList ?? [];
+        final int itemCount = 1 + list.length; // 1 for "Home" + all categories
+
+        return SizedBox(
+          height: 36,
+          child: ListView.separated(
+            controller: tabScrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: itemCount,
+            separatorBuilder: (context, index) => const SizedBox(width: 6),
+            itemBuilder: (context, index) {
+              final bool isHomeTab = index == 0;
+              final bool isSelected = isHomeTab
+                  ? (homeProvider.selectedIndex <= 0)
+                  : (homeProvider.selectedIndex == index);
+
+              final String title = isHomeTab
+                  ? "Home"
+                  : (list[index - 1].name?.toString() ?? "");
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(20),
+                splashColor: transparent,
+                highlightColor: transparent,
+                onTap: () async {
+                  if (isSelected) return;
+                  _scrollToCurrent(index);
+                  await getTabData(
+                    isHomeTab ? -1 : (index - 1),
+                    sectionTypeList,
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSelected ? 14 : 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: isSelected ? colorPrimary : transparent,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  alignment: Alignment.center,
+                  child: MyText(
+                    color: isSelected ? black : white.withValues(alpha: 0.90),
+                    text: title,
+                    multilanguage: false,
+                    fontsizeNormal: 14,
+                    fontsizeWeb: 15,
+                    fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    maxline: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textalign: TextAlign.center,
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+  /* **************** Category Pills END */
+
+  Widget _buildBannerGenres(banner.Result item) {
+    final List<String> parts = [];
+    if ((item.categoryName ?? "").trim().isNotEmpty) {
+      parts.addAll(
+        (item.categoryName ?? "")
+            .split(",")
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty),
+      );
+    }
+    if (parts.isEmpty) return const SizedBox(height: 18);
+
+    return SizedBox(
+      height: 18,
+      child: Center(
+        child: MyText(
+          color: white.withValues(alpha: 0.95),
+          text: parts.join("  •  "),
+          textalign: TextAlign.center,
+          fontsizeNormal: 13,
+          fontsizeWeb: 14,
+          fontweight: FontWeight.w600,
+          letterSpacing: 0.3,
+          multilanguage: false,
+          maxline: 1,
+          overflow: TextOverflow.ellipsis,
+          fontstyle: FontStyle.normal,
+          isShadowText: true,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBannerActionButtons(
+    banner.Result item,
+    int index,
+    bool isLive,
+    double screenW,
+  ) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 320),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          /* Button 1: White pill button with black icon & text (Cek Sekarang / Watch Now) */
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                openDetailPage(
+                  item.id ?? 0,
+                  item.subVideoType ?? 0,
+                  item.videoType ?? 0,
+                  item.typeId ?? 0,
+                );
+              },
+              borderRadius: BorderRadius.circular(24),
+              child: Container(
+                height: 38,
+                decoration: BoxDecoration(
+                  color: white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
-                  ),
-                  /* Bottom gradient */
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.center,
-                        colors: [
-                          black.withValues(alpha: 0.72),
-                          black.withValues(alpha: 0.55),
-                          black.withValues(alpha: 0.35),
-                          black.withValues(alpha: 0.15),
-                          black.withValues(alpha: 0.04),
-                          transparent,
-                        ],
-                        stops: const [0.0, 0.15, 0.35, 0.55, 0.72, 1.0],
-                      ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.play_arrow_rounded,
+                      color: black,
+                      size: 20,
                     ),
-                  ),
-                  /* Badge — top-left */
-                  Positioned(
-                    top: 14,
-                    left: 14,
-                    child: _buildBannerBadge(list[index]),
-                  ),
-                  /* Title + Metadata — bottom-left */
-                  Positioned(
-                    left: 14,
-                    right: 70,
-                    bottom: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        MyText(
-                          color: white,
-                          text: (list[index].name ?? "").isNotEmpty
-                              ? (list[index].name ?? "")
-                              : "-",
-                          textalign: TextAlign.start,
-                          fontsizeNormal: 26,
-                          fontsizeWeb: 26,
-                          fontweight: FontWeight.w800,
-                          multilanguage: false,
-                          maxline: 2,
-                          overflow: TextOverflow.ellipsis,
-                          fontstyle: FontStyle.normal,
-                          isShadowText: true,
-                        ),
-                        const SizedBox(height: 8),
-                        _buildBannerMetaRow(list[index]),
-                      ],
+                    const SizedBox(width: 6),
+                    MyText(
+                      color: black,
+                      text: "check_now",
+                      fontsizeNormal: 13,
+                      fontsizeWeb: 14,
+                      fontweight: FontWeight.w700,
+                      multilanguage: true,
                     ),
-                  ),
-                  /* Action buttons — bottom-right */
-                  Positioned(
-                    right: 14,
-                    bottom: 14,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (!isLive) ...[
-                          _buildBannerCircleBtn(
-                            iconPath: (list[index].isBookmark ?? 0) == 1
-                                ? "ic_tick.png"
-                                : "ic_plus.png",
-                            onTap: () async {
-                              if (Constant.userID != null) {
-                                await sectionDataProvider.setBookMark(
-                                  context,
-                                  index,
-                                );
-                              } else {
-                                await Utils.openLogin(
-                                  context: context,
-                                  newPage: "",
-                                );
-                              }
-                            },
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                        _buildBannerCircleBtn(
-                          iconPath: "ic_play.png",
-                          onTap: () {
-                            openDetailPage(
-                              list[index].id ?? 0,
-                              list[index].subVideoType ?? 0,
-                              list[index].videoType ?? 0,
-                              list[index].typeId ?? 0,
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          );
-        },
+          ),
+
+          if (!isLive) ...[
+            const SizedBox(width: 12),
+
+            /* Button 2: Dark translucent pill button with white border (Daftarku / + Watchlist) */
+            Expanded(
+              child: Consumer<SectionDataProvider>(
+                builder: (context, sdp, _) {
+                  final bool isBookmarked = (item.isBookmark ?? 0) == 1;
+
+                  return InkWell(
+                    onTap: () async {
+                      if (Constant.userID != null) {
+                        await sectionDataProvider.setBookMark(
+                          context,
+                          index,
+                        );
+                      } else {
+                        await Utils.openLogin(
+                          context: context,
+                          newPage: widget.newPage ?? "",
+                        );
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: black.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(
+                          color: white.withValues(alpha: 0.80),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Icon(
+                            isBookmarked
+                                ? Icons.check_rounded
+                                : Icons.add_rounded,
+                            color: white,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 6),
+                          MyText(
+                            color: white,
+                            text: "my_list",
+                            fontsizeNormal: 13,
+                            fontsizeWeb: 14,
+                            fontweight: FontWeight.w700,
+                            multilanguage: true,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -1120,38 +1416,6 @@ class WebHomeState extends State<WebHome> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBannerMetaRow(banner.Result item) {
-    final List<String> parts = [];
-    if ((item.totalLanguage ?? 0) > 0) {
-      parts.add(
-        "${item.totalLanguage} "
-        "${(item.totalLanguage ?? 0) == 1 ? 'Language' : 'Languages'}",
-      );
-    }
-    if ((item.categoryName ?? "").trim().isNotEmpty) {
-      parts.addAll(
-        (item.categoryName ?? "")
-            .split(",")
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty),
-      );
-    }
-    if (parts.isEmpty) return const SizedBox.shrink();
-    return MyText(
-      color: white.withValues(alpha: 0.75),
-      text: parts.join("  •  "),
-      textalign: TextAlign.start,
-      fontsizeNormal: 13,
-      fontsizeWeb: 14,
-      fontweight: FontWeight.w500,
-      multilanguage: false,
-      maxline: 5,
-      overflow: TextOverflow.ellipsis,
-      fontstyle: FontStyle.normal,
-      isShadowText: true,
     );
   }
 
@@ -1362,27 +1626,6 @@ class WebHomeState extends State<WebHome> {
           ),
         ],
       ],
-    );
-  }
-
-  Widget _buildBannerCircleBtn({
-    required String iconPath,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 48,
-        height: 48,
-        decoration: BoxDecoration(
-          color: white.withValues(alpha: 0.20),
-          shape: BoxShape.circle,
-          border: Border.all(color: white.withValues(alpha: 0.10), width: 1),
-        ),
-        padding: const EdgeInsets.all(14),
-        child: MyImage(imagePath: iconPath, color: white),
-      ),
     );
   }
 

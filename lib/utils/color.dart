@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 const colorPrimary = Color(0xffBAFA34);
 const colorPrimaryDark = Color(0xff6EBE6B);
-const colorAccent = Color(0xffEC2B4E);
+const colorAccent = Color(0xffBAFA34);
 
 const appBgColor = Color(0xFF000000);
 const secondaryBgColor = Color(0xFF1F2229); //Visible color in appBgColor

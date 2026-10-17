@@ -1332,6 +1332,8 @@ class Utils {
   }) async {
     dynamic isContinue;
     if (kIsWeb) {
+      /* Request browser fullscreen on web */
+      JSHelper().callBrowserFullscreen(true);
       /* Pod Player & Youtube Player */
       if (!context.mounted) return;
       context.go("/${RoutesConstant.playerPage}", extra: playerModel);
@@ -3583,7 +3585,7 @@ Let's watch together! 🍿✨
       if (!isInFileExists) {
         printLog("decryptUsingFFMPEG Encrypted file does not exist.");
         completer.complete(null);
-        return completer.future;
+        return await completer.future;
       }
 
       /* DURATION FETCHING */
