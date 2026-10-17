@@ -8,7 +8,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:percent_indicator/linear_percent_indicator.dart';
 import 'package:provider/provider.dart';
-import 'package:scrollview_observer/scrollview_observer.dart';
+import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../model/playermodel.dart';
 import '../pages/sectionviewall.dart';
@@ -30,7 +30,6 @@ import '../model/sectionbannermodel.dart' as banner;
 import '../utils/constant.dart';
 import '../utils/dimens.dart';
 import '../utils/loadingoverlay.dart';
-import '../widget/morehomedialog.dart';
 import '../widget/myusernetworkimg.dart';
 import '../widget/nodata.dart';
 import '../provider/homeprovider.dart';
@@ -62,7 +61,6 @@ class HomeState extends State<Home> {
   CarouselSliderController carouselController = CarouselSliderController();
   final nestedScrollController = ScrollController();
   final tabScrollController = ScrollController();
-  late ListObserverController observerController;
   String? currentPage, subscriptionStatus, continueWatchingStatus;
 
   Future<void> _nestedScrollListener() async {
@@ -131,9 +129,6 @@ class HomeState extends State<Home> {
     );
     bottombarProvider = Provider.of<BottombarProvider>(context, listen: false);
     homeProvider = Provider.of<HomeProvider>(context, listen: false);
-    observerController = ListObserverController(
-      controller: tabScrollController,
-    );
     currentPage = widget.pageName ?? "";
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getData();
@@ -411,32 +406,16 @@ class HomeState extends State<Home> {
   }
   /* ========= Open Player ========= */
 
-  void _openMoreDialog() {
-    showModalBottomSheet(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      clipBehavior: Clip.antiAliasWithSaveLayer,
-      backgroundColor: transparent,
-      builder: (BuildContext context) {
-        return const Wrap(
-          alignment: WrapAlignment.center,
-          children: [MoreHomeDialog()],
-        );
-      },
-    );
-  }
-
   @override
   void dispose() {
     super.dispose();
     LoadingOverlay().hide();
   }
 
-  void _scrollToCurrent() {
-    if (homeProvider.selectedIndex == -1) return;
-    observerController.animateTo(
-      index: homeProvider.selectedIndex,
+  void _scrollToCurrent(int index) {
+    if (!tabScrollController.hasClients) return;
+    tabScrollController.animateTo(
+      (index * 95.0).clamp(0.0, tabScrollController.position.maxScrollExtent),
       curve: Curves.easeInOut,
       duration: const Duration(milliseconds: 300),
     );
@@ -701,46 +680,30 @@ class HomeState extends State<Home> {
       if (homeProvider.sectionTypeModel.status == 200) {
         if (homeProvider.sectionTypeModel.result != null ||
             (homeProvider.sectionTypeModel.result?.length ?? 0) > 0) {
-          return Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              /* Banner & Sections */
-              Consumer<SectionDataProvider>(
-                builder: (context, sectionDataProvider, child) {
-                  if ((sectionDataProvider.sectionBannerModel.result == null ||
-                          (sectionDataProvider
-                                      .sectionBannerModel
-                                      .result
-                                      ?.length ??
-                                  0) ==
-                              0) &&
-                      (sectionDataProvider.sectionList?.length ?? 0) == 0 &&
-                      !sectionDataProvider.loadingBanner &&
-                      !sectionDataProvider.loadingSection) {
-                    return const Center(
-                      child: NoData(
-                        title: 'no_data',
-                        subTitle: 'no_video_show',
-                      ),
-                    );
-                  } else {
-                    return _buildTypeTabData(
-                      homeProvider.sectionTypeModel.result,
-                    );
-                  }
-                },
-              ),
-
-              /* Types */
-              FittedBox(
-                child: Container(
-                  height: Dimens.homeTabHeightSmall,
-                  padding: const EdgeInsets.fromLTRB(40, 10, 40, 10),
-                  margin: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                  child: _buildTypeTabs(homeProvider.sectionTypeModel.result),
-                ),
-              ),
-            ],
+          return Consumer<SectionDataProvider>(
+            builder: (context, sectionDataProvider, child) {
+              if ((sectionDataProvider.sectionBannerModel.result == null ||
+                      (sectionDataProvider
+                                  .sectionBannerModel
+                                  .result
+                                  ?.length ??
+                              0) ==
+                          0) &&
+                  (sectionDataProvider.sectionList?.length ?? 0) == 0 &&
+                  !sectionDataProvider.loadingBanner &&
+                  !sectionDataProvider.loadingSection) {
+                return const Center(
+                  child: NoData(
+                    title: 'no_data',
+                    subTitle: 'no_video_show',
+                  ),
+                );
+              } else {
+                return _buildTypeTabData(
+                  homeProvider.sectionTypeModel.result,
+                );
+              }
+            },
           );
         } else {
           return const Center(
@@ -755,194 +718,91 @@ class HomeState extends State<Home> {
     }
   }
 
-  /* Type START ************** */
-  Widget _buildTypeTabs(List<type.Result>? sectionTypeList) {
+  /* Category Pills START (Disney+ Hotstar style) ************** */
+  Widget _buildCategoryPillsRow(List<type.Result>? sectionTypeList) {
     return Consumer<HomeProvider>(
       builder: (context, homeProvider, child) {
-        if (homeProvider.selectedIndex != -1) {
-          return _buildSelectedTypeView(sectionTypeList);
-        } else {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (tabScrollController.hasClients) {
-              _scrollToCurrent();
-            }
-          });
-          return Visibility(
-            visible: (homeProvider.selectedIndex == -1),
-            maintainAnimation: true,
-            maintainState: true,
-            child: AnimatedOpacity(
-              opacity: (homeProvider.selectedIndex == -1) ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 1000),
-              child: ListViewObserver(
-                controller: observerController,
-                child: Container(
-                  constraints: const BoxConstraints(minHeight: 30),
-                  decoration: Utils.setBGWithBorder(
-                    secondaryBgColor,
-                    transparent,
-                    Dimens.menuRadius,
-                    0,
-                  ),
-                  padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-                  child: ListView.separated(
-                    itemCount: (sectionTypeList?.length ?? 0) > 3
-                        ? 3
-                        : (sectionTypeList?.length ?? 0),
-                    shrinkWrap: true,
-                    controller: tabScrollController,
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                    separatorBuilder: (context, index) => Container(
-                      width: 1.5,
-                      margin: const EdgeInsets.fromLTRB(4, 10, 4, 10),
-                      decoration: Utils.setBackground(grayDark, 5),
-                    ),
-                    itemBuilder: (BuildContext context, int index) {
-                      if (index == 2) {
-                        return _buildMoreBtn();
-                      }
-                      return InkWell(
-                        borderRadius: BorderRadius.circular(25),
-                        onTap: () async {
-                          printLog("index ===========> $index");
-                          AdHelper.checkAndShowAds(
-                            context: context,
-                            buttonKey: "",
-                            adType: Constant.interstialAdType,
-                            alwaysShowAd: false,
-                            showOnByClick: true,
-                            onAdComplete: () async {
-                              await bottombarProvider.toggleVisibility(true);
-                              await getTabData(
-                                index,
-                                homeProvider.sectionTypeModel.result,
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                          child: MyText(
-                            color: white,
-                            multilanguage: false,
-                            text:
-                                (sectionTypeList?[index].name.toString() ?? ""),
-                            fontsizeNormal: 14,
-                            fontweight: FontWeight.w600,
-                            fontsizeWeb: 15,
-                            maxline: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textalign: TextAlign.center,
-                            fontstyle: FontStyle.normal,
-                          ),
-                        ),
+        final list = sectionTypeList ?? [];
+        final int itemCount = 1 + list.length; // 1 for "Home" + all categories
+
+        return SizedBox(
+          height: 38,
+          child: ListView.separated(
+            controller: tabScrollController,
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemCount: itemCount,
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
+            itemBuilder: (context, index) {
+              final bool isHomeTab = index == 0;
+              final bool isSelected = isHomeTab
+                  ? (homeProvider.selectedIndex == -1)
+                  : (homeProvider.selectedIndex == (index - 1));
+
+              final String title = isHomeTab
+                  ? "Home"
+                  : (list[index - 1].name?.toString() ?? "");
+
+              return InkWell(
+                borderRadius: BorderRadius.circular(30),
+                onTap: () async {
+                  if (isSelected) return;
+                  _scrollToCurrent(index);
+                  AdHelper.checkAndShowAds(
+                    context: context,
+                    buttonKey: "",
+                    adType: Constant.interstialAdType,
+                    alwaysShowAd: false,
+                    showOnByClick: true,
+                    onAdComplete: () async {
+                      await bottombarProvider.toggleVisibility(true);
+                      await getTabData(
+                        isHomeTab ? -1 : (index - 1),
+                        sectionTypeList,
                       );
                     },
+                  );
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 8,
                   ),
-                ),
-              ),
-            ),
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildSelectedTypeView(List<type.Result>? sectionTypeList) {
-    return Visibility(
-      visible: (homeProvider.selectedIndex != -1),
-      maintainAnimation: true,
-      maintainState: true,
-      child: AnimatedOpacity(
-        opacity: (homeProvider.selectedIndex != -1) ? 1.0 : 0.0,
-        duration: const Duration(milliseconds: 1000),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              constraints: const BoxConstraints(minHeight: 35),
-              decoration: Utils.setBGWithBorder(
-                secondaryBgColor,
-                transparent,
-                Dimens.menuRadius,
-                0,
-              ),
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 0),
-              child: Container(
-                alignment: Alignment.center,
-                padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-                child: MyText(
-                  color: white,
-                  multilanguage: false,
-                  text:
-                      (sectionTypeList?[(homeProvider.selectedIndex)].name
-                          .toString() ??
-                      ""),
-                  fontsizeNormal: 14,
-                  fontweight: FontWeight.w600,
-                  fontsizeWeb: 15,
-                  maxline: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textalign: TextAlign.center,
-                  fontstyle: FontStyle.normal,
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            /* Close */
-            InkWell(
-              onTap: () async {
-                await getTabData(-1, sectionTypeList);
-              },
-              focusColor: white,
-              borderRadius: BorderRadius.circular(Dimens.menuRadius),
-              child: FittedBox(
-                child: Container(
-                  height: 30,
-                  width: 30,
                   decoration: BoxDecoration(
-                    color: secondaryBgColor,
-                    borderRadius: BorderRadius.circular(Dimens.menuRadius),
+                    color: isSelected
+                        ? white.withValues(alpha: 0.14)
+                        : const Color(0xFF16181F).withValues(alpha: 0.70),
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(
+                      color: isSelected
+                          ? white
+                          : white.withValues(alpha: 0.18),
+                      width: isSelected ? 1.5 : 1.0,
+                    ),
                   ),
-                  padding: const EdgeInsets.all(10),
-                  child: MyImage(imagePath: "ic_close.png", color: white),
+                  alignment: Alignment.center,
+                  child: MyText(
+                    color: isSelected ? white : white.withValues(alpha: 0.75),
+                    text: title,
+                    multilanguage: false,
+                    fontsizeNormal: 13,
+                    fontsizeWeb: 14,
+                    fontweight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    maxline: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textalign: TextAlign.center,
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMoreBtn() {
-    return InkWell(
-      borderRadius: BorderRadius.circular(25),
-      onTap: () async {
-        _openMoreDialog();
+              );
+            },
+          ),
+        );
       },
-      child: Container(
-        alignment: Alignment.center,
-        padding: const EdgeInsets.fromLTRB(12, 0, 12, 0),
-        child: MyText(
-          color: white,
-          multilanguage: true,
-          text: "more",
-          fontsizeNormal: 14,
-          fontweight: FontWeight.w600,
-          fontsizeWeb: 15,
-          maxline: 1,
-          overflow: TextOverflow.ellipsis,
-          textalign: TextAlign.center,
-          fontstyle: FontStyle.normal,
-        ),
-      ),
     );
   }
+  /* **************** Category Pills END */
 
   Widget _buildTypeTabData(List<type.Result>? sectionTypeList) {
     return Container(
@@ -976,45 +836,34 @@ class HomeState extends State<Home> {
   }
 
   Widget _buildBannerSections() {
+    final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
+        (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
+
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /* Banner */
-        if (!sectionDataProvider.loadingBanner &&
-            sectionDataProvider.sectionBannerModel.status == 200 &&
-            sectionDataProvider.sectionBannerModel.result != null)
-          Container(
-            alignment: Alignment.centerLeft,
-            padding: EdgeInsets.only(
-              left: 13,
-              right: 13,
-              top: MediaQuery.of(context).padding.top + 30,
-              bottom: 12,
-            ),
-            child: MyText(
-              color: titleTextColor,
-              text: "for_you",
-              textalign: TextAlign.start,
-              fontsizeNormal: 17,
-              fontweight: FontWeight.w600,
-              fontsizeWeb: 19,
-              multilanguage: true,
-              maxline: 1,
-              overflow: TextOverflow.ellipsis,
-              fontstyle: FontStyle.normal,
-            ),
-          ),
-        if (sectionDataProvider.loadingBanner)
+        /* Top Category Pills Row (Hotstar style: Home, Sports, Disney+, Movies, Series, Kids...) */
+        if (hasTypes)
           Padding(
             padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight + 8,
+              top: MediaQuery.of(context).padding.top + kToolbarHeight + 4,
+              bottom: 10,
             ),
-            child: ShimmerUtils.bannerMobile(context),
+            child: _buildCategoryPillsRow(homeProvider.sectionTypeModel.result),
           )
+        else
+          SizedBox(
+            height: MediaQuery.of(context).padding.top + kToolbarHeight + 4,
+          ),
+
+        /* Banner */
+        if (sectionDataProvider.loadingBanner)
+          ShimmerUtils.bannerMobile(context)
         else if (sectionDataProvider.sectionBannerModel.status == 200 &&
             sectionDataProvider.sectionBannerModel.result != null)
           _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result)
         else
-          SafeArea(child: SizedBox(height: Dimens.homeTabHeightSmall)),
+          const SizedBox.shrink(),
 
         /* Banner Ad */
         SmartBannerAd(isSpacing: true, topSpace: 10, bottomSpace: 10),
@@ -1043,174 +892,189 @@ class HomeState extends State<Home> {
   Widget _mobileHomeBanner(List<banner.Result>? sectionBannerList) {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
+    final double screenW = MediaQuery.of(context).size.width;
+    final double bannerH = kIsWeb
+        ? Dimens.getBannerHeight(context)
+        : (MediaQuery.of(context).size.height * 0.58).clamp(460.0, 540.0);
+
     return SizedBox(
-      height: Dimens.getBannerHeight(context),
-      child: CarouselSlider.builder(
-        itemCount: list.length,
-        carouselController: carouselController,
-        options: CarouselOptions(
-          initialPage: 0,
-          height: Dimens.getBannerHeight(context),
-          enlargeCenterPage: true,
-          enlargeFactor: 0.2,
-          enlargeStrategy: CenterPageEnlargeStrategy.scale,
-          enableInfiniteScroll: list.length > 1,
-          autoPlay: true,
-          autoPlayCurve: Curves.easeInOutCubic,
-          autoPlayInterval: Duration(milliseconds: Constant.bannerDuration),
-          autoPlayAnimationDuration: Duration(
-            milliseconds: Constant.animationDuration,
-          ),
-          viewportFraction: 0.8,
-          padEnds: true,
-          onPageChanged: (val, _) async {
-            sectionDataProvider.setCurrentBanner(val);
-          },
-        ),
-        itemBuilder: (BuildContext context, int index, int pageViewIndex) {
-          final imageUrl =
-              (list[index].thumbnail == null ||
-                  (list[index].thumbnail ?? "").isEmpty ||
-                  (list[index].thumbnail ?? "").contains("no_img"))
-              ? (list[index].landscape ?? "")
-              : (list[index].thumbnail ?? "");
-          final isLive =
-              (list[index].videoUploadType ?? "") == "live_stream_url";
-          return ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            clipBehavior: Clip.antiAliasWithSaveLayer,
-            child: InkWell(
-              focusColor: white,
-              borderRadius: BorderRadius.circular(16),
-              onTap: () {
-                openDetailPage(
-                  list[index].id ?? 0,
-                  list[index].subVideoType ?? 0,
-                  list[index].videoType ?? 0,
-                  list[index].typeId ?? 0,
-                );
+      height: bannerH,
+      width: screenW,
+      child: Stack(
+        alignment: AlignmentDirectional.bottomCenter,
+        clipBehavior: Clip.antiAliasWithSaveLayer,
+        children: [
+          /* ── Full-bleed Poster Carousel ── */
+          CarouselSlider.builder(
+            itemCount: list.length,
+            carouselController: carouselController,
+            options: CarouselOptions(
+              initialPage: 0,
+              height: bannerH,
+              viewportFraction: 1.0,
+              enlargeCenterPage: false,
+              padEnds: false,
+              enableInfiniteScroll: list.length > 1,
+              autoPlay: true,
+              autoPlayCurve: Curves.easeInOutCubic,
+              autoPlayInterval: Duration(milliseconds: Constant.bannerDuration),
+              autoPlayAnimationDuration: Duration(
+                milliseconds: Constant.animationDuration,
+              ),
+              onPageChanged: (val, _) async {
+                sectionDataProvider.setCurrentBanner(val);
               },
-              child: Stack(
+            ),
+            itemBuilder: (BuildContext context, int index, int pageViewIndex) {
+              final item = list[index];
+              final imageUrl =
+                  (item.thumbnail == null ||
+                          (item.thumbnail ?? "").isEmpty ||
+                          (item.thumbnail ?? "").contains("no_img"))
+                      ? (item.landscape ?? "")
+                      : (item.thumbnail ?? "");
+              final isLive =
+                  (item.videoUploadType ?? "") == "live_stream_url";
+
+              return Stack(
                 fit: StackFit.expand,
                 children: [
-                  /* Poster image */
-                  MyNetworkImage(imageUrl: imageUrl, fit: BoxFit.fill),
-                  /* Top gradient */
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.center,
-                        colors: [
-                          black.withValues(alpha: 0.55),
-                          black.withValues(alpha: 0.20),
-                          black.withValues(alpha: 0.05),
-                          transparent,
-                        ],
-                        stops: const [0.0, 0.25, 0.50, 1.0],
+                  /* Poster Image */
+                  InkWell(
+                    onTap: () {
+                      openDetailPage(
+                        item.id ?? 0,
+                        item.subVideoType ?? 0,
+                        item.videoType ?? 0,
+                        item.typeId ?? 0,
+                      );
+                    },
+                    child: SizedBox.expand(
+                      child: MyNetworkImage(
+                        imageUrl: imageUrl,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
-                  /* Bottom gradient */
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.center,
-                        colors: [
-                          black.withValues(alpha: 0.82),
-                          black.withValues(alpha: 0.70),
-                          black.withValues(alpha: 0.50),
-                          black.withValues(alpha: 0.28),
-                          black.withValues(alpha: 0.08),
-                          transparent,
-                        ],
-                        stops: const [0.0, 0.18, 0.38, 0.58, 0.75, 1.0],
+
+                  /* Top-fade gradient — ensures top bar / category pills contrast */
+                  IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.center,
+                          stops: const [0.0, 0.25, 0.50],
+                          colors: [
+                            appBgColor.withValues(alpha: 0.65),
+                            appBgColor.withValues(alpha: 0.20),
+                            transparent,
+                          ],
+                        ),
                       ),
                     ),
                   ),
+
+                  /* Bottom-fade gradient — seamless dissolution into solid black floor */
+                  IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          stops: const [0.0, 0.35, 0.58, 0.76, 0.90, 1.0],
+                          colors: [
+                            transparent,
+                            transparent,
+                            appBgColor.withValues(alpha: 0.35),
+                            appBgColor.withValues(alpha: 0.75),
+                            appBgColor.withValues(alpha: 0.96),
+                            appBgColor,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
                   /* Badge — top-left */
                   Positioned(
                     top: 14,
-                    left: 14,
-                    child: _buildBannerBadge(list[index]),
+                    left: 16,
+                    child: _buildBannerBadge(item),
                   ),
-                  /* Title + Metadata — bottom-left :: Action buttons — bottom-right */
+
+                  /* Content: Title (optional), Genres Centered & 2 Action Buttons */
                   Positioned(
-                    left: 14,
-                    right: 14,
-                    bottom: 10,
-                    child: Row(
+                    bottom: 28,
+                    left: 16,
+                    right: 16,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              MyText(
-                                color: white,
-                                text: (list[index].name ?? "").isNotEmpty
-                                    ? (list[index].name ?? "")
-                                    : "-",
-                                textalign: TextAlign.start,
-                                fontsizeNormal: 24,
-                                fontsizeWeb: 26,
-                                fontweight: FontWeight.w800,
-                                multilanguage: false,
-                                maxline: 2,
-                                overflow: TextOverflow.ellipsis,
-                                fontstyle: FontStyle.normal,
-                                isShadowText: true,
-                              ),
-                              const SizedBox(height: 3),
-                              _buildBannerMetaRow(list[index]),
-                            ],
+                        // Title only when isTitle == 1, otherwise title is in artwork
+                        if ((item.isTitle ?? 0) == 1 &&
+                            (item.name ?? "").trim().isNotEmpty) ...[
+                          MyText(
+                            color: white,
+                            text: item.name ?? "",
+                            textalign: TextAlign.center,
+                            fontsizeNormal: 22,
+                            fontsizeWeb: 24,
+                            fontweight: FontWeight.w800,
+                            multilanguage: false,
+                            maxline: 1,
+                            overflow: TextOverflow.ellipsis,
+                            fontstyle: FontStyle.normal,
+                            isShadowText: true,
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        Column(
-                          children: [
-                            if (!isLive) ...[
-                              _buildBannerCircleBtn(
-                                iconPath: (list[index].isBookmark ?? 0) == 1
-                                    ? "ic_tick.png"
-                                    : "ic_plus.png",
-                                onTap: () async {
-                                  if (Constant.userID != null) {
-                                    await sectionDataProvider.setBookMark(
-                                      context,
-                                      index,
-                                    );
-                                  } else {
-                                    await Utils.openLogin(
-                                      context: context,
-                                      newPage: "",
-                                    );
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 8),
-                            ],
-                            _buildBannerCircleBtn(
-                              iconPath: "ic_play.png",
-                              onTap: () {
-                                openDetailPage(
-                                  list[index].id ?? 0,
-                                  list[index].subVideoType ?? 0,
-                                  list[index].videoType ?? 0,
-                                  list[index].typeId ?? 0,
-                                );
-                              },
-                            ),
-                          ],
-                        ),
+                          const SizedBox(height: 6),
+                        ],
+
+                        // Genres / Category: e.g. "Action • Adventure"
+                        _buildBannerGenres(item),
+
+                        const SizedBox(height: 14),
+
+                        // Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ]
+                        _buildBannerActionButtons(item, index, isLive, screenW),
                       ],
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+
+          /* ── Dot indicator ── */
+          if (list.length > 1)
+            Positioned(
+              bottom: 8,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Consumer<SectionDataProvider>(
+                  builder: (context, sdp, _) {
+                    final int activeIndex =
+                        (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
+                    return AnimatedSmoothIndicator(
+                      count: list.length,
+                      activeIndex: activeIndex,
+                      effect: ScrollingDotsEffect(
+                        spacing: 8,
+                        radius: 4,
+                        activeDotScale: 1.25,
+                        activeDotColor: white,
+                        dotColor: white.withValues(alpha: 0.30),
+                        dotHeight: 6,
+                        dotWidth: 6,
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
-          );
-        },
+        ],
       ),
     );
   }
@@ -1224,7 +1088,7 @@ class HomeState extends State<Home> {
     if (isPremium) {
       return _badgePill(label: "PREMIUM", bgColor: secondaryBgColor);
     }
-    return SizedBox.shrink();
+    return const SizedBox.shrink();
   }
 
   Widget _badgePill({
@@ -1271,14 +1135,8 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _buildBannerMetaRow(banner.Result item) {
+  Widget _buildBannerGenres(banner.Result item) {
     final List<String> parts = [];
-    if ((item.totalLanguage ?? 0) > 0) {
-      parts.add(
-        "${item.totalLanguage} "
-        "${(item.totalLanguage ?? 0) == 1 ? 'Language' : 'Languages'}",
-      );
-    }
     if ((item.categoryName ?? "").trim().isNotEmpty) {
       parts.addAll(
         (item.categoryName ?? "")
@@ -1288,38 +1146,143 @@ class HomeState extends State<Home> {
       );
     }
     if (parts.isEmpty) return const SizedBox.shrink();
+
     return MyText(
-      color: white.withValues(alpha: 0.75),
+      color: white.withValues(alpha: 0.95),
       text: parts.join("  •  "),
-      textalign: TextAlign.start,
-      fontsizeNormal: 12,
+      textalign: TextAlign.center,
+      fontsizeNormal: 13,
       fontsizeWeb: 14,
-      fontweight: FontWeight.w500,
+      fontweight: FontWeight.w600,
+      letterSpacing: 0.3,
       multilanguage: false,
-      maxline: 5,
+      maxline: 1,
       overflow: TextOverflow.ellipsis,
       fontstyle: FontStyle.normal,
       isShadowText: true,
     );
   }
 
-  Widget _buildBannerCircleBtn({
-    required String iconPath,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        width: 42,
-        height: 42,
-        decoration: BoxDecoration(
-          color: white.withValues(alpha: 0.20),
-          shape: BoxShape.circle,
-          border: Border.all(color: white.withValues(alpha: 0.10), width: 1),
-        ),
-        padding: const EdgeInsets.all(12),
-        child: MyImage(imagePath: iconPath, color: white),
+  Widget _buildBannerActionButtons(
+    banner.Result item,
+    int index,
+    bool isLive,
+    double screenW,
+  ) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 440),
+      child: Row(
+        children: [
+          /* Button 1: White pill button with black icon & text (Cek Sekarang / Watch Now) */
+          Expanded(
+            child: InkWell(
+              onTap: () {
+                openDetailPage(
+                  item.id ?? 0,
+                  item.subVideoType ?? 0,
+                  item.videoType ?? 0,
+                  item.typeId ?? 0,
+                );
+              },
+              borderRadius: BorderRadius.circular(30),
+              child: Container(
+                height: 48,
+                decoration: BoxDecoration(
+                  color: white,
+                  borderRadius: BorderRadius.circular(30),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withValues(alpha: 0.30),
+                      blurRadius: 8,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.play_arrow_rounded,
+                      color: black,
+                      size: 26,
+                    ),
+                    const SizedBox(width: 8),
+                    MyText(
+                      color: black,
+                      text: "check_now",
+                      fontsizeNormal: 15,
+                      fontsizeWeb: 16,
+                      fontweight: FontWeight.w700,
+                      multilanguage: true,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 14),
+
+          /* Button 2: Dark translucent pill button with white border (Daftarku / + Watchlist) */
+          Expanded(
+            child: Consumer<SectionDataProvider>(
+              builder: (context, sdp, _) {
+                final bool isBookmarked = (item.isBookmark ?? 0) == 1;
+
+                return InkWell(
+                  onTap: () async {
+                    if (Constant.userID != null) {
+                      await sectionDataProvider.setBookMark(
+                        context,
+                        index,
+                      );
+                    } else {
+                      await Utils.openLogin(
+                        context: context,
+                        newPage: "",
+                      );
+                    }
+                  },
+                  borderRadius: BorderRadius.circular(30),
+                  child: Container(
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: black.withValues(alpha: 0.35),
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: white.withValues(alpha: 0.85),
+                        width: 1.5,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Icon(
+                          isBookmarked
+                              ? Icons.check_rounded
+                              : Icons.add_rounded,
+                          color: white,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        MyText(
+                          color: white,
+                          text: "my_list",
+                          fontsizeNormal: 15,
+                          fontsizeWeb: 16,
+                          fontweight: FontWeight.w700,
+                          multilanguage: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
