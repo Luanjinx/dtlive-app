@@ -425,6 +425,7 @@ class HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: appBgColor,
+      extendBody: true,
       body: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (!nestedScrollController.hasClients) return false;
@@ -455,7 +456,7 @@ class HomeState extends State<Home> {
               ),
             ];
           },
-          body: SafeArea(child: _buildPageUI()),
+          body: SafeArea(top: true, bottom: false, child: _buildPageUI()),
         ),
       ),
     );
@@ -843,7 +844,10 @@ class HomeState extends State<Home> {
         if (sectionDataProvider.loadingBanner)
           Stack(
             children: [
-              ShimmerUtils.bannerMobile(context),
+              ShimmerUtils.bannerMobile(
+                context,
+                showCategoryPills: !hasTypes,
+              ),
               if (hasTypes)
                 Positioned(
                   top: 8,
@@ -887,7 +891,7 @@ class HomeState extends State<Home> {
           ShimmerUtils.sectionPortraitListView(context)
         else
           const SizedBox.shrink(),
-        SizedBox(height: Dimens.homeTabHeight),
+        SizedBox(height: Dimens.homeTabHeight + 25),
       ],
     );
   }
@@ -904,7 +908,7 @@ class HomeState extends State<Home> {
     final double imageH = kIsWeb
         ? (screenW * 0.38).clamp(280.0, 420.0)
         : (screenW * 0.62).roundToDouble();
-    final double carouselH = imageH + 88.0;
+    final double carouselH = imageH + 30.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -942,8 +946,6 @@ class HomeState extends State<Home> {
                         !(item.landscape ?? "").contains("no_img"))
                     ? (item.landscape ?? "")
                     : (item.thumbnail ?? "");
-                final isLive =
-                    (item.videoUploadType ?? "") == "live_stream_url";
 
                 return Column(
                   mainAxisSize: MainAxisSize.min,
@@ -1058,19 +1060,6 @@ class HomeState extends State<Home> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: _buildBannerGenres(item),
                     ),
-
-                    const SizedBox(height: 12),
-
-                    /* Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] */
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildBannerActionButtons(
-                        item,
-                        index,
-                        isLive,
-                        screenW,
-                      ),
-                    ),
                   ],
                 );
               },
@@ -1087,9 +1076,31 @@ class HomeState extends State<Home> {
           ],
         ),
 
+        const SizedBox(height: 12),
+
+        /* ── Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] (Static, does not slide with carousel) ── */
+        Consumer<SectionDataProvider>(
+          builder: (context, sdp, _) {
+            final int activeIndex =
+                (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
+            final activeItem = list[activeIndex];
+            final isLive =
+                (activeItem.videoUploadType ?? "") == "live_stream_url";
+
+            return Center(
+              child: _buildBannerActionButtons(
+                activeItem,
+                activeIndex,
+                isLive,
+                screenW,
+              ),
+            );
+          },
+        ),
+
         /* ── Dot indicator ── */
         if (list.length > 1) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Center(
             child: Consumer<SectionDataProvider>(
               builder: (context, sdp, _) {
@@ -1183,21 +1194,26 @@ class HomeState extends State<Home> {
             .where((e) => e.isNotEmpty),
       );
     }
-    if (parts.isEmpty) return const SizedBox.shrink();
+    if (parts.isEmpty) return const SizedBox(height: 18);
 
-    return MyText(
-      color: white.withValues(alpha: 0.95),
-      text: parts.join("  •  "),
-      textalign: TextAlign.center,
-      fontsizeNormal: 13,
-      fontsizeWeb: 14,
-      fontweight: FontWeight.w600,
-      letterSpacing: 0.3,
-      multilanguage: false,
-      maxline: 1,
-      overflow: TextOverflow.ellipsis,
-      fontstyle: FontStyle.normal,
-      isShadowText: true,
+    return SizedBox(
+      height: 18,
+      child: Center(
+        child: MyText(
+          color: white.withValues(alpha: 0.95),
+          text: parts.join("  •  "),
+          textalign: TextAlign.center,
+          fontsizeNormal: 13,
+          fontsizeWeb: 14,
+          fontweight: FontWeight.w600,
+          letterSpacing: 0.3,
+          multilanguage: false,
+          maxline: 1,
+          overflow: TextOverflow.ellipsis,
+          fontstyle: FontStyle.normal,
+          isShadowText: true,
+        ),
+      ),
     );
   }
 
@@ -1208,8 +1224,10 @@ class HomeState extends State<Home> {
     double screenW,
   ) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 440),
+      constraints: const BoxConstraints(maxWidth: 320),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           /* Button 1: White pill button with black icon & text (Cek Sekarang / Watch Now) */
           Expanded(
@@ -1222,17 +1240,17 @@ class HomeState extends State<Home> {
                   item.typeId ?? 0,
                 );
               },
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(24),
               child: Container(
-                height: 48,
+                height: 38,
                 decoration: BoxDecoration(
                   color: white,
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: black.withValues(alpha: 0.30),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                      color: black.withValues(alpha: 0.25),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
                     ),
                   ],
                 ),
@@ -1243,14 +1261,14 @@ class HomeState extends State<Home> {
                     const Icon(
                       Icons.play_arrow_rounded,
                       color: black,
-                      size: 26,
+                      size: 20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 6),
                     MyText(
                       color: black,
                       text: "check_now",
-                      fontsizeNormal: 15,
-                      fontsizeWeb: 16,
+                      fontsizeNormal: 13,
+                      fontsizeWeb: 14,
                       fontweight: FontWeight.w700,
                       multilanguage: true,
                     ),
@@ -1260,7 +1278,7 @@ class HomeState extends State<Home> {
             ),
           ),
 
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
 
           /* Button 2: Dark translucent pill button with white border (Daftarku / + Watchlist) */
           Expanded(
@@ -1282,15 +1300,15 @@ class HomeState extends State<Home> {
                       );
                     }
                   },
-                  borderRadius: BorderRadius.circular(30),
+                  borderRadius: BorderRadius.circular(24),
                   child: Container(
-                    height: 48,
+                    height: 38,
                     decoration: BoxDecoration(
                       color: black.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(30),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: white.withValues(alpha: 0.85),
-                        width: 1.5,
+                        color: white.withValues(alpha: 0.80),
+                        width: 1.2,
                       ),
                     ),
                     child: Row(
@@ -1302,14 +1320,14 @@ class HomeState extends State<Home> {
                               ? Icons.check_rounded
                               : Icons.add_rounded,
                           color: white,
-                          size: 22,
+                          size: 18,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 6),
                         MyText(
                           color: white,
                           text: "my_list",
-                          fontsizeNormal: 15,
-                          fontsizeWeb: 16,
+                          fontsizeNormal: 13,
+                          fontsizeWeb: 14,
                           fontweight: FontWeight.w700,
                           multilanguage: true,
                         ),

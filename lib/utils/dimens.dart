@@ -64,12 +64,12 @@ class Dimens {
   static double landRatio = 1.91;
   /* Ratio */
 
-  static double widthPort = 125;
-  static double heightPort = 180;
-  static double widthLand = 195;
-  static double heightLand = 120;
-  static double widthPortOther = 125;
-  static double heightPortOther = 175;
+  static double widthPort = 110;
+  static double heightPort = 165;
+  static double widthLand = 165;
+  static double heightLand = 100;
+  static double widthPortOther = 110;
+  static double heightPortOther = 165;
   static double widthPortOtherWeb = 224;
   static double heightPortOtherWeb = 320;
   static double widthPortWeb = 224;

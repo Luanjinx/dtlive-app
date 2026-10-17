@@ -19,9 +19,10 @@ class ShimmerUtils {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
+            if (!kIsWeb) const SizedBox(height: kToolbarHeight),
             Dimens.isBigScreen(context)
                 ? bannerWeb(context)
-                : bannerMobile(context),
+                : bannerMobile(context, showCategoryPills: true),
             ListView.builder(
               itemCount: 10, // itemCount must be greater than 5
               shrinkWrap: true,
@@ -44,173 +45,216 @@ class ShimmerUtils {
     );
   }
 
-  static Widget bannerMobile(BuildContext context) {
+  static Widget _categoryPillsShimmer(BuildContext context) {
+    final pillWidths = [62.0, 58.0, 64.0, 78.0, 78.0];
+    return SizedBox(
+      height: 36,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: pillWidths.length,
+        separatorBuilder: (context, index) => const SizedBox(width: 6),
+        itemBuilder: (context, index) {
+          final isHome = index == 0;
+          return ShimmerWidget.roundcorner(
+            height: 32,
+            width: pillWidths[index],
+            shimmerBgColor: isHome
+                ? colorPrimary.withValues(alpha: 0.25)
+                : shimmerItemColor,
+            shapeBorder: RoundedRectangleBorder(
+              borderRadius: const BorderRadius.all(Radius.circular(20)),
+              side: isHome
+                  ? BorderSide(
+                      color: colorPrimary.withValues(alpha: 0.40),
+                      width: 1,
+                    )
+                  : BorderSide.none,
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  static Widget bannerMobile(
+    BuildContext context, {
+    bool showCategoryPills = false,
+  }) {
     final double screenW = MediaQuery.of(context).size.width;
-    final double bannerH = Dimens.getBannerHeight(context);
+    final double imageH = kIsWeb
+        ? (screenW * 0.38).clamp(280.0, 420.0)
+        : (screenW * 0.62).roundToDouble();
 
-    return Stack(
-      alignment: AlignmentDirectional.bottomCenter,
-      clipBehavior: Clip.antiAliasWithSaveLayer,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        /* ── Poster shimmer ── */
-        SizedBox(
-          height: bannerH,
-          child: Stack(
-            fit: StackFit.passthrough,
-            children: [
-              /* Poster block */
-              Container(
-                width: screenW,
-                height: bannerH,
-                margin: EdgeInsets.only(bottom: Dimens.homeTabHeight),
-                child: ShimmerWidget.roundcorner(
-                  height: bannerH,
-                  shapeBorder: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.zero,
-                  ),
-                ),
-              ),
-              /* Top-fade gradient */
-              Container(
-                width: screenW,
-                height: bannerH,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.center,
-                    colors: [
-                      appBgColor.withValues(alpha: 0.9),
-                      appBgColor.withValues(alpha: 0.5),
-                      appBgColor.withValues(alpha: 0.1),
-                      transparent,
-                      transparent,
-                    ],
-                  ),
-                ),
-              ),
-              /* Bottom-fade gradient */
-              Container(
-                width: screenW,
-                height: bannerH,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.center,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      transparent,
-                      appBgColor.withValues(alpha: 0.3),
-                      appBgColor.withValues(alpha: 0.6),
-                      appBgColor.withValues(alpha: 0.85),
-                      appBgColor,
-                      appBgColor,
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        /* ── Title, meta, category at bottom ── */
-        Positioned(
-          bottom: 90,
-          left: 0,
-          right: 0,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              /* Title — 2 lines */
-              ShimmerWidget.roundrectborder(
-                height: 22,
-                width: screenW * 0.68,
-                shimmerBgColor: shimmerItemColor,
-                shapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
-              const SizedBox(height: 7),
-              ShimmerWidget.roundrectborder(
-                height: 22,
-                width: screenW * 0.48,
-                shimmerBgColor: shimmerItemColor,
-                shapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(5)),
-                ),
-              ),
-              const SizedBox(height: 10),
-              /* Category / language meta */
-              ShimmerWidget.roundrectborder(
-                height: 13,
-                width: screenW * 0.42,
-                shimmerBgColor: shimmerItemColor,
-                shapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                ),
-              ),
-              const SizedBox(height: 6),
-              ShimmerWidget.roundrectborder(
-                height: 13,
-                width: screenW * 0.58,
-                shimmerBgColor: shimmerItemColor,
-                shapeBorder: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(4)),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        /* ── Buttons & dot indicator ── */
-        Positioned(
-          bottom: 5,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              /* Watch Now + Watchlist icon */
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+        /* ── Landscape Poster Image with Gradients & Floating Category Tabs ── */
+        Stack(
+          children: [
+            SizedBox(
+              width: screenW,
+              height: imageH,
+              child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  ShimmerWidget.roundrectborder(
-                    height: 45,
-                    width: screenW * 0.45,
+                  /* Poster shimmer block */
+                  ShimmerWidget.roundcorner(
+                    height: imageH,
+                    width: screenW,
                     shimmerBgColor: shimmerItemColor,
                     shapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+                      borderRadius: BorderRadius.zero,
                     ),
                   ),
-                  const SizedBox(width: 10),
-                  ShimmerWidget.roundrectborder(
-                    height: 45,
-                    width: 45,
-                    shimmerBgColor: shimmerItemColor,
-                    shapeBorder: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(8)),
+
+                  /* Top gradient overlay (behind floating category tabs) */
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 110,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            stops: const [0.0, 0.40, 0.75, 1.0],
+                            colors: [
+                              appBgColor.withValues(alpha: 0.95),
+                              appBgColor.withValues(alpha: 0.70),
+                              appBgColor.withValues(alpha: 0.30),
+                              transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  /* Subtle bottom gradient overlay to blend image into dark background */
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 52,
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              transparent,
+                              appBgColor.withValues(alpha: 0.85),
+                              appBgColor,
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              /* Dot indicator */
-              Padding(
-                padding: const EdgeInsets.fromLTRB(5, 14, 5, 5),
-                child: const AnimatedSmoothIndicator(
-                  count: 5,
-                  activeIndex: 2,
-                  effect: ScrollingDotsEffect(
-                    spacing: 8,
-                    radius: 4,
-                    activeDotScale: 1.2,
-                    activeDotColor: colorPrimary,
-                    dotColor: defaultIconColor,
-                    dotHeight: 6,
-                    dotWidth: 6,
-                  ),
-                ),
+            ),
+
+            /* Optional Category Tabs shimmer overlay */
+            if (showCategoryPills)
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: _categoryPillsShimmer(context),
               ),
-            ],
+          ],
+        ),
+
+        const SizedBox(height: 10),
+
+        /* ── Genre / Category shimmer line (centered) ── */
+        Center(
+          child: ShimmerWidget.roundrectborder(
+            height: 14,
+            width: screenW * 0.45,
+            shimmerBgColor: shimmerItemColor,
+            shapeBorder: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(4)),
+            ),
           ),
         ),
+
+        const SizedBox(height: 12),
+
+        /* ── Action Buttons: [ Cek Sekarang ]  [ + Daftarku ] ── */
+        Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 320),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                /* Button 1 (simulating white pill button) */
+                Expanded(
+                  child: ShimmerWidget.roundcorner(
+                    height: 38,
+                    width: double.infinity,
+                    shimmerBgColor: secondaryBgColor,
+                    shapeBorder: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(24)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                /* Button 2 (simulating dark pill button with white border) */
+                Expanded(
+                  child: Container(
+                    height: 38,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: white.withValues(alpha: 0.25),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: ShimmerWidget.roundcorner(
+                        height: 38,
+                        width: double.infinity,
+                        shimmerBgColor: shimmerItemColor,
+                        shapeBorder: const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(Radius.circular(24)),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        /* ── Dot indicator ── */
+        Center(
+          child: AnimatedSmoothIndicator(
+            count: 5,
+            activeIndex: 2,
+            effect: ScrollingDotsEffect(
+              spacing: 7,
+              radius: 4,
+              activeDotScale: 1.25,
+              activeDotColor: white,
+              dotColor: white.withValues(alpha: 0.30),
+              dotHeight: 5,
+              dotWidth: 5,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
       ],
     );
   }

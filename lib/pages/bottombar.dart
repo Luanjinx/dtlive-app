@@ -272,6 +272,7 @@ class BottombarState extends State<Bottombar> with RouteAware {
 
   Widget _buildOnlinePage() {
     return Scaffold(
+      extendBody: true,
       resizeToAvoidBottomInset: false,
       body: Consumer<BottombarProvider>(
         builder: (context, bottombarProvider, child) {
@@ -282,6 +283,10 @@ class BottombarState extends State<Bottombar> with RouteAware {
       ),
       bottomNavigationBar: Consumer<BottombarProvider>(
         builder: (context, bottombarProvider, child) {
+          final double bottomInset = MediaQuery.of(context).padding.bottom;
+          final double leftInset = MediaQuery.of(context).padding.left;
+          final double rightInset = MediaQuery.of(context).padding.right;
+
           return Visibility(
             visible: bottombarProvider.isShowBottombar,
             maintainAnimation: true,
@@ -290,94 +295,123 @@ class BottombarState extends State<Bottombar> with RouteAware {
               opacity: bottombarProvider.isShowBottombar ? 1.0 : 0.0,
               duration: const Duration(milliseconds: 800),
               curve: Curves.easeInOut,
-              child: BottomAppBar(
-                elevation: 0,
-                color: secondaryBgColor,
-                padding: EdgeInsets.zero,
-                shadowColor: black.withValues(alpha: 0.8),
-                child: BottomNavigationBar(
-                  elevation: 0,
-                  showSelectedLabels: false,
-                  showUnselectedLabels: false,
-                  currentIndex: bottombarProvider.bottomNavIndex,
-                  backgroundColor: secondaryBgColor,
-                  landscapeLayout: BottomNavigationBarLandscapeLayout.centered,
-                  type: BottomNavigationBarType.fixed,
-                  items: [
-                    BottomNavigationBarItem(
-                      label: "",
-                      activeIcon: _buildBottomNavIcon(
-                        title: "bottommenu1",
-                        isTitleMultilang: true,
-                        iconName: 'ic_home',
-                        iconColor: colorPrimary,
+              child: IgnorePointer(
+                ignoring: !bottombarProvider.isShowBottombar,
+                child: Container(
+                  margin: EdgeInsets.only(
+                    left: 16 + leftInset,
+                    right: 16 + rightInset,
+                    bottom: bottomInset > 0 ? bottomInset : 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: secondaryBgColor,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(
+                      color: white.withValues(alpha: 0.08),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: black.withValues(alpha: 0.45),
+                        blurRadius: 18,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 6),
                       ),
-                      icon: _buildBottomNavIcon(
-                        title: "bottommenu1",
-                        isTitleMultilang: true,
-                        iconName: 'ic_home',
-                        iconColor: defaultIconColor,
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(28),
+                    child: MediaQuery.removePadding(
+                      context: context,
+                      removeBottom: true,
+                      child: BottomNavigationBar(
+                        elevation: 0,
+                        showSelectedLabels: false,
+                        showUnselectedLabels: false,
+                        currentIndex: bottombarProvider.bottomNavIndex,
+                        backgroundColor: Colors.transparent,
+                        landscapeLayout:
+                            BottomNavigationBarLandscapeLayout.centered,
+                        type: BottomNavigationBarType.fixed,
+                        items: [
+                          BottomNavigationBarItem(
+                            label: "",
+                            activeIcon: _buildBottomNavIcon(
+                              title: "bottommenu1",
+                              isTitleMultilang: true,
+                              iconName: 'ic_home',
+                              iconColor: colorPrimary,
+                            ),
+                            icon: _buildBottomNavIcon(
+                              title: "bottommenu1",
+                              isTitleMultilang: true,
+                              iconName: 'ic_home',
+                              iconColor: defaultIconColor,
+                            ),
+                          ),
+                          BottomNavigationBarItem(
+                            label: "",
+                            activeIcon: _buildBottomNavIcon(
+                              title: "bottommenu2",
+                              isTitleMultilang: true,
+                              iconName: 'ic_find',
+                              iconColor: colorPrimary,
+                            ),
+                            icon: _buildBottomNavIcon(
+                              title: "bottommenu2",
+                              isTitleMultilang: true,
+                              iconName: 'ic_find',
+                              iconColor: defaultIconColor,
+                            ),
+                          ),
+                          if (Constant.userIsKid == false)
+                            BottomNavigationBarItem(
+                              label: "",
+                              activeIcon: _buildBottomNavIcon(
+                                title: "bottommenu3",
+                                isTitleMultilang: true,
+                                iconName: 'ic_clips',
+                                iconColor: colorPrimary,
+                              ),
+                              icon: _buildBottomNavIcon(
+                                title: "bottommenu3",
+                                isTitleMultilang: true,
+                                iconName: 'ic_clips',
+                                iconColor: defaultIconColor,
+                              ),
+                            ),
+                          if ((rentMenuStatus != null &&
+                                  rentMenuStatus == "1") &&
+                              Constant.userIsKid == false)
+                            BottomNavigationBarItem(
+                              label: "",
+                              activeIcon: _buildBottomNavIcon(
+                                title: "bottommenu4",
+                                isTitleMultilang: true,
+                                iconName: 'ic_store',
+                                iconColor: colorPrimary,
+                              ),
+                              icon: _buildBottomNavIcon(
+                                title: "bottommenu4",
+                                isTitleMultilang: true,
+                                iconName: 'ic_store',
+                                iconColor: defaultIconColor,
+                              ),
+                            ),
+                          BottomNavigationBarItem(
+                            label: "",
+                            activeIcon: _buildBottomNavProfileIcon(
+                              iconColor: colorPrimary,
+                            ),
+                            icon: _buildBottomNavProfileIcon(
+                              iconColor: defaultIconColor,
+                            ),
+                          ),
+                        ],
+                        onTap: _onItemTapped,
                       ),
                     ),
-                    BottomNavigationBarItem(
-                      label: "",
-                      activeIcon: _buildBottomNavIcon(
-                        title: "bottommenu2",
-                        isTitleMultilang: true,
-                        iconName: 'ic_find',
-                        iconColor: colorPrimary,
-                      ),
-                      icon: _buildBottomNavIcon(
-                        title: "bottommenu2",
-                        isTitleMultilang: true,
-                        iconName: 'ic_find',
-                        iconColor: defaultIconColor,
-                      ),
-                    ),
-                    if (Constant.userIsKid == false)
-                      BottomNavigationBarItem(
-                        label: "",
-                        activeIcon: _buildBottomNavIcon(
-                          title: "bottommenu3",
-                          isTitleMultilang: true,
-                          iconName: 'ic_clips',
-                          iconColor: colorPrimary,
-                        ),
-                        icon: _buildBottomNavIcon(
-                          title: "bottommenu3",
-                          isTitleMultilang: true,
-                          iconName: 'ic_clips',
-                          iconColor: defaultIconColor,
-                        ),
-                      ),
-                    if ((rentMenuStatus != null && rentMenuStatus == "1") &&
-                        Constant.userIsKid == false)
-                      BottomNavigationBarItem(
-                        label: "",
-                        activeIcon: _buildBottomNavIcon(
-                          title: "bottommenu4",
-                          isTitleMultilang: true,
-                          iconName: 'ic_store',
-                          iconColor: colorPrimary,
-                        ),
-                        icon: _buildBottomNavIcon(
-                          title: "bottommenu4",
-                          isTitleMultilang: true,
-                          iconName: 'ic_store',
-                          iconColor: defaultIconColor,
-                        ),
-                      ),
-                    BottomNavigationBarItem(
-                      label: "",
-                      activeIcon: _buildBottomNavProfileIcon(
-                        iconColor: colorPrimary,
-                      ),
-                      icon: _buildBottomNavProfileIcon(
-                        iconColor: defaultIconColor,
-                      ),
-                    ),
-                  ],
-                  onTap: _onItemTapped,
+                  ),
                 ),
               ),
             ),
@@ -398,6 +432,7 @@ class BottombarState extends State<Bottombar> with RouteAware {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
             alignment: Alignment.center,
@@ -440,6 +475,7 @@ class BottombarState extends State<Bottombar> with RouteAware {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
                   alignment: Alignment.center,

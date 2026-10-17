@@ -165,9 +165,11 @@ class FindState extends State<Find> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
       resizeToAvoidBottomInset: false,
       backgroundColor: appBgColor,
       body: SafeArea(
+        bottom: false,
         child: Consumer<FindProvider>(
           builder: (context, findProvider, child) {
             return Stack(
@@ -420,6 +422,7 @@ class FindState extends State<Find> {
                 )
               else
                 const SizedBox.shrink(),
+              const SizedBox(height: 85),
             ],
           ),
         ),

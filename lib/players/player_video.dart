@@ -1207,71 +1207,74 @@ class _PlayerVideoState extends State<PlayerVideo>
     await _handleDoubleTap(true);
   }
 
-  void _onVerticalDragUpdate(DragUpdateDetails details, Size size) async {
+  Future<void> _updateBrightness(double newBrightness) async {
     if (kIsWeb) return;
-    final dx = details.globalPosition.dx;
-    final dy = details.delta.dy;
-
-    if (dx < size.width / 2) {
-      // Left side: Brightness
-      playerProvider.brightnessLevel -= dy * 0.005;
-      playerProvider.brightnessLevel = playerProvider.brightnessLevel.clamp(
-        0.0,
-        1.0,
-      );
-      ScreenBrightness().setApplicationScreenBrightness(
+    playerProvider.brightnessLevel = newBrightness.clamp(0.0, 1.0);
+    try {
+      await ScreenBrightness().setApplicationScreenBrightness(
         playerProvider.brightnessLevel,
       );
-      playerProvider.showBrightnessBar = true;
-    } else {
-      // Right side: Volume
-      playerProvider.volumeLevel -= dy * 0.005;
-      playerProvider.volumeLevel = playerProvider.volumeLevel.clamp(0.0, 1.0);
-      _volumeController?.setVolume(playerProvider.volumeLevel);
-      playerProvider.showVolumeBar = true;
-      await _volumeController?.setMute(playerProvider.volumeLevel <= 0);
-      playerProvider.isVolMuted = (_volumeController != null)
-          ? (await _volumeController.isMuted())
-          : false;
+    } catch (e) {
+      printLog("Error setting screen brightness: $e");
     }
     playerProvider.notifyProvider();
   }
 
-  void _onVerticalDragEnd(DragEndDetails details) {
-    _hideVolumeAndBrightnessBars();
+  void _updateBrightnessFromDy(double dy, double trackHeight) {
+    if (trackHeight <= 0) return;
+    final double fraction = (1.0 - (dy / trackHeight)).clamp(0.0, 1.0);
+    _updateBrightness(fraction);
   }
 
-  void _onVerticalDragCancel() {
-    _hideVolumeAndBrightnessBars();
+  Future<void> _updateVolume(double newVolume) async {
+    playerProvider.volumeLevel = newVolume.clamp(0.0, 1.0);
+    final bool shouldMute = playerProvider.volumeLevel <= 0;
+    if (!kIsWeb) {
+      await _volumeController?.setVolume(playerProvider.volumeLevel);
+      await _volumeController?.setMute(shouldMute);
+      playerProvider.isVolMuted = (_volumeController != null)
+          ? (await _volumeController.isMuted())
+          : shouldMute;
+    } else {
+      await _videoPlayerController.setVolume(playerProvider.volumeLevel);
+      playerProvider.isVolMuted = shouldMute;
+    }
+    playerProvider.notifyProvider();
   }
 
-  void _hideVolumeAndBrightnessBars() {
-    Future.delayed(Duration(seconds: 1), () {
-      if (mounted) {
-        playerProvider.showVolumeBar = false;
-        playerProvider.showBrightnessBar = false;
-        playerProvider.notifyProvider();
-      }
-    });
+  void _updateVolumeFromDy(double dy, double trackHeight) {
+    if (trackHeight <= 0) return;
+    final double fraction = (1.0 - (dy / trackHeight)).clamp(0.0, 1.0);
+    _updateVolume(fraction);
   }
 
   Future<void> updateMuteStatus(bool isMute) async {
-    if (kIsWeb) return;
     if (isMute) {
-      playerProvider.lastVolumeLevel = playerProvider.volumeLevel;
+      playerProvider.lastVolumeLevel = playerProvider.volumeLevel > 0
+          ? playerProvider.volumeLevel
+          : (playerProvider.lastVolumeLevel > 0
+              ? playerProvider.lastVolumeLevel
+              : 0.5);
       playerProvider.volumeLevel = 0.0;
     } else {
-      playerProvider.volumeLevel = playerProvider.lastVolumeLevel;
+      playerProvider.volumeLevel = playerProvider.lastVolumeLevel > 0
+          ? playerProvider.lastVolumeLevel
+          : 0.5;
     }
-    await _volumeController?.setMute(isMute);
-    if (Platform.isIOS) {
-      // On iOS, the system does not update the mute status immediately
-      // You need to wait for the system to update the mute status
-      await Future.delayed(Duration(milliseconds: 50));
+    if (!kIsWeb) {
+      await _volumeController?.setVolume(playerProvider.volumeLevel);
+      await _volumeController?.setMute(isMute);
+      if (Platform.isIOS) {
+        // On iOS, the system does not update the mute status immediately
+        await Future.delayed(const Duration(milliseconds: 50));
+      }
+      playerProvider.isVolMuted = (_volumeController != null)
+          ? (await _volumeController.isMuted())
+          : isMute;
+    } else {
+      await _videoPlayerController.setVolume(playerProvider.volumeLevel);
+      playerProvider.isVolMuted = isMute;
     }
-    playerProvider.isVolMuted = (_volumeController != null)
-        ? (await _volumeController.isMuted())
-        : false;
     playerProvider.notifyProvider();
   }
 
@@ -1512,16 +1515,6 @@ class _PlayerVideoState extends State<PlayerVideo>
                         }
                       }
                     : _toggleControls, // mobile: tap = toggle controls
-                onVerticalDragEnd: _isScreenLocked ? null : _onVerticalDragEnd,
-                onVerticalDragCancel: _isScreenLocked
-                    ? null
-                    : _onVerticalDragCancel,
-                onVerticalDragUpdate: _isScreenLocked
-                    ? null
-                    : (details) => _onVerticalDragUpdate(
-                        details,
-                        MediaQuery.of(context).size,
-                      ),
                 onDoubleTapDown: _isScreenLocked
                     ? null
                     : (details) async {
@@ -1749,22 +1742,6 @@ class _PlayerVideoState extends State<PlayerVideo>
             ),
           ),
 
-        // Brightness/Volume side bars — AnimatedOpacity handles visibility
-        if (!kIsWeb)
-          _buildSideBar(
-            "brightness",
-            playerProvider.brightnessLevel,
-            Alignment.centerLeft,
-            Icons.brightness_6,
-          ),
-        if (!kIsWeb)
-          _buildSideBar(
-            "volume",
-            playerProvider.volumeLevel,
-            Alignment.centerRight,
-            playerProvider.isVolMuted ? Icons.volume_off : Icons.volume_up,
-          ),
-
         // Controls overlay (animated)
         _buildControlsOverlay(isFinished: isFinished),
 
@@ -1891,6 +1868,37 @@ class _PlayerVideoState extends State<PlayerVideo>
             child: IgnorePointer(
               ignoring: !_showControls,
               child: _buildTopBar(),
+            ),
+          ),
+
+          // Left Side: Brightness Control UI
+          if (!kIsWeb)
+            Positioned(
+              left: 16,
+              top: 0,
+              bottom: 0,
+              child: SafeArea(
+                child: IgnorePointer(
+                  ignoring: !_showControls,
+                  child: Center(
+                    child: _buildBrightnessControlUI(),
+                  ),
+                ),
+              ),
+            ),
+
+          // Right Side: Volume Control UI
+          Positioned(
+            right: 16,
+            top: 0,
+            bottom: 0,
+            child: SafeArea(
+              child: IgnorePointer(
+                ignoring: !_showControls,
+                child: Center(
+                  child: _buildVolumeControlUI(),
+                ),
+              ),
             ),
           ),
 
@@ -2331,7 +2339,32 @@ class _PlayerVideoState extends State<PlayerVideo>
                   constraints: const BoxConstraints(),
                 ),
 
-                const SizedBox(width: 6),
+                const SizedBox(width: 8),
+
+                // Inline volume button
+                IconButton(
+                  icon: Icon(
+                    playerProvider.isVolMuted || playerProvider.volumeLevel <= 0
+                        ? Icons.volume_off_rounded
+                        : playerProvider.volumeLevel < 0.5
+                            ? Icons.volume_down_rounded
+                            : Icons.volume_up_rounded,
+                    color: (playerProvider.isVolMuted ||
+                            playerProvider.volumeLevel <= 0)
+                        ? colorAccent
+                        : white,
+                    size: 22,
+                  ),
+                  onPressed: () async {
+                    _cancelAndRestartTimer();
+                    await updateMuteStatus(!playerProvider.isVolMuted);
+                  },
+                  tooltip: playerProvider.isVolMuted ? 'Unmute' : 'Mute',
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+
+                const SizedBox(width: 8),
 
                 // Position time
                 if (widget.playerModel.isLive == false)
@@ -3089,74 +3122,295 @@ class _PlayerVideoState extends State<PlayerVideo>
     });
   }
 
-  /* Brightness/Volume START ********************************** */
-  Widget _buildSideBar(
-    // FIX-B8
-    String btnType,
-    double value,
-    Alignment alignment,
-    IconData icon,
-  ) {
-    final isVolume = btnType == "volume";
-    return AnimatedOpacity(
-      opacity:
-          (isVolume
-              ? playerProvider.showVolumeBar
-              : playerProvider.showBrightnessBar)
-          ? 1.0
-          : 0.0,
-      duration: const Duration(milliseconds: 200),
-      child: SafeArea(
-        child: Align(
-          alignment: alignment,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            width: 44,
-            height: 160,
-            decoration: BoxDecoration(
-              color: black.withValues(alpha: 0.60), // [IMP-4]
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: white.withValues(alpha: 0.15), // [IMP-4]
-                width: 1,
+  /* Brightness/Volume UI START ********************************** */
+  Widget _buildBrightnessControlUI() {
+    final double level = playerProvider.brightnessLevel.clamp(0.0, 1.0);
+    final int percent = (level * 100).round();
+
+    return Container(
+      width: 44,
+      height: 172,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: white.withValues(alpha: 0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: black.withValues(alpha: 0.35),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icon with tap to cycle brightness
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              _cancelAndRestartTimer();
+              double nextLevel;
+              if (level < 0.35) {
+                nextLevel = 0.50;
+              } else if (level < 0.65) {
+                nextLevel = 0.75;
+              } else if (level < 0.90) {
+                nextLevel = 1.0;
+              } else {
+                nextLevel = 0.25;
+              }
+              await _updateBrightness(nextLevel);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Icon(
+                level > 0.6
+                    ? Icons.wb_sunny_rounded
+                    : level > 0.25
+                        ? Icons.brightness_medium_rounded
+                        : Icons.brightness_low_rounded,
+                color: white,
+                size: 19,
               ),
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                InkWell(
-                  onTap: isVolume
-                      ? () async => updateMuteStatus(!playerProvider.isVolMuted)
-                      : null,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Icon(icon, color: white, size: 18), // [IMP-4]
-                ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: RotatedBox(
-                    quarterTurns: -1,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: value,
-                        color: white, // [IMP-4]
-                        backgroundColor: white.withValues(
-                          alpha: 0.24,
-                        ), // [IMP-4]
-                        minHeight: 4,
+          ),
+
+          const SizedBox(height: 6),
+
+          // Interactive vertical slider track
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double trackHeight = constraints.maxHeight;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragStart: (details) {
+                    _hideTimer?.cancel();
+                    _updateBrightnessFromDy(
+                      details.localPosition.dy,
+                      trackHeight,
+                    );
+                  },
+                  onVerticalDragUpdate: (details) {
+                    _hideTimer?.cancel();
+                    _updateBrightnessFromDy(
+                      details.localPosition.dy,
+                      trackHeight,
+                    );
+                  },
+                  onVerticalDragEnd: (_) {
+                    _startHideTimer();
+                  },
+                  onTapDown: (details) {
+                    _hideTimer?.cancel();
+                    _updateBrightnessFromDy(
+                      details.localPosition.dy,
+                      trackHeight,
+                    );
+                    _startHideTimer();
+                  },
+                  child: SizedBox(
+                    width: 44,
+                    height: trackHeight,
+                    child: Center(
+                      child: Container(
+                        width: 7,
+                        height: trackHeight,
+                        decoration: BoxDecoration(
+                          color: white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            width: 7,
+                            height: (trackHeight * level).clamp(
+                              0.0,
+                              trackHeight,
+                            ),
+                            decoration: BoxDecoration(
+                              color: white,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: white.withValues(alpha: 0.35),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                );
+              },
             ),
           ),
-        ),
+
+          const SizedBox(height: 6),
+
+          // Percentage text
+          MyText(
+            color: white.withValues(alpha: 0.90),
+            text: "$percent%",
+            multilanguage: false,
+            fontsizeNormal: 10,
+            fontsizeWeb: 11,
+            fontweight: FontWeight.w700,
+            maxline: 1,
+            overflow: TextOverflow.ellipsis,
+            textalign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
-  /* ************************************ Brightness/Volume END */
+
+  Widget _buildVolumeControlUI() {
+    final bool isMuted =
+        playerProvider.isVolMuted || playerProvider.volumeLevel <= 0;
+    final double level =
+        isMuted ? 0.0 : playerProvider.volumeLevel.clamp(0.0, 1.0);
+    final int percent = (level * 100).round();
+
+    return Container(
+      width: 44,
+      height: 172,
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      decoration: BoxDecoration(
+        color: black.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: white.withValues(alpha: 0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: black.withValues(alpha: 0.35),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Icon with tap to toggle mute
+          InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () async {
+              _cancelAndRestartTimer();
+              await updateMuteStatus(!playerProvider.isVolMuted);
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: Icon(
+                isMuted
+                    ? Icons.volume_off_rounded
+                    : level < 0.5
+                        ? Icons.volume_down_rounded
+                        : Icons.volume_up_rounded,
+                color: isMuted ? colorAccent : white,
+                size: 19,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // Interactive vertical slider track
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final double trackHeight = constraints.maxHeight;
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onVerticalDragStart: (details) {
+                    _hideTimer?.cancel();
+                    _updateVolumeFromDy(details.localPosition.dy, trackHeight);
+                  },
+                  onVerticalDragUpdate: (details) {
+                    _hideTimer?.cancel();
+                    _updateVolumeFromDy(details.localPosition.dy, trackHeight);
+                  },
+                  onVerticalDragEnd: (_) {
+                    _startHideTimer();
+                  },
+                  onTapDown: (details) {
+                    _hideTimer?.cancel();
+                    _updateVolumeFromDy(details.localPosition.dy, trackHeight);
+                    _startHideTimer();
+                  },
+                  child: SizedBox(
+                    width: 44,
+                    height: trackHeight,
+                    child: Center(
+                      child: Container(
+                        width: 7,
+                        height: trackHeight,
+                        decoration: BoxDecoration(
+                          color: white.withValues(alpha: 0.22),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            width: 7,
+                            height: (trackHeight * level).clamp(
+                              0.0,
+                              trackHeight,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isMuted ? defaultIconColor : white,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: isMuted
+                                  ? null
+                                  : [
+                                      BoxShadow(
+                                        color: white.withValues(alpha: 0.35),
+                                        blurRadius: 4,
+                                      ),
+                                    ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          // Percentage / Mute text
+          MyText(
+            color: isMuted
+                ? colorAccent.withValues(alpha: 0.90)
+                : white.withValues(alpha: 0.90),
+            text: isMuted ? "Mute" : "$percent%",
+            multilanguage: false,
+            fontsizeNormal: 10,
+            fontsizeWeb: 11,
+            fontweight: FontWeight.w700,
+            maxline: 1,
+            overflow: TextOverflow.ellipsis,
+            textalign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+  /* ************************************ Brightness/Volume UI END */
 
   Future<void> onBackPressed(bool didPop) async {
     if (didPop) return;
