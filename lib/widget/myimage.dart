@@ -39,11 +39,10 @@ class MyImage extends StatelessWidget {
           width: width,
           fit: fit,
           errorBuilder: (context, url, error) {
-            return Image.asset(
-              "assets/images/no_image_port.png",
+            return Container(
               width: width,
               height: height,
-              fit: BoxFit.cover,
+              color: transparent,
             );
           },
         ),
@@ -56,11 +55,10 @@ class MyImage extends StatelessWidget {
         width: width,
         fit: fit,
         errorBuilder: (context, url, error) {
-          return Image.asset(
-            "assets/images/no_image_port.png",
+          return Container(
             width: width,
             height: height,
-            fit: BoxFit.cover,
+            color: transparent,
           );
         },
       );

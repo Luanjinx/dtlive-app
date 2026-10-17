@@ -970,6 +970,8 @@ class HomeState extends State<Home> {
                             MyNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
+                              width: screenW,
+                              height: imageH,
                             ),
 
                             /* Top gradient (HiTV style) to darken behind category tabs */

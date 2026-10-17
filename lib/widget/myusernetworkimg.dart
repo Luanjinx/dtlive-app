@@ -1,8 +1,9 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:shimmer_animation/shimmer_animation.dart';
 
-import '../widget/myimage.dart';
+import '../utils/color.dart';
 
 // ignore: must_be_immutable
 class MyUserNetworkImage extends StatefulWidget {
@@ -39,15 +40,40 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
     await precacheImage(image, context);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (widget.imageUrl.contains('no_img')) {
-      return MyImage(
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer(
+      duration: const Duration(milliseconds: 800),
+      interval: const Duration(milliseconds: 800),
+      color: shimmerColor,
+      colorOpacity: 0.3,
+      enabled: true,
+      direction: const ShimmerDirection.fromLTRB(),
+      child: Container(
         width: widget.width,
         height: widget.height,
-        imagePath: "no_image_land.png",
-        fit: BoxFit.cover,
-      );
+        color: shimmerItemColor,
+      ),
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      width: widget.width,
+      height: widget.height,
+      color: shimmerItemColor,
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person_outline,
+        color: gray.withValues(alpha: 0.5),
+        size: ((widget.width ?? 0) > 0 && (widget.width ?? 0) < 50) ? 16 : 24,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.imageUrl.trim().isEmpty || widget.imageUrl.contains('no_img')) {
+      return _buildErrorWidget();
     }
 
     if (kIsWeb) {
@@ -61,24 +87,10 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
             if (loadingProgress == null) {
               return child;
             }
-            return MyImage(
-              width: widget.width,
-              height: widget.height,
-              imagePath: widget.imageUrl.contains('land_')
-                  ? "no_image_land.png"
-                  : "no_image_port.png",
-              fit: BoxFit.cover,
-            );
+            return _buildShimmerPlaceholder();
           },
           errorBuilder: (context, error, stackTrace) {
-            return MyImage(
-              width: widget.width,
-              height: widget.height,
-              imagePath: widget.imageUrl.contains('land_')
-                  ? "no_image_land.png"
-                  : "no_image_port.png",
-              fit: BoxFit.cover,
-            );
+            return _buildErrorWidget();
           },
         ),
       );
@@ -90,30 +102,18 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
       child: CachedNetworkImage(
         imageUrl: widget.imageUrl,
         fit: widget.fit,
+        fadeInDuration: const Duration(milliseconds: 300),
+        fadeOutDuration: const Duration(milliseconds: 200),
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
             image: DecorationImage(image: imageProvider, fit: widget.fit),
           ),
         ),
         placeholder: (context, url) {
-          return MyImage(
-            width: widget.width,
-            height: widget.height,
-            imagePath: widget.imageUrl.contains('land_')
-                ? "no_image_land.png"
-                : "no_image_port.png",
-            fit: BoxFit.cover,
-          );
+          return _buildShimmerPlaceholder();
         },
         errorWidget: (context, url, error) {
-          return MyImage(
-            width: widget.width,
-            height: widget.height,
-            imagePath: widget.imageUrl.contains('land_')
-                ? "no_image_land.png"
-                : "no_image_port.png",
-            fit: BoxFit.cover,
-          );
+          return _buildErrorWidget();
         },
       ),
     );

@@ -153,6 +153,20 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
     }
   }
 
+  String _getEpisodeLandscape(int position) {
+    String epiImg = (episodeProvider.episodeList?[position].landscape ?? "").trim();
+    if (epiImg.isEmpty || epiImg.contains("no_img.png")) {
+      String showImg = (widget.sectionDetails?.landscape ??
+              showDetailsProvider.contentDetailModel.result?[0].landscape ??
+              "")
+          .trim();
+      if (showImg.isNotEmpty && !showImg.contains("no_img.png")) {
+        return showImg;
+      }
+    }
+    return epiImg;
+  }
+
   @override
   Widget build(BuildContext context) {
     if (episodeProvider.loading && !episodeProvider.loadMore) {
@@ -344,11 +358,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                           fit: BoxFit.cover,
                           height: Dimens.epiPoster,
                           width: MediaQuery.of(context).size.width,
-                          imageUrl:
-                              (episodeProvider
-                                  .episodeList?[position]
-                                  .landscape ??
-                              ""),
+                          imageUrl: _getEpisodeLandscape(position),
                         ),
                         Container(
                           padding: const EdgeInsets.fromLTRB(15, 15, 15, 8),
@@ -474,8 +484,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                       ? Dimens.heightLandWeb
                       : Dimens.heightLand,
                   borderRadius: 4,
-                  imageUrl:
-                      episodeProvider.episodeList?[position].landscape ?? "",
+                  imageUrl: _getEpisodeLandscape(position),
                   onTap: () {
                     printLog("===> position $position");
                     openPlayer("Show", position, episodeProvider.episodeList);
@@ -497,9 +506,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                       borderRadius: BorderRadius.circular(4),
                       clipBehavior: Clip.antiAliasWithSaveLayer,
                       child: MyNetworkImage(
-                        imageUrl:
-                            episodeProvider.episodeList?[position].landscape ??
-                            "",
+                        imageUrl: _getEpisodeLandscape(position),
                         fit: BoxFit.cover,
                         height: MediaQuery.of(context).size.height,
                         width: MediaQuery.of(context).size.width,
@@ -558,11 +565,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
                                     ),
                                     clipBehavior: Clip.antiAliasWithSaveLayer,
                                     child: MyNetworkImage(
-                                      imageUrl:
-                                          (episodeProvider
-                                              .episodeList?[position]
-                                              .landscape ??
-                                          ""),
+                                      imageUrl: _getEpisodeLandscape(position),
                                       fit: BoxFit.cover,
                                       height: Dimens.isBigScreen(context)
                                           ? Dimens.heightEpiLandWeb
@@ -1416,7 +1419,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       int? vTypeID = widget.typeId;
       int? stopTime = (episodeList?[epiPos].stopTime ?? 0);
       String? vUploadType = (episodeList?[epiPos].videoUploadType ?? "");
-      String? videoThumb = (episodeList?[epiPos].landscape ?? "");
+      String? videoThumb = _getEpisodeLandscape(epiPos);
       String? epiUrl = Utils.getPrimaryVideoUrl(
         video320: episodeList?[epiPos].video320,
         video480: episodeList?[epiPos].video480,

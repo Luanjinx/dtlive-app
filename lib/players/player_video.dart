@@ -945,132 +945,313 @@ class _PlayerVideoState extends State<PlayerVideo>
     }
   }
 
-  // [NEW] FEATURE-6: Episode switcher panel
-  void _showEpisodePanel() {
+  // Modern right-docked side sheet helper for Episode, Subtitle, Quality, and Settings
+  Future<T?> _showRightSideSheet<T>({
+    required String title,
+    Widget? titleTrailing,
+    required Widget Function(BuildContext sheetContext) builder,
+  }) {
     _hideTimer?.cancel();
-    showModalBottomSheet(
+    return showGeneralDialog<T>(
       context: context,
-      backgroundColor: lightBlack,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.symmetric(vertical: 10),
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (sheetCtx, anim1, anim2) {
+        final size = MediaQuery.of(sheetCtx).size;
+        final isLandscape = size.width > size.height;
+        final double panelWidth = isLandscape
+            ? (size.width * 0.42).clamp(280.0, 380.0)
+            : (size.width * 0.85).clamp(280.0, 420.0);
+
+        return Align(
+          alignment: Alignment.centerRight,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: panelWidth,
+              height: double.infinity,
               decoration: BoxDecoration(
-                color: white.withValues(alpha: 0.24), // [IMP-4]
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-              child: Row(
-                children: [
-                  MyText(
-                    // [TASK-2]
-                    color: white,
-                    text: "episodes",
-                    multilanguage: true,
-                    fontsizeNormal: 16,
-                    fontsizeWeb: 18,
-                    fontweight: FontWeight.w700,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.start,
-                    fontstyle: FontStyle.normal,
+                gradient: LinearGradient(
+                  begin: Alignment.topRight,
+                  end: Alignment.bottomLeft,
+                  colors: [
+                    colorAccent.withValues(alpha: 0.32),
+                    secondaryBgColor.withValues(alpha: 0.96),
+                    appBgColor.withValues(alpha: 0.98),
+                  ],
+                  stops: const [0.0, 0.40, 1.0],
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  bottomLeft: Radius.circular(20),
+                ),
+                border: Border(
+                  left: BorderSide(
+                    color: colorAccent.withValues(alpha: 0.35),
+                    width: 1.2,
                   ),
-                  const Spacer(),
-                  IconButton(
-                    icon: Icon(
-                      Icons.close,
-                      color: white.withValues(alpha: 0.54), // [IMP-4]
-                      size: 20,
-                    ),
-                    onPressed: () => Utils.exitDialog(context),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: black.withValues(alpha: 0.70),
+                    blurRadius: 24,
+                    spreadRadius: 2,
+                    offset: const Offset(-6, 0),
                   ),
                 ],
               ),
-            ),
-            Divider(color: white.withValues(alpha: 0.12), height: 1), // [IMP-4]
-            LimitedBox(
-              maxHeight: 320,
-              child: ListView.builder(
-                shrinkWrap: true,
-                itemCount: widget.playerModel.episodeList?.length ?? 0,
-                itemBuilder: (_, i) {
-                  final ep = widget.playerModel.episodeList![i];
-                  final isCurrent =
-                      i == (widget.playerModel.currentEpiPos ?? 0);
-                  return ListTile(
-                    leading: ClipRRect(
-                      borderRadius: BorderRadius.circular(6),
-                      child: MyNetworkImage(
-                        imageUrl: ep.landscape ?? "",
-                        width: 72,
-                        height: 44,
-                        fit: BoxFit.cover,
+              child: SafeArea(
+                left: false,
+                top: true,
+                bottom: true,
+                right: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Header
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 14, 14),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    title,
+                                    style: GoogleFonts.inter(
+                                      color: white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.3,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                if (titleTrailing != null) ...[
+                                  const SizedBox(width: 8),
+                                  titleTrailing,
+                                ],
+                              ],
+                            ),
+                          ),
+                          InkWell(
+                            borderRadius: BorderRadius.circular(20),
+                            onTap: () => Navigator.of(sheetCtx).pop(),
+                            child: Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: white.withValues(alpha: 0.08),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.close,
+                                color: white,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    title: MyText(
-                      color: isCurrent ? colorAccent : white, // [IMP-4]
-                      text: ep.name ?? ep.description ?? "Episode ${i + 1}",
-                      multilanguage: false,
-                      textalign: TextAlign.start,
-                      fontsizeNormal: 13,
-                      fontsizeWeb: 14,
-                      fontweight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-                      maxline: 1,
-                      overflow: TextOverflow.ellipsis,
-                      fontstyle: FontStyle.normal,
+                    Divider(
+                      color: white.withValues(alpha: 0.12),
+                      height: 1,
+                      thickness: 1,
                     ),
-                    subtitle: isCurrent
-                        ? MyText(
-                            // [TASK-2]
-                            color: colorAccent,
-                            text: "now_playing",
-                            multilanguage: true,
-                            fontsizeNormal: 11,
-                            fontsizeWeb: 12,
-                            fontweight: FontWeight.w400,
-                            maxline: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textalign: TextAlign.start,
-                            fontstyle: FontStyle.normal,
-                          )
-                        : null,
-                    trailing: isCurrent
-                        ? Icon(
-                            Icons.play_arrow_rounded,
-                            color: colorAccent, // [IMP-4]
-                            size: 20,
-                          )
-                        : null,
-                    onTap: isCurrent
-                        ? null
-                        : () {
-                            Utils.exitDialog(context);
-                            _jumpToEpisode(i);
-                          },
-                  );
-                },
+                    // Body
+                    Expanded(
+                      child: builder(sheetCtx),
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
-          ],
+          ),
         );
       },
-    ).then((_) {
+      transitionBuilder: (sheetCtx, anim1, anim2, child) {
+        final curved = Curves.easeOutCubic.transform(anim1.value);
+        return Transform.translate(
+          offset: Offset((1.0 - curved) * 380, 0),
+          child: child,
+        );
+      },
+    ).then((val) {
       if (mounted &&
           _isControllerReady &&
           _videoPlayerController.value.isPlaying) {
         _startHideTimer();
       }
+      return val;
     });
+  }
+
+  // [NEW] FEATURE-6: Episode switcher panel (Right-docked modern style)
+  void _showEpisodePanel() {
+    final epList = widget.playerModel.episodeList ?? [];
+    final currentIdx = widget.playerModel.currentEpiPos ?? 0;
+    final defaultLandscape = widget.playerModel.videoThumb ?? "";
+
+    _showRightSideSheet(
+      title: "Daftar Episode",
+      titleTrailing: epList.isNotEmpty
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+              decoration: BoxDecoration(
+                color: colorAccent.withValues(alpha: 0.18),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: colorAccent.withValues(alpha: 0.4),
+                  width: 0.8,
+                ),
+              ),
+              child: Text(
+                "${epList.length}",
+                style: GoogleFonts.inter(
+                  color: colorAccent,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            )
+          : null,
+      builder: (sheetCtx) {
+        if (epList.isEmpty) {
+          return Center(
+            child: Text(
+              "Tidak ada episode",
+              style: GoogleFonts.inter(
+                color: white.withValues(alpha: 0.6),
+                fontSize: 14,
+              ),
+            ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+          itemCount: epList.length,
+          separatorBuilder: (_, index) => Divider(
+            color: white.withValues(alpha: 0.06),
+            height: 1,
+          ),
+          itemBuilder: (_, i) {
+            final ep = epList[i];
+            final isCurrent = (i == currentIdx);
+            final epImg = (ep.landscape != null && ep.landscape!.isNotEmpty)
+                ? ep.landscape!
+                : defaultLandscape;
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(10),
+                onTap: isCurrent
+                    ? null
+                    : () {
+                        Navigator.of(sheetCtx).pop();
+                        _jumpToEpisode(i);
+                      },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    color: isCurrent
+                        ? colorAccent.withValues(alpha: 0.14)
+                        : Colors.transparent,
+                    border: isCurrent
+                        ? Border.all(
+                            color: colorAccent.withValues(alpha: 0.4),
+                            width: 1,
+                          )
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: MyNetworkImage(
+                              imageUrl: epImg,
+                              width: 76,
+                              height: 48,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          if (isCurrent)
+                            Container(
+                              width: 76,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(6),
+                                color: black.withValues(alpha: 0.45),
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                color: colorAccent,
+                                size: 26,
+                              ),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              ep.name ?? ep.description ?? "Episode ${i + 1}",
+                              style: GoogleFonts.inter(
+                                color: isCurrent ? colorAccent : white,
+                                fontSize: 13,
+                                fontWeight: isCurrent
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              isCurrent ? "Sedang diputar" : "Episode ${i + 1}",
+                              style: GoogleFonts.inter(
+                                color: isCurrent
+                                    ? colorAccent.withValues(alpha: 0.85)
+                                    : white.withValues(alpha: 0.45),
+                                fontSize: 11,
+                                fontWeight: isCurrent
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (isCurrent) ...[
+                        const SizedBox(width: 8),
+                        const Icon(
+                          Icons.check,
+                          color: colorAccent,
+                          size: 20,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
   }
 
   void _resetDoubleTapCount() {
@@ -2136,7 +2317,9 @@ class _PlayerVideoState extends State<PlayerVideo>
             if (widget.playerModel.isLive == false &&
                 Constant.subtitleUrls.isNotEmpty)
               _buildSubtitleToggle(),
-            if (widget.playerModel.isLive == false) _buildOptionsButton(),
+            if (widget.playerModel.isLive == false &&
+                Constant.resolutionsUrls.isNotEmpty)
+              _buildQualityButton(),
           ],
         ),
       ),
@@ -2601,14 +2784,14 @@ class _PlayerVideoState extends State<PlayerVideo>
   }
 
   Widget _buildSubtitleToggle() {
-    //if don't have subtitle hiden button
     if (Constant.subtitleUrls.isEmpty) {
       return const SizedBox();
     }
     return Tooltip(
-      message: 'Subtitles ON/OFF',
+      message: 'Subtitel',
       child: GestureDetector(
-        onTap: _subtitleToggle,
+        onTap: subtitleDialog,
+        onLongPress: _subtitleToggle,
         child: Container(
           height: 47.0,
           color: transparent, // [IMP-4]
@@ -2616,8 +2799,8 @@ class _PlayerVideoState extends State<PlayerVideo>
           padding: const EdgeInsets.only(left: 6.0, right: 6.0),
           child: Icon(
             playerProvider.subtitleOn ? Icons.subtitles : Icons.subtitles_off,
-            color: white, // [IMP-4]
-            size: 25.0,
+            color: playerProvider.subtitleOn ? colorAccent : white, // [IMP-4]
+            size: 24.0,
           ),
         ),
       ),
@@ -2951,175 +3134,231 @@ class _PlayerVideoState extends State<PlayerVideo>
     );
   }
 
-  GestureDetector _buildOptionsButton() {
-    final options = <OptionItem>[];
-    OptionItem qualityItem = OptionItem(
-      onTap: (context) {
-        Utils.exitDialog(context);
-        qualityDialog();
-      },
-      iconData: Icons.video_collection_rounded,
-      title: 'Quality',
-    );
-    OptionItem subtitlesItem = OptionItem(
-      onTap: (context) {
-        Utils.exitDialog(context);
-        subtitleDialog();
-      },
-      iconData: Icons.video_collection_rounded,
-      title: 'Subtitles',
-    );
-
-    if (Constant.resolutionsUrls.isNotEmpty) options.add(qualityItem);
-    if (Constant.subtitleUrls.isNotEmpty) options.add(subtitlesItem);
-
-    return GestureDetector(
-      onTap: () async {
-        _hideTimer?.cancel();
-        await showCupertinoModalPopup<OptionItem>(
-          context: context,
-          semanticsDismissible: true,
-          builder: (context) => CupertinoOptionsDialog(
-            options: options,
-            cancelButtonText: "Cancel",
-          ),
-        );
-        if (_videoPlayerController.value.isPlaying) {
-          _startHideTimer();
-        }
-      },
-      child: Tooltip(
-        message: 'Quality/Subtitles change',
+  Widget _buildQualityButton() {
+    if (Constant.resolutionsUrls.isEmpty) {
+      return const SizedBox();
+    }
+    return Tooltip(
+      message: 'Kualitas Video',
+      child: GestureDetector(
+        onTap: qualityDialog,
         child: Container(
           height: 47.0,
           color: transparent, // [IMP-4]
-          padding: const EdgeInsets.only(left: 4.0, right: 8.0),
+          padding: const EdgeInsets.only(left: 6.0, right: 6.0),
           margin: const EdgeInsets.only(right: 6.0),
-          child: Icon(Icons.more_vert, color: white, size: 23), // [IMP-4]
+          child: const Icon(
+            Icons.high_quality_rounded,
+            color: white, // [IMP-4]
+            size: 26,
+          ),
         ),
       ),
     );
   }
 
   Future<void> subtitleDialog() async {
-    await showCupertinoModalPopup<void>(
-      context: context,
-      semanticsDismissible: true,
-      useRootNavigator: true,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actions: Constant.subtitleUrls
-              .map(
-                (option) => CupertinoActionSheetAction(
-                  onPressed: () async {
-                    playerProvider.setCurrentSubtitle(option.subtitleLang);
-                    updateSubtitleUrl(subtitleUrl: option.subtitleUrl);
-                    if (!context.mounted) return;
-                    Utils.exitDialog(context);
-                  },
-                  child: Text(
-                    option.subtitleLang,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontStyle: FontStyle.normal,
-                      color:
-                          (playerProvider.currentSubtitle ==
-                              option.subtitleLang)
-                          ? black
-                          : black.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w600,
-                    ),
+    final isOff =
+        !playerProvider.subtitleOn || playerProvider.currentSubtitle.isEmpty;
+    final currentSub = playerProvider.currentSubtitle;
+
+    await _showRightSideSheet(
+      title: "Subtitel",
+      builder: (sheetCtx) {
+        return ListView(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          children: [
+            // Option: Nonaktif
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  await playerProvider.setSubtitleState(false);
+                  playerProvider.setCurrentSubtitle("");
+                  _videoPlayerController.setClosedCaptionFile(null);
+                  if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  color: isOff
+                      ? colorAccent.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "Nonaktif",
+                          style: GoogleFonts.inter(
+                            color: isOff ? colorAccent : white,
+                            fontSize: 15,
+                            fontWeight:
+                                isOff ? FontWeight.w700 : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (isOff)
+                        const Icon(
+                          Icons.check,
+                          color: colorAccent,
+                          size: 22,
+                        ),
+                    ],
                   ),
                 ),
-              )
-              .toList(),
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: () => Utils.exitDialog(context),
-            isDestructiveAction: true,
-            child: Text(
-              "Cancel",
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-              style: GoogleFonts.inter(
-                fontSize: 15,
-                fontStyle: FontStyle.normal,
-                color: redColor,
-                fontWeight: FontWeight.w600,
               ),
             ),
-          ),
+            Divider(
+              color: white.withValues(alpha: 0.08),
+              height: 1,
+            ),
+            // Options: Subtitle Languages
+            ...Constant.subtitleUrls.map((option) {
+              final isSelected = (!isOff && currentSub == option.subtitleLang);
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () async {
+                        await playerProvider.setSubtitleState(true);
+                        playerProvider.setCurrentSubtitle(option.subtitleLang);
+                        updateSubtitleUrl(subtitleUrl: option.subtitleUrl);
+                        if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        color: isSelected
+                            ? colorAccent.withValues(alpha: 0.08)
+                            : Colors.transparent,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                option.subtitleLang,
+                                style: GoogleFonts.inter(
+                                  color: isSelected ? colorAccent : white,
+                                  fontSize: 15,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                            if (isSelected)
+                              const Icon(
+                                Icons.check,
+                                color: colorAccent,
+                                size: 22,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Divider(
+                    color: white.withValues(alpha: 0.08),
+                    height: 1,
+                  ),
+                ],
+              );
+            }),
+          ],
         );
       },
-    ).then((value) {
-      printLog("============= SUBTITLE =============");
-      if (!mounted) return;
-      playerProvider.notifyProvider();
-    });
+    );
+
+    printLog("============= SUBTITLE =============");
+    if (!mounted) return;
+    playerProvider.notifyProvider();
   }
 
   Future<void> qualityDialog() async {
-    await showCupertinoModalPopup<void>(
-      context: context,
-      semanticsDismissible: true,
-      useRootNavigator: true,
-      builder: (context) {
-        return CupertinoActionSheet(
-          actions: Constant.resolutionsUrls
-              .map(
-                (option) => CupertinoActionSheetAction(
-                  onPressed: () async {
-                    updateQualityUrl(
-                      qualityName: option.qualityName,
-                      qualityUrl: option.qualityUrl,
-                    );
-                    if (!context.mounted) return;
-                    Utils.exitDialog(context);
-                  },
-                  child: Text(
-                    option.qualityName,
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: GoogleFonts.inter(
-                      fontSize: 15,
-                      fontStyle: FontStyle.normal,
-                      color:
-                          (playerProvider.currentQuality == option.qualityName)
-                          ? black
-                          : black.withValues(alpha: 0.5),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              )
-              .toList(),
-          cancelButton: CupertinoActionSheetAction(
-            onPressed: () => Utils.exitDialog(context),
-            isDestructiveAction: true,
+    final resolutions = Constant.resolutionsUrls;
+    final currentQuality = playerProvider.currentQuality;
+
+    await _showRightSideSheet(
+      title: "Kualitas Video",
+      builder: (sheetCtx) {
+        if (resolutions.isEmpty) {
+          return Center(
             child: Text(
-              "Cancel",
-              textAlign: TextAlign.center,
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              "Kualitas bawaan",
               style: GoogleFonts.inter(
-                fontSize: 15,
-                fontStyle: FontStyle.normal,
-                color: redColor,
-                fontWeight: FontWeight.w600,
+                color: white.withValues(alpha: 0.6),
+                fontSize: 14,
               ),
             ),
+          );
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: resolutions.length,
+          separatorBuilder: (_, index) => Divider(
+            color: white.withValues(alpha: 0.08),
+            height: 1,
           ),
+          itemBuilder: (_, i) {
+            final option = resolutions[i];
+            final isSelected = (currentQuality == option.qualityName);
+
+            return Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                  updateQualityUrl(
+                    qualityName: option.qualityName,
+                    qualityUrl: option.qualityUrl,
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 16,
+                  ),
+                  color: isSelected
+                      ? colorAccent.withValues(alpha: 0.08)
+                      : Colors.transparent,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          option.qualityName,
+                          style: GoogleFonts.inter(
+                            color: isSelected ? colorAccent : white,
+                            fontSize: 15,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (isSelected)
+                        const Icon(
+                          Icons.check,
+                          color: colorAccent,
+                          size: 22,
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
-    ).then((value) {
-      printLog("============= QUALITY =============");
-      if (!mounted) return;
-      playerProvider.notifyProvider();
-    });
+    );
+
+    printLog("============= QUALITY =============");
+    if (!mounted) return;
+    playerProvider.notifyProvider();
   }
 
   /* Brightness/Volume UI START ********************************** */
