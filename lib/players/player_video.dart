@@ -119,6 +119,7 @@ class _PlayerVideoState extends State<PlayerVideo>
   static const int safeStartDelayMs = 3000;
 
   bool _hasShownNextEpisodePopup = false;
+  bool _isSwitchingEpisode = false;
   int _initialPositionMs = 0;
   double _popupOpacity = 1.0;
   double _countdownProgress = 1.0; // 1.0 = full bar, 0.0 = empty
@@ -334,6 +335,9 @@ class _PlayerVideoState extends State<PlayerVideo>
   void didChangeDependencies() {
     printLog("========= didChangeDependencies =========");
     routeObserver.subscribe(this, ModalRoute.of(context)!);
+    if (!kIsWeb) {
+      OrientationManager.forceLandscape();
+    }
     super.didChangeDependencies();
   }
 
@@ -346,6 +350,9 @@ class _PlayerVideoState extends State<PlayerVideo>
   @override
   void didPopNext() {
     printLog("========= didPopNext =========");
+    if (!kIsWeb) {
+      OrientationManager.forceLandscape();
+    }
     super.didPopNext();
   }
 
@@ -364,6 +371,9 @@ class _PlayerVideoState extends State<PlayerVideo>
   @override
   void initState() {
     super.initState();
+    if (!kIsWeb) {
+      OrientationManager.forceLandscape();
+    }
     printLog("initState videoUrl ======> ${widget.playerModel.videoUrl}");
     printLog("initState uploadType ====> ${widget.playerModel.uploadType}");
     printLog("initState stopTime ======> ${widget.playerModel.stopTime}");
@@ -776,7 +786,9 @@ class _PlayerVideoState extends State<PlayerVideo>
       _adsManager?.pause();
       _adsManager?.destroy();
       _adsManager = null;
-      OrientationManager.forcePortrait();
+      if (!_isSwitchingEpisode) {
+        OrientationManager.forcePortrait();
+      }
     } else {
       _jsHelper.callBrowserFullscreen(false);
     }
@@ -909,6 +921,10 @@ class _PlayerVideoState extends State<PlayerVideo>
     );
 
     if (!mounted || !context.mounted) return;
+    _isSwitchingEpisode = true;
+    if (!kIsWeb) {
+      OrientationManager.forceLandscape();
+    }
     if (kIsWeb) {
       context.pushReplacement(
         "/${RoutesConstant.playerPage}",
@@ -1049,7 +1065,11 @@ class _PlayerVideoState extends State<PlayerVideo>
         );
       },
     ).then((_) {
-      if (_videoPlayerController.value.isPlaying) _startHideTimer();
+      if (mounted &&
+          _isControllerReady &&
+          _videoPlayerController.value.isPlaying) {
+        _startHideTimer();
+      }
     });
   }
 
@@ -3140,6 +3160,7 @@ class _PlayerVideoState extends State<PlayerVideo>
 
   Future<void> onBackPressed(bool didPop) async {
     if (didPop) return;
+    _isSwitchingEpisode = false;
     // [NEW] FEATURE-9: Animate out before dismissing
     await _enterExitAnim.reverse();
     if (!mounted) return;

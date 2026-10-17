@@ -718,7 +718,7 @@ class HomeState extends State<Home> {
     }
   }
 
-  /* Category Pills START (Disney+ Hotstar style) ************** */
+  /* Category Pills START (HiTV themed style) ************** */
   Widget _buildCategoryPillsRow(List<type.Result>? sectionTypeList) {
     return Consumer<HomeProvider>(
       builder: (context, homeProvider, child) {
@@ -726,14 +726,14 @@ class HomeState extends State<Home> {
         final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
         return SizedBox(
-          height: 38,
+          height: 36,
           child: ListView.separated(
             controller: tabScrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: itemCount,
-            separatorBuilder: (context, index) => const SizedBox(width: 8),
+            separatorBuilder: (context, index) => const SizedBox(width: 6),
             itemBuilder: (context, index) {
               final bool isHomeTab = index == 0;
               final bool isSelected = isHomeTab
@@ -745,7 +745,9 @@ class HomeState extends State<Home> {
                   : (list[index - 1].name?.toString() ?? "");
 
               return InkWell(
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(20),
+                splashColor: transparent,
+                highlightColor: transparent,
                 onTap: () async {
                   if (isSelected) return;
                   _scrollToCurrent(index);
@@ -766,30 +768,22 @@ class HomeState extends State<Home> {
                 },
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 8,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSelected ? 14 : 10,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? white.withValues(alpha: 0.14)
-                        : const Color(0xFF16181F).withValues(alpha: 0.70),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: isSelected
-                          ? white
-                          : white.withValues(alpha: 0.18),
-                      width: isSelected ? 1.5 : 1.0,
-                    ),
+                    color: isSelected ? colorPrimary : transparent,
+                    borderRadius: BorderRadius.circular(20),
                   ),
                   alignment: Alignment.center,
                   child: MyText(
-                    color: isSelected ? white : white.withValues(alpha: 0.75),
+                    color: isSelected ? black : white.withValues(alpha: 0.90),
                     text: title,
                     multilanguage: false,
-                    fontsizeNormal: 13,
-                    fontsizeWeb: 14,
-                    fontweight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    fontsizeNormal: 14,
+                    fontsizeWeb: 15,
+                    fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     maxline: 1,
                     overflow: TextOverflow.ellipsis,
                     textalign: TextAlign.center,
@@ -842,31 +836,42 @@ class HomeState extends State<Home> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /* Top Category Pills Row (Hotstar style: Home, Sports, Disney+, Movies, Series, Kids...) */
-        if (hasTypes)
+        /* Top spacer to sit right below the pinned transparent SliverAppBar */
+        const SizedBox(height: kToolbarHeight),
+
+        /* Top Banner with Category Tabs embedded inside */
+        if (sectionDataProvider.loadingBanner)
+          Stack(
+            children: [
+              ShimmerUtils.bannerMobile(context),
+              if (hasTypes)
+                Positioned(
+                  top: 8,
+                  left: 0,
+                  right: 0,
+                  child: _buildCategoryPillsRow(
+                    homeProvider.sectionTypeModel.result,
+                  ),
+                ),
+            ],
+          )
+        else if (sectionDataProvider.sectionBannerModel.status == 200 &&
+            sectionDataProvider.sectionBannerModel.result != null &&
+            (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false))
+          _mobileHomeBanner(
+            sectionDataProvider.sectionBannerModel.result,
+            categoryList: hasTypes ? homeProvider.sectionTypeModel.result : null,
+          )
+        else if (hasTypes)
           Padding(
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + kToolbarHeight + 4,
-              bottom: 10,
-            ),
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: _buildCategoryPillsRow(homeProvider.sectionTypeModel.result),
           )
-        else
-          SizedBox(
-            height: MediaQuery.of(context).padding.top + kToolbarHeight + 4,
-          ),
-
-        /* Banner */
-        if (sectionDataProvider.loadingBanner)
-          ShimmerUtils.bannerMobile(context)
-        else if (sectionDataProvider.sectionBannerModel.status == 200 &&
-            sectionDataProvider.sectionBannerModel.result != null)
-          _mobileHomeBanner(sectionDataProvider.sectionBannerModel.result)
         else
           const SizedBox.shrink(),
 
         /* Banner Ad */
-        SmartBannerAd(isSpacing: true, topSpace: 10, bottomSpace: 10),
+        SmartBannerAd(isSpacing: false),
 
         /* Remaining Sections */
         if (sectionDataProvider.loadingSection && !sectionDataProvider.loadMore)
@@ -889,193 +894,226 @@ class HomeState extends State<Home> {
   /* **************** Type END */
 
   /* Banner START ************** */
-  Widget _mobileHomeBanner(List<banner.Result>? sectionBannerList) {
+  Widget _mobileHomeBanner(
+    List<banner.Result>? sectionBannerList, {
+    List<type.Result>? categoryList,
+  }) {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
-    final double bannerH = kIsWeb
-        ? Dimens.getBannerHeight(context)
-        : (MediaQuery.of(context).size.height * 0.58).clamp(460.0, 540.0);
+    final double imageH = kIsWeb
+        ? (screenW * 0.38).clamp(280.0, 420.0)
+        : (screenW * 0.62).roundToDouble();
+    final double carouselH = imageH + 88.0;
 
-    return SizedBox(
-      height: bannerH,
-      width: screenW,
-      child: Stack(
-        alignment: AlignmentDirectional.bottomCenter,
-        clipBehavior: Clip.antiAliasWithSaveLayer,
-        children: [
-          /* ── Full-bleed Poster Carousel ── */
-          CarouselSlider.builder(
-            itemCount: list.length,
-            carouselController: carouselController,
-            options: CarouselOptions(
-              initialPage: 0,
-              height: bannerH,
-              viewportFraction: 1.0,
-              enlargeCenterPage: false,
-              padEnds: false,
-              enableInfiniteScroll: list.length > 1,
-              autoPlay: true,
-              autoPlayCurve: Curves.easeInOutCubic,
-              autoPlayInterval: Duration(milliseconds: Constant.bannerDuration),
-              autoPlayAnimationDuration: Duration(
-                milliseconds: Constant.animationDuration,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        /* ── Landscape Carousel Slider with Category Tabs embedded ── */
+        Stack(
+          children: [
+            CarouselSlider.builder(
+              itemCount: list.length,
+              carouselController: carouselController,
+              options: CarouselOptions(
+                initialPage: 0,
+                height: carouselH,
+                viewportFraction: 1.0,
+                enlargeCenterPage: false,
+                padEnds: false,
+                enableInfiniteScroll: list.length > 1,
+                autoPlay: true,
+                autoPlayCurve: Curves.easeInOutCubic,
+                autoPlayInterval: Duration(
+                  milliseconds: Constant.bannerDuration,
+                ),
+                autoPlayAnimationDuration: Duration(
+                  milliseconds: Constant.animationDuration,
+                ),
+                onPageChanged: (val, _) async {
+                  sectionDataProvider.setCurrentBanner(val);
+                },
               ),
-              onPageChanged: (val, _) async {
-                sectionDataProvider.setCurrentBanner(val);
+              itemBuilder: (BuildContext context, int index, int pageViewIndex) {
+                final item = list[index];
+                final imageUrl = (item.landscape != null &&
+                        (item.landscape ?? "").trim().isNotEmpty &&
+                        !(item.landscape ?? "").contains("no_img"))
+                    ? (item.landscape ?? "")
+                    : (item.thumbnail ?? "");
+                final isLive =
+                    (item.videoUploadType ?? "") == "live_stream_url";
+
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    /* 16:9 Landscape Banner Image */
+                    InkWell(
+                      onTap: () {
+                        openDetailPage(
+                          item.id ?? 0,
+                          item.subVideoType ?? 0,
+                          item.videoType ?? 0,
+                          item.typeId ?? 0,
+                        );
+                      },
+                      child: SizedBox(
+                        width: screenW,
+                        height: imageH,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            MyNetworkImage(
+                              imageUrl: imageUrl,
+                              fit: BoxFit.cover,
+                            ),
+
+                            /* Top gradient (HiTV style) to darken behind category tabs */
+                            Positioned(
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: 110,
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      stops: const [0.0, 0.40, 0.75, 1.0],
+                                      colors: [
+                                        appBgColor.withValues(alpha: 0.95),
+                                        appBgColor.withValues(alpha: 0.70),
+                                        appBgColor.withValues(alpha: 0.30),
+                                        transparent,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            /* Subtle bottom gradient to blend image into dark background */
+                            Positioned(
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              height: 52,
+                              child: IgnorePointer(
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topCenter,
+                                      end: Alignment.bottomCenter,
+                                      colors: [
+                                        transparent,
+                                        appBgColor.withValues(alpha: 0.85),
+                                        appBgColor,
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+
+                            /* Badge (top-left, below floating tabs) */
+                            Positioned(
+                              top: 50,
+                              left: 14,
+                              child: _buildBannerBadge(item),
+                            ),
+
+                            /* Optional Title if isTitle == 1 */
+                            if ((item.isTitle ?? 0) == 1 &&
+                                (item.name ?? "").trim().isNotEmpty)
+                              Positioned(
+                                bottom: 6,
+                                left: 16,
+                                right: 16,
+                                child: MyText(
+                                  color: white,
+                                  text: item.name ?? "",
+                                  textalign: TextAlign.center,
+                                  fontsizeNormal: 18,
+                                  fontsizeWeb: 20,
+                                  fontweight: FontWeight.w800,
+                                  multilanguage: false,
+                                  maxline: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  fontstyle: FontStyle.normal,
+                                  isShadowText: true,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    /* Genres: e.g. Action • Adventure */
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildBannerGenres(item),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    /* Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] */
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: _buildBannerActionButtons(
+                        item,
+                        index,
+                        isLive,
+                        screenW,
+                      ),
+                    ),
+                  ],
+                );
               },
             ),
-            itemBuilder: (BuildContext context, int index, int pageViewIndex) {
-              final item = list[index];
-              final imageUrl =
-                  (item.thumbnail == null ||
-                          (item.thumbnail ?? "").isEmpty ||
-                          (item.thumbnail ?? "").contains("no_img"))
-                      ? (item.landscape ?? "")
-                      : (item.thumbnail ?? "");
-              final isLive =
-                  (item.videoUploadType ?? "") == "live_stream_url";
 
-              return Stack(
-                fit: StackFit.expand,
-                children: [
-                  /* Poster Image */
-                  InkWell(
-                    onTap: () {
-                      openDetailPage(
-                        item.id ?? 0,
-                        item.subVideoType ?? 0,
-                        item.videoType ?? 0,
-                        item.typeId ?? 0,
-                      );
-                    },
-                    child: SizedBox.expand(
-                      child: MyNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-
-                  /* Top-fade gradient — ensures top bar / category pills contrast */
-                  IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.center,
-                          stops: const [0.0, 0.25, 0.50],
-                          colors: [
-                            appBgColor.withValues(alpha: 0.65),
-                            appBgColor.withValues(alpha: 0.20),
-                            transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  /* Bottom-fade gradient — seamless dissolution into solid black floor */
-                  IgnorePointer(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0.0, 0.35, 0.58, 0.76, 0.90, 1.0],
-                          colors: [
-                            transparent,
-                            transparent,
-                            appBgColor.withValues(alpha: 0.35),
-                            appBgColor.withValues(alpha: 0.75),
-                            appBgColor.withValues(alpha: 0.96),
-                            appBgColor,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  /* Badge — top-left */
-                  Positioned(
-                    top: 14,
-                    left: 16,
-                    child: _buildBannerBadge(item),
-                  ),
-
-                  /* Content: Title (optional), Genres Centered & 2 Action Buttons */
-                  Positioned(
-                    bottom: 28,
-                    left: 16,
-                    right: 16,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Title only when isTitle == 1, otherwise title is in artwork
-                        if ((item.isTitle ?? 0) == 1 &&
-                            (item.name ?? "").trim().isNotEmpty) ...[
-                          MyText(
-                            color: white,
-                            text: item.name ?? "",
-                            textalign: TextAlign.center,
-                            fontsizeNormal: 22,
-                            fontsizeWeb: 24,
-                            fontweight: FontWeight.w800,
-                            multilanguage: false,
-                            maxline: 1,
-                            overflow: TextOverflow.ellipsis,
-                            fontstyle: FontStyle.normal,
-                            isShadowText: true,
-                          ),
-                          const SizedBox(height: 6),
-                        ],
-
-                        // Genres / Category: e.g. "Action • Adventure"
-                        _buildBannerGenres(item),
-
-                        const SizedBox(height: 14),
-
-                        // Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ]
-                        _buildBannerActionButtons(item, index, isLive, screenW),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-
-          /* ── Dot indicator ── */
-          if (list.length > 1)
-            Positioned(
-              bottom: 8,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Consumer<SectionDataProvider>(
-                  builder: (context, sdp, _) {
-                    final int activeIndex =
-                        (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
-                    return AnimatedSmoothIndicator(
-                      count: list.length,
-                      activeIndex: activeIndex,
-                      effect: ScrollingDotsEffect(
-                        spacing: 8,
-                        radius: 4,
-                        activeDotScale: 1.25,
-                        activeDotColor: white,
-                        dotColor: white.withValues(alpha: 0.30),
-                        dotHeight: 6,
-                        dotWidth: 6,
-                      ),
-                    );
-                  },
-                ),
+            /* Floating Category Tabs Row inside Banner (at the top over the dark gradient) */
+            if (categoryList != null && categoryList.isNotEmpty)
+              Positioned(
+                top: 8,
+                left: 0,
+                right: 0,
+                child: _buildCategoryPillsRow(categoryList),
               ),
+          ],
+        ),
+
+        /* ── Dot indicator ── */
+        if (list.length > 1) ...[
+          const SizedBox(height: 12),
+          Center(
+            child: Consumer<SectionDataProvider>(
+              builder: (context, sdp, _) {
+                final int activeIndex =
+                    (sdp.cBannerIndex ?? 0).clamp(0, list.length - 1);
+                return AnimatedSmoothIndicator(
+                  count: list.length,
+                  activeIndex: activeIndex,
+                  effect: ScrollingDotsEffect(
+                    spacing: 7,
+                    radius: 4,
+                    activeDotScale: 1.25,
+                    activeDotColor: white,
+                    dotColor: white.withValues(alpha: 0.30),
+                    dotHeight: 5,
+                    dotWidth: 5,
+                  ),
+                );
+              },
             ),
+          ),
+          const SizedBox(height: 4),
         ],
-      ),
+      ],
     );
   }
 
@@ -1295,7 +1333,7 @@ class HomeState extends State<Home> {
     return ListView.builder(
       itemCount: sectionList?.length ?? 0,
       shrinkWrap: true,
-      padding: const EdgeInsets.fromLTRB(0, 15, 0, 0),
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 0),
       physics: const NeverScrollableScrollPhysics(),
       itemBuilder: (BuildContext context, int index) {
         if (sectionList?[index].data != null &&
