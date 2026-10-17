@@ -8,7 +8,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_subtitle/flutter_subtitle.dart';
 import 'package:http/http.dart' as http;
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:interactive_media_ads/interactive_media_ads.dart';
 import 'package:provider/provider.dart';
@@ -921,7 +920,9 @@ class _PlayerVideoState extends State<PlayerVideo>
           ? vdocipherDetails!.result
           : null,
       trailerUrl: widget.playerModel.trailerUrl ?? "",
-      uploadType: widget.playerModel.uploadType ?? "",
+      uploadType: (ep.videoUploadType != null && ep.videoUploadType!.isNotEmpty)
+          ? ep.videoUploadType!
+          : (widget.playerModel.uploadType ?? ""),
       videoThumb: ep.landscape ?? "",
       stopTime: 0, // [FIX] FIX-2: always 0 for any new episode jump
       isPremium: widget.playerModel.isPremium ?? 0,
@@ -939,24 +940,17 @@ class _PlayerVideoState extends State<PlayerVideo>
     if (!kIsWeb) {
       OrientationManager.forceLandscape();
     }
-    if (kIsWeb) {
-      context.pushReplacement(
-        "/${RoutesConstant.playerPage}",
-        extra: playerModel,
-      );
-    } else {
-      // [NEW] FEATURE-7: FadeTransition instead of MaterialPageRoute
-      Navigator.pushReplacement(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              PlayerVideo(playerModel: playerModel),
-          transitionsBuilder: (context, anim, secondaryAnim, child) =>
-              FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
-    }
+    // [NEW] FEATURE-7: FadeTransition instead of MaterialPageRoute (works on both Web & Mobile)
+    Navigator.pushReplacement(
+      context,
+      PageRouteBuilder(
+        pageBuilder: (context, animation, secondaryAnimation) =>
+            PlayerVideo(playerModel: playerModel),
+        transitionsBuilder: (context, anim, secondaryAnim, child) =>
+            FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 300),
+      ),
+    );
   }
 
   // Modern right-docked side sheet helper for Episode, Subtitle, and Quality

@@ -246,7 +246,9 @@ class Utils {
     final JSHelper jsHelper = JSHelper();
     if (kIsWeb) {
       printLog("========== ON WEB EXIT ==========");
-      if (context.canPop()) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      } else if (context.canPop()) {
         context.pop();
       } else {
         jsHelper.goBack();
@@ -1336,7 +1338,7 @@ class Utils {
       JSHelper().callBrowserFullscreen(true);
       /* Pod Player & Youtube Player */
       if (!context.mounted) return;
-      context.go("/${RoutesConstant.playerPage}", extra: playerModel);
+      isContinue = await context.push("/${RoutesConstant.playerPage}", extra: playerModel);
     } else {
       /* Better, Youtube & Vimeo Players */
       if (playerModel.uploadType == "youtube") {

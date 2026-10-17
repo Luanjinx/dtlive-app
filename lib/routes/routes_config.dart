@@ -686,6 +686,12 @@ class RoutesConfig {
       GoRoute(
         name: RoutesConstant.playerPage,
         path: '/${RoutesConstant.playerPage}',
+        redirect: (context, state) {
+          if (state.extra == null || state.extra is! PlayerModel) {
+            return '/${RoutesConstant.homePage}';
+          }
+          return null;
+        },
         builder: (context, state) {
           String newPage = "";
           PlayerModel playerModel;
@@ -718,10 +724,10 @@ class RoutesConfig {
               return PlayerVideo(playerModel: playerModel);
             }
           } else {
-            return WebErrorPage(
-              (state.error != null)
-                  ? (state.error!)
-                  : Exception(Locales.string(context, "page_not_found")),
+            return const WebHome(
+              newPage: RoutesConstant.homePage,
+              oldPage: '',
+              reqText: '',
             );
           }
         },
