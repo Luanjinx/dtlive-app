@@ -635,7 +635,7 @@ class _WebFooterState extends State<WebFooter> {
                   onClick: () {
                     _redirectToUrl(
                       generalProvider.pagesModel.result?[position].url ?? "",
-                      false,
+                      true,
                     );
                   },
                 );

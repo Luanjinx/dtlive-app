@@ -1488,7 +1488,7 @@ class WebSettingsState extends State<WebSettings> with RouteAware {
                         _redirectToUrl(
                           generalProvider.pagesModel.result?[position].url ??
                               "",
-                          false,
+                          true,
                         );
                       },
                     ),
