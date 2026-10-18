@@ -464,18 +464,17 @@ class HomeState extends State<Home> {
   }
 
   SliverAppBar _buildAppBar(bool innerBoxIsScrolled) {
+    final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
+        (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
+
     return SliverAppBar(
       centerTitle: false,
       automaticallyImplyLeading: false,
       toolbarHeight: kToolbarHeight,
       titleSpacing: 10,
-      backgroundColor: transparent,
-      flexibleSpace: AnimatedOpacity(
-        duration: const Duration(milliseconds: 300),
-        opacity: bottombarProvider.isShowBottombar ? 0.0 : 1.0,
-        child: ClipRRect(
-          child: Container(color: appBgColor.withValues(alpha: 0.8)),
-        ),
+      backgroundColor: appBgColor,
+      flexibleSpace: Container(
+        color: appBgColor,
       ),
       leading: Container(
         height: kToolbarHeight,
@@ -549,9 +548,23 @@ class HomeState extends State<Home> {
         ),
       ],
       pinned: true,
-      floating: true,
+      floating: false,
       expandedHeight: 0,
       forceElevated: innerBoxIsScrolled,
+      bottom: hasTypes
+          ? PreferredSize(
+              preferredSize: const Size.fromHeight(42),
+              child: Container(
+                height: 42,
+                color: appBgColor,
+                padding: const EdgeInsets.only(bottom: 6),
+                alignment: Alignment.centerLeft,
+                child: _buildCategoryPillsRow(
+                  homeProvider.sectionTypeModel.result,
+                ),
+              ),
+            )
+          : null,
     );
   }
 
@@ -783,39 +796,20 @@ class HomeState extends State<Home> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /* Top spacer to sit right below the pinned transparent SliverAppBar */
-        const SizedBox(height: kToolbarHeight),
+        /* Top spacer to sit right below the pinned SliverAppBar + Category Tabs */
+        SizedBox(height: kToolbarHeight + (hasTypes ? 42.0 : 0.0) + 6.0),
 
-        /* Top Banner with Category Tabs embedded inside */
+        /* Top Banner */
         if (sectionDataProvider.loadingBanner)
-          Stack(
-            children: [
-              ShimmerUtils.bannerMobile(
-                context,
-                showCategoryPills: !hasTypes,
-              ),
-              if (hasTypes)
-                Positioned(
-                  top: 8,
-                  left: 0,
-                  right: 0,
-                  child: _buildCategoryPillsRow(
-                    homeProvider.sectionTypeModel.result,
-                  ),
-                ),
-            ],
+          ShimmerUtils.bannerMobile(
+            context,
+            showCategoryPills: false,
           )
         else if (sectionDataProvider.sectionBannerModel.status == 200 &&
             sectionDataProvider.sectionBannerModel.result != null &&
             (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false))
           _mobileHomeBanner(
             sectionDataProvider.sectionBannerModel.result,
-            categoryList: hasTypes ? homeProvider.sectionTypeModel.result : null,
-          )
-        else if (hasTypes)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: _buildCategoryPillsRow(homeProvider.sectionTypeModel.result),
           )
         else
           const SizedBox.shrink(),
@@ -845,9 +839,8 @@ class HomeState extends State<Home> {
 
   /* Banner START ************** */
   Widget _mobileHomeBanner(
-    List<banner.Result>? sectionBannerList, {
-    List<type.Result>? categoryList,
-  }) {
+    List<banner.Result>? sectionBannerList,
+  ) {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
@@ -920,23 +913,20 @@ class HomeState extends State<Home> {
                               height: imageH,
                             ),
 
-                            /* Top gradient (HiTV style) to darken behind category tabs */
+                            /* Subtle top gradient to soften banner image edge */
                             Positioned(
                               top: 0,
                               left: 0,
                               right: 0,
-                              height: 90,
+                              height: 36,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      stops: const [0.0, 0.40, 0.75, 1.0],
                                       colors: [
-                                        appBgColor.withValues(alpha: 0.95),
-                                        appBgColor.withValues(alpha: 0.70),
-                                        appBgColor.withValues(alpha: 0.30),
+                                        appBgColor.withValues(alpha: 0.60),
                                         transparent,
                                       ],
                                     ),
@@ -968,9 +958,9 @@ class HomeState extends State<Home> {
                               ),
                             ),
 
-                            /* Badge (top-left, below floating tabs) */
+                            /* Badge (top-left) */
                             Positioned(
-                              top: 48,
+                              top: 12,
                               left: 14,
                               child: _buildBannerBadge(item),
                             ),
@@ -1012,14 +1002,6 @@ class HomeState extends State<Home> {
               },
             ),
 
-            /* Floating Category Tabs Row inside Banner (at the top over the dark gradient) */
-            if (categoryList != null && categoryList.isNotEmpty)
-              Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: _buildCategoryPillsRow(categoryList),
-              ),
           ],
         ),
 

@@ -423,11 +423,16 @@ class WebHomeState extends State<WebHome> {
               (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false))
             if (isBig)
               _tvHomeBanner(sectionDataProvider.sectionBannerModel.result)
-            else
+            else ...[
+              if (hasTypes)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
+                  child: _buildCategoryPillsRow(sectionTypeList),
+                ),
               _mobileHomeBanner(
                 sectionDataProvider.sectionBannerModel.result,
-                categoryList: hasTypes ? sectionTypeList : null,
-              )
+              ),
+            ]
           else if (!isBig && hasTypes)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -902,9 +907,8 @@ class WebHomeState extends State<WebHome> {
   }
 
   Widget _mobileHomeBanner(
-    List<banner.Result>? sectionBannerList, {
-    List<type.Result>? categoryList,
-  }) {
+    List<banner.Result>? sectionBannerList,
+  ) {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
@@ -975,23 +979,20 @@ class WebHomeState extends State<WebHome> {
                               height: imageH,
                             ),
 
-                            /* Top gradient to darken behind category tabs */
+                            /* Subtle top gradient to soften banner image edge */
                             Positioned(
                               top: 0,
                               left: 0,
                               right: 0,
-                              height: 90,
+                              height: 36,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
                                     gradient: LinearGradient(
                                       begin: Alignment.topCenter,
                                       end: Alignment.bottomCenter,
-                                      stops: const [0.0, 0.40, 0.75, 1.0],
                                       colors: [
-                                        appBgColor.withValues(alpha: 0.95),
-                                        appBgColor.withValues(alpha: 0.70),
-                                        appBgColor.withValues(alpha: 0.30),
+                                        appBgColor.withValues(alpha: 0.60),
                                         transparent,
                                       ],
                                     ),
@@ -1023,9 +1024,9 @@ class WebHomeState extends State<WebHome> {
                               ),
                             ),
 
-                            /* Badge (top-left, below floating tabs) */
+                            /* Badge (top-left) */
                             Positioned(
-                              top: 48,
+                              top: 12,
                               left: 14,
                               child: _buildBannerBadge(item),
                             ),
@@ -1067,14 +1068,6 @@ class WebHomeState extends State<WebHome> {
               },
             ),
 
-            /* Floating Category Tabs Row inside Banner (at the top over the dark gradient) */
-            if (categoryList != null && categoryList.isNotEmpty)
-              Positioned(
-                top: 8,
-                left: 0,
-                right: 0,
-                child: _buildCategoryPillsRow(categoryList),
-              ),
           ],
         ),
 
