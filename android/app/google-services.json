@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "124709066369",
+    "firebase_url": "https://nexstream-b070d-default-rtdb.firebaseio.com",
     "project_id": "nexstream-b070d",
     "storage_bucket": "nexstream-b070d.firebasestorage.app"
   },

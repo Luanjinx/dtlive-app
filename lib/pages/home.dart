@@ -63,9 +63,36 @@ class HomeState extends State<Home> {
   final nestedScrollController = ScrollController();
   final tabScrollController = ScrollController();
   String? currentPage, subscriptionStatus, continueWatchingStatus;
+  bool _isScrolled = false;
+
+  void _resetHomeScroll() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (tabScrollController.hasClients && tabScrollController.offset > 0) {
+        tabScrollController.animateTo(
+          0,
+          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+      if (nestedScrollController.hasClients && nestedScrollController.offset > 0) {
+        nestedScrollController.animateTo(
+          0,
+          curve: Curves.easeInOut,
+          duration: const Duration(milliseconds: 300),
+        );
+      }
+    });
+  }
 
   Future<void> _nestedScrollListener() async {
     if (!nestedScrollController.hasClients) return;
+    final bool scrolled = nestedScrollController.offset > 12;
+    if (scrolled != _isScrolled) {
+      setState(() {
+        _isScrolled = scrolled;
+      });
+    }
     if (nestedScrollController.offset >=
             nestedScrollController.position.maxScrollExtent &&
         !nestedScrollController.position.outOfRange &&
@@ -466,15 +493,32 @@ class HomeState extends State<Home> {
   SliverAppBar _buildAppBar(bool innerBoxIsScrolled) {
     final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
         (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
+    final bool isHeaderSolid = innerBoxIsScrolled || _isScrolled;
 
     return SliverAppBar(
       centerTitle: false,
       automaticallyImplyLeading: false,
       toolbarHeight: kToolbarHeight,
       titleSpacing: 10,
-      backgroundColor: appBgColor,
-      flexibleSpace: Container(
-        color: appBgColor,
+      backgroundColor: isHeaderSolid ? appBgColor : transparent,
+      elevation: isHeaderSolid ? 4 : 0,
+      flexibleSpace: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        decoration: BoxDecoration(
+          color: isHeaderSolid ? appBgColor : transparent,
+          gradient: !isHeaderSolid
+              ? LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    appBgColor.withValues(alpha: 0.85),
+                    appBgColor.withValues(alpha: 0.45),
+                    transparent,
+                  ],
+                  stops: const [0.0, 0.65, 1.0],
+                )
+              : null,
+        ),
       ),
       leading: Container(
         height: kToolbarHeight,
@@ -550,13 +594,14 @@ class HomeState extends State<Home> {
       pinned: true,
       floating: false,
       expandedHeight: 0,
-      forceElevated: innerBoxIsScrolled,
+      forceElevated: isHeaderSolid,
       bottom: hasTypes
           ? PreferredSize(
               preferredSize: const Size.fromHeight(42),
-              child: Container(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
                 height: 42,
-                color: appBgColor,
+                color: isHeaderSolid ? appBgColor : transparent,
                 padding: const EdgeInsets.only(bottom: 6),
                 alignment: Alignment.centerLeft,
                 child: _buildCategoryPillsRow(
@@ -685,6 +730,10 @@ class HomeState extends State<Home> {
         final list = sectionTypeList ?? [];
         final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
+        if (homeProvider.selectedIndex == -1) {
+          _resetHomeScroll();
+        }
+
         return SizedBox(
           height: 36,
           child: ListView.separated(
@@ -693,7 +742,7 @@ class HomeState extends State<Home> {
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: itemCount,
-            separatorBuilder: (context, index) => const SizedBox(width: 6),
+            separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               final bool isHomeTab = index == 0;
               final bool isSelected = isHomeTab
@@ -729,20 +778,37 @@ class HomeState extends State<Home> {
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
                   padding: EdgeInsets.symmetric(
-                    horizontal: isSelected ? 14 : 10,
+                    horizontal: isSelected ? 16 : 12,
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: isSelected ? colorPrimary : transparent,
+                    color: isSelected
+                        ? colorPrimary
+                        : black.withValues(alpha: 0.40),
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: isSelected
+                          ? colorPrimary
+                          : white.withValues(alpha: 0.22),
+                      width: 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: colorPrimary.withValues(alpha: 0.35),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
                   ),
                   alignment: Alignment.center,
                   child: MyText(
-                    color: isSelected ? black : white.withValues(alpha: 0.90),
+                    color: isSelected ? black : white,
                     text: title,
                     multilanguage: false,
-                    fontsizeNormal: 14,
-                    fontsizeWeb: 15,
+                    fontsizeNormal: 13,
+                    fontsizeWeb: 14,
                     fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     maxline: 1,
                     overflow: TextOverflow.ellipsis,
@@ -790,14 +856,11 @@ class HomeState extends State<Home> {
   }
 
   Widget _buildBannerSections() {
-    final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
-        (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /* Top spacer to sit right below the pinned SliverAppBar + Category Tabs */
-        SizedBox(height: kToolbarHeight + (hasTypes ? 42.0 : 0.0) + 6.0),
+        /* Top spacer so banner starts right below top header bar and sits behind transparent category tabs */
+        const SizedBox(height: kToolbarHeight),
 
         /* Top Banner */
         if (sectionDataProvider.loadingBanner)
@@ -845,8 +908,8 @@ class HomeState extends State<Home> {
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
     final double imageH = kIsWeb
-        ? (screenW * 0.38).clamp(220.0, 340.0)
-        : (screenW * 0.52).clamp(195.0, 235.0);
+        ? (screenW * 0.42).clamp(240.0, 420.0)
+        : (screenW * (9 / 16)).clamp(215.0, 320.0);
     final double carouselH = imageH + 58.0;
 
     return Column(
@@ -909,6 +972,7 @@ class HomeState extends State<Home> {
                             MyNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
                               width: screenW,
                               height: imageH,
                             ),
@@ -935,12 +999,12 @@ class HomeState extends State<Home> {
                               ),
                             ),
 
-                            /* Subtle bottom gradient to blend image into dark background */
+                            /* Subtle bottom gradient right at the image edge boundary */
                             Positioned(
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              height: 44,
+                              height: 20,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -949,9 +1013,10 @@ class HomeState extends State<Home> {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         transparent,
-                                        appBgColor.withValues(alpha: 0.85),
+                                        appBgColor.withValues(alpha: 0.50),
                                         appBgColor,
                                       ],
+                                      stops: const [0.0, 0.70, 1.0],
                                     ),
                                   ),
                                 ),
@@ -1169,12 +1234,12 @@ class HomeState extends State<Home> {
                   item.typeId ?? 0,
                 );
               },
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(5),
               child: Container(
                 height: 38,
                 decoration: BoxDecoration(
                   color: white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(5),
                   boxShadow: [
                     BoxShadow(
                       color: black.withValues(alpha: 0.25),
@@ -1229,12 +1294,12 @@ class HomeState extends State<Home> {
                       );
                     }
                   },
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(5),
                   child: Container(
                     height: 38,
                     decoration: BoxDecoration(
                       color: black.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(24),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
                         color: white.withValues(alpha: 0.80),
                         width: 1.2,

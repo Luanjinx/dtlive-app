@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_locales/flutter_locales.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
@@ -961,210 +962,150 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   }
 
   Widget tabTitle(List<type.Result>? sectionTypeList) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const ClampingScrollPhysics(),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Consumer<HomeProvider>(
-            builder: (context, homeProvider, child) {
-              return ListView.separated(
-                itemCount: (sectionTypeList?.length ?? 0) + 1,
-                shrinkWrap: true,
-                scrollDirection: Axis.horizontal,
-                physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.symmetric(horizontal: 10),
-                separatorBuilder: (context, index) => const SizedBox(width: 6),
-                itemBuilder: (BuildContext context, int index) {
-                  final bool isActive =
-                      widget.newPage == RoutesConstant.homePage &&
-                      homeProvider.selectedIndex == index;
-
-                  final String title = index == 0
-                      ? "Home"
-                      : (sectionTypeList?[index - 1].name?.toString() ?? "");
-
-                  return InteractiveIcon(
-                    builder: (isHovered) {
-                      return Material(
-                        type: MaterialType.transparency,
-                        child: InkWell(
-                          autofocus: false,
-                          focusColor: transparent,
-                          hoverColor: transparent,
-                          splashColor: transparent,
-                          highlightColor: transparent,
-                          onTap: () async {
-                            printLog("<===============================>");
-                            printLog("HOME index ======> $index");
-                            printLog("HOME oldPage ====> ${widget.oldPage}");
-                            printLog("HOME newPage ====> ${widget.newPage}");
-                            printLog("<===============================>");
-                            if (index == 0) {
-                              await getTabData(
-                                -1,
-                                homeProvider.sectionTypeModel.result,
-                              );
-                            } else {
-                              await getTabData(
-                                (index - 1),
-                                homeProvider.sectionTypeModel.result,
-                              );
-                            }
-                            if (widget.newPage != RoutesConstant.homePage) {
-                              if (!context.mounted) return;
-                              context.go('/', extra: widget.newPage ?? "");
-                            }
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: IntrinsicWidth(
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Text(
-                                    title,
-                                    style: GoogleFonts.inter(
-                                      color: isActive
-                                          ? white
-                                          : (isHovered
-                                              ? white
-                                              : white.withValues(alpha: 0.70)),
-                                      fontSize: 15,
-                                      fontWeight: isActive
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      letterSpacing: 0.2,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.center,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 200),
-                                    curve: Curves.easeInOut,
-                                    height: 3,
-                                    decoration: BoxDecoration(
-                                      color: isActive
-                                          ? colorPrimary
-                                          : transparent,
-                                      borderRadius: BorderRadius.circular(2),
-                                      boxShadow: isActive
-                                          ? [
-                                              BoxShadow(
-                                                color: colorPrimary.withValues(
-                                                  alpha: 0.50,
-                                                ),
-                                                blurRadius: 4,
-                                                offset: const Offset(0, 1),
-                                              ),
-                                            ]
-                                          : null,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              );
-            },
-          ),
-          /* Store */
-          if ((rentMenuStatus != null && rentMenuStatus == "1") &&
-              Constant.userIsKid == false) ...[
-            const SizedBox(width: 6),
-            InteractiveIcon(
-              builder: (isHovered) {
-                final bool isStoreActive =
-                    widget.newPage == RoutesConstant.storePage;
-                return Material(
-                  type: MaterialType.transparency,
-                  child: InkWell(
-                    focusColor: transparent,
-                    hoverColor: transparent,
-                    splashColor: transparent,
-                    highlightColor: transparent,
-                    onTap: () async {
-                      printLog("newPage ======> ${widget.newPage}");
-                      if (!mounted) return;
-                      context.go(
-                        '/${RoutesConstant.storePage}',
-                        extra: widget.newPage ?? "",
-                      );
-                    },
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+    return SizedBox(
+      height: Dimens.homeTabHeight,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const ClampingScrollPhysics(),
+          child: Container(
+            height: Dimens.homeTabHeight,
+            alignment: Alignment.centerLeft,
+            child: Consumer<HomeProvider>(
+              builder: (context, homeProvider, child) {
+                final int itemCount = (sectionTypeList?.length ?? 0) + 1;
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    for (int index = 0; index < itemCount; index++) ...[
+                      _buildDesktopTabItem(
+                        title: index == 0
+                            ? "Home"
+                            : (sectionTypeList?[index - 1].name?.toString() ?? ""),
+                        isActive: widget.newPage == RoutesConstant.homePage &&
+                            homeProvider.selectedIndex == index,
+                        onTap: () async {
+                          printLog("<===============================>");
+                          printLog("HOME index ======> $index");
+                          printLog("HOME oldPage ====> ${widget.oldPage}");
+                          printLog("HOME newPage ====> ${widget.newPage}");
+                          printLog("<===============================>");
+                          if (index == 0) {
+                            await getTabData(
+                              -1,
+                              homeProvider.sectionTypeModel.result,
+                            );
+                          } else {
+                            await getTabData(
+                              (index - 1),
+                              homeProvider.sectionTypeModel.result,
+                            );
+                          }
+                          if (widget.newPage != RoutesConstant.homePage) {
+                            if (!context.mounted) return;
+                            context.go('/', extra: widget.newPage ?? "");
+                          }
+                        },
                       ),
-                      child: IntrinsicWidth(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            MyText(
-                              color: isStoreActive
-                                  ? white
-                                  : (isHovered
-                                      ? white
-                                      : white.withValues(alpha: 0.70)),
-                              multilanguage: true,
-                              text: "bottommenu4",
-                              maxline: 1,
-                              overflow: TextOverflow.ellipsis,
-                              fontsizeNormal: 14,
-                              fontweight: isStoreActive
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontsizeWeb: 15,
-                              textalign: TextAlign.center,
-                              fontstyle: FontStyle.normal,
-                            ),
-                            const SizedBox(height: 6),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              curve: Curves.easeInOut,
-                              height: 3,
-                              decoration: BoxDecoration(
-                                color: isStoreActive
-                                    ? colorPrimary
-                                    : transparent,
-                                borderRadius: BorderRadius.circular(2),
-                                boxShadow: isStoreActive
-                                    ? [
-                                        BoxShadow(
-                                          color: colorPrimary.withValues(
-                                            alpha: 0.50,
-                                          ),
-                                          blurRadius: 4,
-                                          offset: const Offset(0, 1),
-                                        ),
-                                      ]
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
+                      if (index < itemCount - 1) const SizedBox(width: 4),
+                    ],
+                    /* Store */
+                    if ((rentMenuStatus != null && rentMenuStatus == "1") &&
+                        Constant.userIsKid == false) ...[
+                      const SizedBox(width: 4),
+                      _buildDesktopTabItem(
+                        title: Locales.string(context, "bottommenu4"),
+                        isActive: widget.newPage == RoutesConstant.storePage,
+                        onTap: () async {
+                          printLog("newPage ======> ${widget.newPage}");
+                          if (!mounted) return;
+                          context.go(
+                            '/${RoutesConstant.storePage}',
+                            extra: widget.newPage ?? "",
+                          );
+                        },
                       ),
-                    ),
-                  ),
+                    ],
+                  ],
                 );
               },
             ),
-          ],
-        ],
+          ),
+        ),
       ),
+    );
+  }
+
+  Widget _buildDesktopTabItem({
+    required String title,
+    required bool isActive,
+    required VoidCallback onTap,
+  }) {
+    return InteractiveIcon(
+      builder: (isHovered) {
+        return Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            autofocus: false,
+            focusColor: transparent,
+            hoverColor: transparent,
+            splashColor: transparent,
+            highlightColor: transparent,
+            borderRadius: BorderRadius.circular(6),
+            onTap: onTap,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 8,
+              ),
+              child: IntrinsicWidth(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      title,
+                      style: GoogleFonts.inter(
+                        color: isActive
+                            ? white
+                            : (isHovered
+                                ? white
+                                : white.withValues(alpha: 0.70)),
+                        fontSize: 15,
+                        fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                        letterSpacing: 0.2,
+                      ),
+                      maxLines: 1,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 6),
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: isActive ? colorPrimary : transparent,
+                        borderRadius: BorderRadius.circular(2),
+                        boxShadow: isActive
+                            ? [
+                                BoxShadow(
+                                  color: colorPrimary.withValues(alpha: 0.50),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                            : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

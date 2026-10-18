@@ -10,6 +10,7 @@ class MyNetworkImage extends StatefulWidget {
   String imageUrl;
   double? height, width;
   dynamic fit;
+  Alignment alignment;
 
   MyNetworkImage({
     super.key,
@@ -17,6 +18,7 @@ class MyNetworkImage extends StatefulWidget {
     required this.fit,
     this.height,
     this.width,
+    this.alignment = Alignment.center,
   });
 
   @override
@@ -98,6 +100,7 @@ class _MyNetworkImageState extends State<MyNetworkImage> {
         child: Image.network(
           cleanUrl,
           fit: widget.fit,
+          alignment: widget.alignment,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {
               return child;
@@ -116,11 +119,16 @@ class _MyNetworkImageState extends State<MyNetworkImage> {
       child: CachedNetworkImage(
         imageUrl: widget.imageUrl,
         fit: widget.fit,
+        alignment: widget.alignment,
         fadeInDuration: const Duration(milliseconds: 300),
         fadeOutDuration: const Duration(milliseconds: 200),
         imageBuilder: (context, imageProvider) => Container(
           decoration: BoxDecoration(
-            image: DecorationImage(image: imageProvider, fit: widget.fit),
+            image: DecorationImage(
+              image: imageProvider,
+              fit: widget.fit,
+              alignment: widget.alignment,
+            ),
           ),
         ),
         placeholder: (context, url) {

@@ -451,7 +451,7 @@ class WebHomeState extends State<WebHome> {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
 
     final double sw = MediaQuery.of(context).size.width;
-    final double sh = Dimens.getResponsiveHeight(context, 0);
+    final double sh = Dimens.getResponsiveHeight(context, 0).clamp(480.0, 760.0);
 
     /* Responsive values */
     final double hPad = sw < 1200
@@ -896,7 +896,7 @@ class WebHomeState extends State<WebHome> {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
-    final double imageH = (screenW * 0.52).clamp(195.0, 320.0);
+    final double imageH = (screenW * (9 / 16)).clamp(215.0, 380.0);
     final double carouselH = imageH + 58.0;
 
     return Column(
@@ -959,6 +959,7 @@ class WebHomeState extends State<WebHome> {
                             MyNetworkImage(
                               imageUrl: imageUrl,
                               fit: BoxFit.cover,
+                              alignment: Alignment.topCenter,
                               width: screenW,
                               height: imageH,
                             ),
@@ -985,12 +986,12 @@ class WebHomeState extends State<WebHome> {
                               ),
                             ),
 
-                            /* Subtle bottom gradient to blend image into dark background */
+                            /* Subtle bottom gradient right at the image edge boundary */
                             Positioned(
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              height: 44,
+                              height: 20,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -999,9 +1000,10 @@ class WebHomeState extends State<WebHome> {
                                       end: Alignment.bottomCenter,
                                       colors: [
                                         transparent,
-                                        appBgColor.withValues(alpha: 0.85),
+                                        appBgColor.withValues(alpha: 0.50),
                                         appBgColor,
                                       ],
+                                      stops: const [0.0, 0.70, 1.0],
                                     ),
                                   ),
                                 ),
@@ -1165,12 +1167,12 @@ class WebHomeState extends State<WebHome> {
                   item.typeId ?? 0,
                 );
               },
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(5),
               child: Container(
                 height: 38,
                 decoration: BoxDecoration(
                   color: white,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(5),
                   boxShadow: [
                     BoxShadow(
                       color: black.withValues(alpha: 0.25),
@@ -1226,12 +1228,12 @@ class WebHomeState extends State<WebHome> {
                         );
                       }
                     },
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(5),
                     child: Container(
                       height: 38,
                       decoration: BoxDecoration(
                         color: black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(5),
                         border: Border.all(
                           color: white.withValues(alpha: 0.80),
                           width: 1.2,

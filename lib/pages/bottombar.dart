@@ -247,9 +247,13 @@ class BottombarState extends State<Bottombar> with RouteAware {
   }
 
   Future<void> getHomeTabData() async {
+    homeProvider.setSelectedTab(-1);
+    await sectionDataProvider.clearOldData();
     sectionDataProvider.setLoading(true);
-    await sectionDataProvider.getSectionBanner("0", "1");
-    await sectionDataProvider.getSectionList("0", "1", 1);
+    await Future.wait([
+      sectionDataProvider.getSectionBanner("0", "1"),
+      sectionDataProvider.getSectionList("0", "1", 1),
+    ]);
   }
 
   @override

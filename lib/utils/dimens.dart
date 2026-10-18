@@ -61,7 +61,7 @@ class Dimens {
 
   /* Ratio */
   static double portRatio = 0.8;
-  static double landRatio = 1.91;
+  static double landRatio = 16 / 9; // 1.7778 for true 16:9 widescreen images without cropping
   /* Ratio */
 
   static double widthPort = 110;
