@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
@@ -44,9 +45,11 @@ class ShortsSectionWidget extends StatelessWidget {
       child: SingleChildScrollView(
         controller: scrollController,
         scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
+        physics: kIsWeb
+            ? const ClampingScrollPhysics()
+            : const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
         child: AlignedGridView.count(
           itemCount: count,
           shrinkWrap: true,
@@ -130,9 +133,10 @@ class _ShortsSectionCardState extends State<_ShortsSectionCard>
     return MouseRegion(
       onEnter: (_) => _ctrl.forward(),
       onExit: (_) => _ctrl.reverse(),
-      child: AnimatedBuilder(
-        animation: _ctrl,
-        builder: (context, _) {
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, _) {
           return Transform.scale(
             scale: _scale.value,
             child: GestureDetector(
@@ -321,6 +325,7 @@ class _ShortsSectionCardState extends State<_ShortsSectionCard>
           );
         },
       ),
-    );
-  }
+    ),
+  );
+}
 }

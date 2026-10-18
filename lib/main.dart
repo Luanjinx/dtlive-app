@@ -742,7 +742,11 @@ class SmoothAppScrollBehavior extends MaterialScrollBehavior {
 
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) {
+    if (kIsWeb) {
+      return const ClampingScrollPhysics();
+    }
     return const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
   }
 }
+
 

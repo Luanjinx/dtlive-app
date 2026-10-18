@@ -411,10 +411,16 @@ class WebHomeState extends State<WebHome> {
               )
           else if (hasBanners)
             if (isBig)
-              _tvHomeBanner(sectionDataProvider.sectionBannerModel.result)
+              RepaintBoundary(
+                child: _tvHomeBanner(
+                  sectionDataProvider.sectionBannerModel.result,
+                ),
+              )
             else
-              _mobileHomeBanner(
-                sectionDataProvider.sectionBannerModel.result,
+              RepaintBoundary(
+                child: _mobileHomeBanner(
+                  sectionDataProvider.sectionBannerModel.result,
+                ),
               )
           else
             const SizedBox.shrink(),
@@ -1593,50 +1599,52 @@ class WebHomeState extends State<WebHome> {
           }
           /* ─────────────────────────────────────────────────── */
 
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildTitleViewAll(
-                sectionList: sectionList,
-                index: index,
-                onViewAllClick: () async {
-                  printLog("viewAll ====> ${sectionList?[index].viewAll}");
-                  final sectionViewAllProvider =
-                      Provider.of<SectionViewAllProvider>(
-                        context,
-                        listen: false,
+          return RepaintBoundary(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildTitleViewAll(
+                  sectionList: sectionList,
+                  index: index,
+                  onViewAllClick: () async {
+                    printLog("viewAll ====> ${sectionList?[index].viewAll}");
+                    final sectionViewAllProvider =
+                        Provider.of<SectionViewAllProvider>(
+                          context,
+                          listen: false,
+                        );
+                    if ((sectionList?[index].viewAll ?? 0) == 1) {
+                      sectionViewAllProvider.setLoading(true);
+                      if (!context.mounted) return;
+                      context.go(
+                        "/${RoutesConstant.sectionDetailsPage}/${(sectionList?[index].id ?? 0)}/${(sectionList?[index].videoType ?? 0)}/${sectionList?[index].screenLayout}",
+                        extra: {
+                          'newpage': widget.newPage.toString(),
+                          'itemid': (sectionList?[index].id ?? 0).toString(),
+                          'title': sectionList?[index].title ?? '',
+                          'screenlayout': sectionList?[index].screenLayout ?? '',
+                          'videotype': (sectionList?[index].videoType ?? 0)
+                              .toString(),
+                        },
                       );
-                  if ((sectionList?[index].viewAll ?? 0) == 1) {
-                    sectionViewAllProvider.setLoading(true);
-                    if (!context.mounted) return;
-                    context.go(
-                      "/${RoutesConstant.sectionDetailsPage}/${(sectionList?[index].id ?? 0)}/${(sectionList?[index].videoType ?? 0)}/${sectionList?[index].screenLayout}",
-                      extra: {
-                        'newpage': widget.newPage.toString(),
-                        'itemid': (sectionList?[index].id ?? 0).toString(),
-                        'title': sectionList?[index].title ?? '',
-                        'screenlayout': sectionList?[index].screenLayout ?? '',
-                        'videotype': (sectionList?[index].videoType ?? 0)
-                            .toString(),
-                      },
-                    );
-                  }
-                },
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: getRemainingDataHeight(
-                  sectionList?[index].videoType.toString() ?? "",
-                  sectionList?[index].screenLayout ?? "",
-                  sectionList,
-                  index,
+                    }
+                  },
                 ),
-                child: setSectionData(sectionList: sectionList, index: index),
-              ),
-              SizedBox(height: Dimens.isBigScreen(context) ? 40 : 25),
-            ],
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: getRemainingDataHeight(
+                    sectionList?[index].videoType.toString() ?? "",
+                    sectionList?[index].screenLayout ?? "",
+                    sectionList,
+                    index,
+                  ),
+                  child: setSectionData(sectionList: sectionList, index: index),
+                ),
+                SizedBox(height: Dimens.isBigScreen(context) ? 40 : 25),
+              ],
+            ),
           );
         } else {
           if ((sectionDataProvider.sectionBannerModel.result == null ||

@@ -678,7 +678,9 @@ class _WebCommanState extends State<WebComman> with RouteAware {
         children: [
           _buildPage(),
           /* AppBar */
-          _buildAppBar(),
+          RepaintBoundary(
+            child: _buildAppBar(),
+          ),
         ],
       ),
     );
@@ -808,7 +810,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
         return ListView.separated(
           controller: _mobileTabScrollController,
           scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
+          physics: const ClampingScrollPhysics(),
           padding: const EdgeInsets.only(bottom: 6),
           itemCount: itemCount,
           separatorBuilder: (context, index) => const SizedBox(width: 6),
@@ -961,7 +963,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   Widget tabTitle(List<type.Result>? sectionTypeList) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
+      physics: const ClampingScrollPhysics(),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -1752,6 +1754,10 @@ class _WebCommanState extends State<WebComman> with RouteAware {
 
   /* Search button */
   Widget _buildSearchButton() {
+    final bool isBig = Dimens.isBigScreen(context);
+    final double sw = MediaQuery.of(context).size.width;
+    final bool isWideDesktop = isBig && sw >= 1150;
+
     return InteractiveIcon(
       builder: (isHovered) {
         return InkWell(
@@ -1769,20 +1775,83 @@ class _WebCommanState extends State<WebComman> with RouteAware {
           },
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
+            curve: Curves.easeInOut,
+            height: 38,
+            width: isWideDesktop ? 260 : 38,
+            padding: EdgeInsets.symmetric(
+              horizontal: isWideDesktop ? 12 : 8,
+              vertical: 8,
+            ),
             decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isHovered ? white.withValues(alpha: 0.08) : transparent,
+              color: isHovered
+                  ? white.withValues(alpha: 0.12)
+                  : white.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isHovered
+                    ? colorPrimary.withValues(alpha: 0.45)
+                    : white.withValues(alpha: 0.10),
+                width: 1,
+              ),
             ),
-            child: MyImage(
-              imagePath: "ic_find.png",
-              color: white.withValues(alpha: isHovered ? 1.0 : 0.80),
-              fit: BoxFit.contain,
-              width: 18,
-              height: 18,
-            ),
+            child: isWideDesktop
+                ? Row(
+                    children: [
+                      MyImage(
+                        imagePath: "ic_find.png",
+                        color: white.withValues(alpha: isHovered ? 1.0 : 0.65),
+                        fit: BoxFit.contain,
+                        width: 15,
+                        height: 15,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          "Cari film, serial...",
+                          style: GoogleFonts.inter(
+                            color: white.withValues(
+                              alpha: isHovered ? 0.90 : 0.50,
+                            ),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: white.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: white.withValues(alpha: 0.15),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          "/",
+                          style: GoogleFonts.inter(
+                            color: white.withValues(alpha: 0.60),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  )
+                : Center(
+                    child: MyImage(
+                      imagePath: "ic_find.png",
+                      color: white.withValues(alpha: isHovered ? 1.0 : 0.80),
+                      fit: BoxFit.contain,
+                      width: 18,
+                      height: 18,
+                    ),
+                  ),
           ),
         );
       },
@@ -1798,9 +1867,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
         scrollController: _mainScrollController,
         childToScroll: SingleChildScrollView(
           controller: _mainScrollController,
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
+          physics: const ClampingScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,

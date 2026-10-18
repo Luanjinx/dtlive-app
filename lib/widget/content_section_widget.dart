@@ -266,9 +266,11 @@ class ContentSectionWidget extends StatelessWidget {
         itemCount: count,
         shrinkWrap: true,
         clipBehavior: Clip.none,
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
+        physics: kIsWeb
+            ? const ClampingScrollPhysics()
+            : const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
         padding: EdgeInsets.only(left: hPad, right: hPad),
         scrollDirection: Axis.horizontal,
         separatorBuilder: (ctx, i) => SizedBox(width: gap),
@@ -315,9 +317,11 @@ class ContentSectionWidget extends StatelessWidget {
         crossAxisCount: 1,
         mainAxisSpacing: mainSpacing,
         padding: EdgeInsets.only(left: leftPad, right: hPad),
-        physics: const BouncingScrollPhysics(
-          parent: AlwaysScrollableScrollPhysics(),
-        ),
+        physics: kIsWeb
+            ? const ClampingScrollPhysics()
+            : const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
         scrollDirection: Axis.horizontal,
         itemBuilder: (ctx, index) {
           final list.Datum datum = items![index];
@@ -420,9 +424,10 @@ class _ContentCardState extends State<_ContentCard>
     return MouseRegion(
       onEnter: (_) => _ctrl.forward(),
       onExit: (_) => _ctrl.reverse(),
-      child: AnimatedBuilder(
-        animation: _ctrl,
-        builder: (context, child) {
+      child: RepaintBoundary(
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, child) {
           return GestureDetector(
             onTap: widget.onTap,
             child: Transform.scale(
@@ -572,7 +577,8 @@ class _ContentCardState extends State<_ContentCard>
           );
         },
       ),
-    );
+    ),
+  );
   }
 }
 
