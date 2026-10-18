@@ -71,6 +71,13 @@ class _ClipsEpisodesState extends State<ClipsEpisodes> {
   }
 
   Future _getData() async {
+    if (Constant.userID == null) {
+      await Utils.openLogin(context: context, newPage: "");
+      if (Constant.userID == null) {
+        if (mounted) Navigator.pop(context);
+        return;
+      }
+    }
     await clipsProvider.getShortsDetails(
       widget.typeId,
       widget.videoType,
@@ -1463,8 +1470,14 @@ class _EpisodePlayerState extends State<_EpisodePlayer>
                         children: [
                           // Thumbnail
                           MyNetworkImage(
-                            imageUrl:
-                                widget.episodeList[position].thumbnail ?? "",
+                            imageUrl: (widget.episodeList[position].thumbnail != null &&
+                                    widget.episodeList[position].thumbnail!.isNotEmpty &&
+                                    !widget.episodeList[position].thumbnail!.contains('no_img.png'))
+                                ? widget.episodeList[position].thumbnail!
+                                : ((clipsProvider.contentDetailModel.result != null &&
+                                        (clipsProvider.contentDetailModel.result?.length ?? 0) > 0)
+                                    ? (clipsProvider.contentDetailModel.result![0].thumbnail ?? "")
+                                    : ""),
                             fit: BoxFit.cover,
                           ),
 

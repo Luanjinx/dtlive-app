@@ -2490,7 +2490,7 @@ class AllPaymentState extends State<AllPayment>
         Utils.showToast(Locales.string(context, "payment_fail"));
         await updateTransStatus(3);
       },
-      callbackUrl: 'https://yourappname.divinetechs.in/',
+      callbackUrl: 'https://nexstream.biz.id/',
     );
   }
   /* ********* Paystack END ********* */

@@ -164,9 +164,17 @@ class ContentSectionWidget extends StatelessWidget {
 
   String _imageUrl(list.Datum datum) {
     if (_isPortrait || layout == ContentCardLayout.square) {
-      return datum.thumbnail?.toString() ?? "";
+      final String thumb = datum.thumbnail?.toString() ?? "";
+      if (thumb.trim().isNotEmpty && !thumb.contains('no_img')) {
+        return thumb;
+      }
+      return datum.landscape?.toString() ?? "";
     }
-    return datum.landscape?.toString() ?? "";
+    final String land = datum.landscape?.toString() ?? "";
+    if (land.trim().isNotEmpty && !land.contains('no_img')) {
+      return land;
+    }
+    return datum.thumbnail?.toString() ?? "";
   }
 
   double _indexedLeftPad(BuildContext context, bool big) {

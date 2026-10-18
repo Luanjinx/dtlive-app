@@ -502,5 +502,7 @@
     "language_singular": "Taal",
     "language_plural": "Talen",
     "see_all_reviews": "Alle beoordelingen bekijken",
-    "write_review": "Schrijf een beoordeling"
+    "write_review": "Schrijf een beoordeling",
+    "mute": "Dempen",
+    "unmute": "Geluid aan"
 }

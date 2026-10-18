@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../provider/findprovider.dart';
@@ -31,6 +30,7 @@ import '../webwidget/webfooter.dart';
 import '../widget/myimage.dart';
 import '../widget/mynetworkimg.dart';
 import '../widget/mytext.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import '../main.dart';
 
@@ -1130,6 +1130,21 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                     ),
                   ],
 
+                  // Clips / Shorts (if not kid)
+                  if (Constant.userIsKid == false)
+                    _buildDrawerNavItem(
+                      icon: Icons.play_circle_outline_rounded,
+                      title: "Shorts",
+                      isActive: widget.newPage == RoutesConstant.clipsEpisodesPage,
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        context.go(
+                          '/${RoutesConstant.clipsEpisodesPage}',
+                          extra: widget.newPage ?? "",
+                        );
+                      },
+                    ),
+
                   // Store (if enabled)
                   if ((rentMenuStatus != null && rentMenuStatus == "1") &&
                       Constant.userIsKid == false)
@@ -1319,8 +1334,6 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                               color: white.withValues(alpha: 0.6),
                               fontSize: 12,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
                           ),
                         ],
                       ],

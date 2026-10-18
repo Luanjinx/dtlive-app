@@ -1,4 +1,4 @@
-import 'package:yourappname/model/successmodel.dart';
+import 'package:nexstream/model/successmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_locales/flutter_locales.dart';
 

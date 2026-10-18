@@ -504,5 +504,7 @@
     "language_singular": "Bahasa",
     "language_plural": "Bahasa",
     "see_all_reviews": "Lihat semua ulasan",
-    "write_review": "Tulis ulasan"
+    "write_review": "Tulis ulasan",
+    "mute": "Bisukan",
+    "unmute": "Bunyikan"
 }

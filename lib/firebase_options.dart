@@ -41,46 +41,44 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAWHjp026aIeKv2Gnf9KWJCyCr0ghXc8fk',
-    appId: '1:976172192756:web:548285a3134408f18e1fa1',
-    messagingSenderId: '976172192756',
-    projectId: 'dtlive-12784',
-    authDomain: 'dtlive-12784.firebaseapp.com',
-    storageBucket: 'dtlive-12784.firebasestorage.app',
-    measurementId: 'G-ZNNGBQXPH1',
+    apiKey: 'AIzaSyDlXcV3tPcwtbhQ4YnjBkFJLbo2uKWMsJY',
+    appId: '1:124709066369:web:50a5f47d7f1a80c1e59f80',
+    messagingSenderId: '124709066369',
+    projectId: 'nexstream-b070d',
+    authDomain: 'nexstream-b070d.firebaseapp.com',
+    storageBucket: 'nexstream-b070d.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyDcObQ6BE_DG5HHRxRr8UTdJSLAtlBuNEg',
-    appId: '1:976172192756:android:c3692a8a3c3eabea8e1fa1',
-    messagingSenderId: '976172192756',
-    projectId: 'dtlive-12784',
-    storageBucket: 'dtlive-12784.firebasestorage.app',
+    apiKey: 'AIzaSyBuaBe8GUExCNm_MAqdEA51ohQGeGLCO40',
+    appId: '1:124709066369:android:da92edd716c1dedee59f80',
+    messagingSenderId: '124709066369',
+    projectId: 'nexstream-b070d',
+    storageBucket: 'nexstream-b070d.firebasestorage.app',
   );
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB8Km3XO8A2LdAYO7-FC9blnxBbhHA3Bps',
-    appId: '1:976172192756:ios:aba072dc0c15c34b8e1fa1',
-    messagingSenderId: '976172192756',
-    projectId: 'dtlive-12784',
-    storageBucket: 'dtlive-12784.firebasestorage.app',
-    iosBundleId: 'com.javstory.prjkt',
+    apiKey: 'AIzaSyDHJ4y6qho45VUi75SOFWV6iDXz7Qw5eCU',
+    appId: '1:124709066369:ios:2efe57b19d3dfa75e59f80',
+    messagingSenderId: '124709066369',
+    projectId: 'nexstream-b070d',
+    storageBucket: 'nexstream-b070d.firebasestorage.app',
+    iosBundleId: 'com.nexstream.prjkt',
   );
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyB8Km3XO8A2LdAYO7-FC9blnxBbhHA3Bps',
-    appId: '1:976172192756:ios:aba072dc0c15c34b8e1fa1',
-    messagingSenderId: '976172192756',
-    projectId: 'dtlive-12784',
-    storageBucket: 'dtlive-12784.firebasestorage.app',
-    iosBundleId: 'com.javstory.prjkt',
+    apiKey: 'AIzaSyDHJ4y6qho45VUi75SOFWV6iDXz7Qw5eCU',
+    appId: '1:124709066369:ios:2efe57b19d3dfa75e59f80',
+    messagingSenderId: '124709066369',
+    projectId: 'nexstream-b070d',
+    storageBucket: 'nexstream-b070d.firebasestorage.app',
+    iosBundleId: 'com.nexstream.prjkt',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyAWHjp026aIeKv2Gnf9KWJCyCr0ghXc8fk',
-    appId: '1:976172192756:web:7185bba6af92e7248e1fa1',
-    messagingSenderId: '976172192756',
-    projectId: 'dtlive-12784',
-    authDomain: 'dtlive-12784.firebaseapp.com',
-    storageBucket: 'dtlive-12784.firebasestorage.app',
-    measurementId: 'G-407LYLFC85',
+    apiKey: 'AIzaSyDlXcV3tPcwtbhQ4YnjBkFJLbo2uKWMsJY',
+    appId: '1:124709066369:web:786b74c16aa00cb4e59f80',
+    messagingSenderId: '124709066369',
+    projectId: 'nexstream-b070d',
+    authDomain: 'nexstream-b070d.firebaseapp.com',
+    storageBucket: 'nexstream-b070d.firebasestorage.app',
   );
 }

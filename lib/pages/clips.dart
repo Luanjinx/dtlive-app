@@ -15,6 +15,7 @@ import '../shimmer/shimmerutils.dart';
 import '../provider/clipsprovider.dart';
 import '../utils/adhelper.dart';
 import '../utils/color.dart';
+import '../utils/constant.dart';
 import '../utils/loadingoverlay.dart';
 import '../utils/utils.dart';
 import '../widget/mytext.dart';
@@ -306,6 +307,10 @@ class _TadkaClipItemState extends State<TadkaClipItem>
 
   void _handleEpisodes() async {
     printLog("Episodes tapped index=${widget.index}");
+    if (Constant.userID == null) {
+      await Utils.openLogin(context: context, newPage: "");
+      if (Constant.userID == null) return;
+    }
     final int typeId = clipsProvider.shortFilmsList?[widget.index].typeId ?? 0;
     final int videoType =
         clipsProvider.shortFilmsList?[widget.index].videoType ?? 0;

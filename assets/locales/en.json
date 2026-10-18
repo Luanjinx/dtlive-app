@@ -504,5 +504,7 @@
     "language_singular": "Language",
     "language_plural": "Languages",
     "see_all_reviews": "See All Reviews",
-    "write_review": "Write a Review"
+    "write_review": "Write a Review",
+    "mute": "Mute",
+    "unmute": "Unmute"
 }

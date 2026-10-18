@@ -502,5 +502,7 @@
     "language_singular": "Taal",
     "language_plural": "Tale",
     "see_all_reviews": "Sien alle resensies",
-    "write_review": "Skryf 'n resensie"
+    "write_review": "Skryf 'n resensie",
+    "mute": "Demp",
+    "unmute": "Ontdemp"
 }

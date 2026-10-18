@@ -124,6 +124,15 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
   }
 
   Future _getData() async {
+    if (Constant.userID == null) {
+      await Utils.openLogin(context: context, newPage: "");
+      if (Constant.userID == null) {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pop(context);
+        }
+        return;
+      }
+    }
     await clipsProvider.getShortsDetails(
       widget.typeId,
       widget.videoType,
@@ -760,12 +769,14 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
                             alignment: Alignment.center,
                             children: [
                               MyNetworkImage(
-                                imageUrl:
-                                    clipsProvider
-                                        .shortFilmEpisodeModel
-                                        .result?[position]
-                                        .thumbnail ??
-                                    "",
+                                imageUrl: (clipsProvider.shortFilmEpisodeModel.result?[position].thumbnail != null &&
+                                        clipsProvider.shortFilmEpisodeModel.result![position].thumbnail!.isNotEmpty &&
+                                        !clipsProvider.shortFilmEpisodeModel.result![position].thumbnail!.contains('no_img.png'))
+                                    ? clipsProvider.shortFilmEpisodeModel.result![position].thumbnail!
+                                    : ((clipsProvider.contentDetailModel.result != null &&
+                                            (clipsProvider.contentDetailModel.result?.length ?? 0) > 0)
+                                        ? (clipsProvider.contentDetailModel.result![0].thumbnail ?? "")
+                                        : ""),
                                 width: Dimens.widthEpiWeb,
                                 height: Dimens.heightEpiWeb,
                                 fit: BoxFit.cover,

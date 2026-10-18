@@ -16,7 +16,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.javstory.prjkt"
+    namespace = "com.nexstream.prjkt"
     compileSdk = 36
     ndkVersion = "28.2.13676358"
 
@@ -33,7 +33,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.javstory.prjkt"
+        applicationId = "com.nexstream.prjkt"
         minSdk = 25
         targetSdk = 35
         versionCode = 1

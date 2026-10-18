@@ -502,5 +502,7 @@
     "language_singular": "Dil",
     "language_plural": "Diller",
     "see_all_reviews": "Tüm yorumları gör",
-    "write_review": "Yorum yaz"
+    "write_review": "Yorum yaz",
+    "mute": "Sessiz",
+    "unmute": "Sesi Aç"
 }

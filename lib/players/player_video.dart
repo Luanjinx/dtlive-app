@@ -803,7 +803,9 @@ class _PlayerVideoState extends State<PlayerVideo>
         OrientationManager.forcePortrait();
       }
     } else {
-      _jsHelper.callBrowserFullscreen(false);
+      if (!_isSwitchingEpisode) {
+        _jsHelper.callBrowserFullscreen(false);
+      }
     }
     _adsLoader = null;
     _countdownTimer?.cancel();
@@ -939,6 +941,8 @@ class _PlayerVideoState extends State<PlayerVideo>
     _isSwitchingEpisode = true;
     if (!kIsWeb) {
       OrientationManager.forceLandscape();
+    } else {
+      _jsHelper.callBrowserFullscreen(true);
     }
     // [NEW] FEATURE-7: FadeTransition instead of MaterialPageRoute (works on both Web & Mobile)
     Navigator.pushReplacement(

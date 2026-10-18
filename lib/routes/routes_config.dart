@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 
 import '../players/player_youtube_web.dart';
 import '../webpages/webclipsepisodes.dart';
+import '../webpages/webcomman.dart';
+import '../pages/clips.dart';
 import '../model/playermodel.dart';
 import '../pages/activetv.dart';
 import '../players/player_vdocipher.dart';
@@ -135,7 +137,28 @@ class RoutesConfig {
         },
       ),
 
-      /* Clip's Episodes */
+      /* Clip's Episodes / Shorts */
+      GoRoute(
+        name: RoutesConstant.clipsEpisodesPage,
+        path: '/${RoutesConstant.clipsEpisodesPage}',
+        builder: (context, state) {
+          final homeProvider = Provider.of<HomeProvider>(
+            context,
+            listen: false,
+          );
+          String newPage = "";
+          if (state.extra != null && state.extra is String) {
+            newPage = state.extra as String;
+          }
+          homeProvider.getSectionType();
+          return WebComman(
+            newPage: RoutesConstant.clipsEpisodesPage,
+            oldPage: newPage,
+            reqText: "",
+            newChild: const Clips(clipId: 0, openFrom: "bottom"),
+          );
+        },
+      ),
       GoRoute(
         path:
             '/${RoutesConstant.clipsEpisodesPage}/:videotype/:typeid/:videoid/:subvideotype',
@@ -688,6 +711,10 @@ class RoutesConfig {
         path: '/${RoutesConstant.playerPage}',
         redirect: (context, state) {
           if (state.extra == null || state.extra is! PlayerModel) {
+            return '/${RoutesConstant.homePage}';
+          }
+          final pModel = state.extra as PlayerModel;
+          if (Constant.userID == null && pModel.playType != "Trailer") {
             return '/${RoutesConstant.homePage}';
           }
           return null;

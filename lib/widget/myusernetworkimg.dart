@@ -36,8 +36,23 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
   }
 
   Future<void> _precacheImage() async {
-    final image = NetworkImage(widget.imageUrl);
-    await precacheImage(image, context);
+    try {
+      final String cleanUrl = _resolveUrl(widget.imageUrl);
+      if (cleanUrl.isNotEmpty && !cleanUrl.contains('no_img')) {
+        final image = NetworkImage(cleanUrl);
+        await precacheImage(image, context, onError: (e, s) {});
+      }
+    } catch (_) {}
+  }
+
+  String _resolveUrl(String url) {
+    String clean = url.trim();
+    if (kIsWeb) {
+      if (Uri.base.scheme == 'https' && clean.startsWith('http://')) {
+        clean = 'https://${clean.substring(7)}';
+      }
+    }
+    return clean;
   }
 
   Widget _buildShimmerPlaceholder() {
@@ -72,7 +87,8 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.imageUrl.trim().isEmpty || widget.imageUrl.contains('no_img')) {
+    final String cleanUrl = _resolveUrl(widget.imageUrl);
+    if (cleanUrl.isEmpty || cleanUrl.contains('no_img')) {
       return _buildErrorWidget();
     }
 
@@ -81,7 +97,7 @@ class _MyUserNetworkImageState extends State<MyUserNetworkImage> {
         height: widget.height,
         width: widget.width,
         child: Image.network(
-          widget.imageUrl,
+          cleanUrl,
           fit: widget.fit,
           loadingBuilder: (context, child, loadingProgress) {
             if (loadingProgress == null) {

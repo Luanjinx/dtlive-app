@@ -7,7 +7,7 @@
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
-		<string>yourappname</string>
+		<string>nexstream</string>
 		<key>CFBundleExecutable</key>
 		<string>$(EXECUTABLE_NAME)</string>
 		<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>yourappname</string>
+		<string>nexstream</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -99,7 +99,7 @@
 		<key>NSDocumentsDirectory</key>
 		<string>YES</string>
 		<key>NSLocalNetworkUsageDescription</key>
-		<string>yourappname uses the local network to discover the Dart debug tool and communicate with connected devices.</string>
+		<string>nexstream uses the local network to discover the Dart debug tool and communicate with connected devices.</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>We are not using location anywhere in the app</string>
 		<key>NSMicrophoneUsageDescription</key>

@@ -502,5 +502,7 @@
     "language_singular": "Ngôn ngữ",
     "language_plural": "Ngôn ngữ",
     "see_all_reviews": "Xem tất cả đánh giá",
-    "write_review": "Viết đánh giá"
+    "write_review": "Viết đánh giá",
+    "mute": "Tắt tiếng",
+    "unmute": "Bật tiếng"
 }

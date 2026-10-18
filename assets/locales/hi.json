@@ -502,5 +502,7 @@
     "language_singular": "भाषा",
     "language_plural": "भाषाएँ",
     "see_all_reviews": "सभी समीक्षाएं देखें",
-    "write_review": "समीक्षा लिखें"
+    "write_review": "समीक्षा लिखें",
+    "mute": "म्यूट",
+    "unmute": "अनम्यूट"
 }

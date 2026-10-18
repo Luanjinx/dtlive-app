@@ -7,9 +7,9 @@ class Constant {
   static String apiToken =
       'v25dcFLxPGg0MIGu7jkSDIJQTEEDqcZx'; // Replace with your API Token (Get from Admin panel)
 
-  static String appName = "Javstory";
+  static String appName = "Nexstream";
   static String appPackageName =
-      "com.javstory.prjkt"; // This is used for PIP channel
+      "com.nexstream.prjkt"; // This is used for PIP channel
   static String appleAppId = ""; // This is used for Appstore iOS App redirect
   static String appVersion = "";
 

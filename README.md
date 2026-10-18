@@ -1,4 +1,4 @@
-# yourappname
+# nexstream
 
 ## 🗓 Version 2.1 - 13 May 2026
 - **[Add]** User Reviews & Ratings feature

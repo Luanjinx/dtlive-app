@@ -502,5 +502,7 @@
     "language_singular": "Langue",
     "language_plural": "Langues",
     "see_all_reviews": "Voir tous les avis",
-    "write_review": "Écrire un avis"
+    "write_review": "Écrire un avis",
+    "mute": "Muet",
+    "unmute": "Son activé"
 }

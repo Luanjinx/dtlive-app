@@ -121,7 +121,10 @@ class _ShortsSectionCardState extends State<_ShortsSectionCard>
 
   @override
   Widget build(BuildContext context) {
-    final String thumb = widget.datum.thumbnail?.toString() ?? "";
+    final String rawThumb = widget.datum.thumbnail?.toString() ?? "";
+    final String thumb = (rawThumb.trim().isNotEmpty && !rawThumb.contains('no_img'))
+        ? rawThumb
+        : (widget.datum.landscape?.toString() ?? "");
     final String name = widget.datum.name?.toString() ?? "";
 
     return MouseRegion(

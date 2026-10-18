@@ -502,5 +502,7 @@
     "language_singular": "Gjuhë",
     "language_plural": "Gjuhë",
     "see_all_reviews": "Shiko të gjitha komentet",
-    "write_review": "Shkruaj një koment"
+    "write_review": "Shkruaj një koment",
+    "mute": "Hesht",
+    "unmute": "Aktivizo zërin"
 }

@@ -353,12 +353,29 @@ class Utils {
         return true;
       }
     } else {
-      if (isPremium == 1 || isRent == 1) {
-        openLogin(context: context, newPage: "");
-        return false;
-      } else {
-        return true;
+      await openLogin(context: context, newPage: "");
+      if (Constant.userID != null) {
+        if (!context.mounted) return true;
+        return await checkSubsRentLogin(
+          context: context,
+          isPremium: isPremium,
+          isRent: isRent,
+          isBuy: isBuy,
+          rentBuy: rentBuy,
+          producerId: producerId,
+          videoId: videoId,
+          rentPrice: rentPrice,
+          vTitle: vTitle,
+          typeId: typeId,
+          vType: vType,
+          subVideoType: subVideoType,
+          rentProductId: rentProductId,
+          newPage: newPage,
+          oldPage: oldPage,
+          reqText: reqText,
+        );
       }
+      return false;
     }
   }
 
@@ -1216,7 +1233,7 @@ class Utils {
       return result;
     }
     if (!context.mounted) return;
-    dynamic result = Navigator.push(
+    dynamic result = await Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder: (context, animation, secondaryAnimation) {
@@ -1332,6 +1349,13 @@ class Utils {
     required BuildContext context,
     required PlayerModel playerModel,
   }) async {
+    if (Constant.userID == null && playerModel.playType != "Trailer") {
+      await openLogin(context: context, newPage: "");
+      if (Constant.userID == null) {
+        return null;
+      }
+    }
+    if (!context.mounted) return null;
     dynamic isContinue;
     if (kIsWeb) {
       /* Request browser fullscreen on web */

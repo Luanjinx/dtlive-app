@@ -502,5 +502,7 @@
     "language_singular": "لغة",
     "language_plural": "لغات",
     "see_all_reviews": "عرض جميع المراجعات",
-    "write_review": "كتابة مراجعة"
+    "write_review": "كتابة مراجعة",
+    "mute": "كتم الصوت",
+    "unmute": "إلغاء الكتم"
 }
