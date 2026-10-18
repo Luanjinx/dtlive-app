@@ -852,9 +852,9 @@ class HomeState extends State<Home> {
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
     final double imageH = kIsWeb
-        ? (screenW * 0.38).clamp(280.0, 420.0)
-        : (screenW * 0.62).roundToDouble();
-    final double carouselH = imageH + 30.0;
+        ? (screenW * 0.38).clamp(220.0, 340.0)
+        : (screenW * 0.52).clamp(195.0, 235.0);
+    final double carouselH = imageH + 58.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -925,7 +925,7 @@ class HomeState extends State<Home> {
                               top: 0,
                               left: 0,
                               right: 0,
-                              height: 110,
+                              height: 90,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -950,7 +950,7 @@ class HomeState extends State<Home> {
                               bottom: 0,
                               left: 0,
                               right: 0,
-                              height: 52,
+                              height: 44,
                               child: IgnorePointer(
                                 child: Container(
                                   decoration: BoxDecoration(
@@ -970,38 +970,37 @@ class HomeState extends State<Home> {
 
                             /* Badge (top-left, below floating tabs) */
                             Positioned(
-                              top: 50,
+                              top: 48,
                               left: 14,
                               child: _buildBannerBadge(item),
                             ),
-
-                            /* Optional Title if isTitle == 1 */
-                            if ((item.isTitle ?? 0) == 1 &&
-                                (item.name ?? "").trim().isNotEmpty)
-                              Positioned(
-                                bottom: 6,
-                                left: 16,
-                                right: 16,
-                                child: MyText(
-                                  color: white,
-                                  text: item.name ?? "",
-                                  textalign: TextAlign.center,
-                                  fontsizeNormal: 18,
-                                  fontsizeWeb: 20,
-                                  fontweight: FontWeight.w800,
-                                  multilanguage: false,
-                                  maxline: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  fontstyle: FontStyle.normal,
-                                  isShadowText: true,
-                                ),
-                              ),
                           ],
                         ),
                       ),
                     ),
 
-                    const SizedBox(height: 10),
+                    /* Title above genre */
+                    if ((item.name ?? "").trim().isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: MyText(
+                          color: white,
+                          text: item.name ?? "",
+                          textalign: TextAlign.center,
+                          fontsizeNormal: 18,
+                          fontsizeWeb: 20,
+                          fontweight: FontWeight.w800,
+                          multilanguage: false,
+                          maxline: 1,
+                          overflow: TextOverflow.ellipsis,
+                          fontstyle: FontStyle.normal,
+                          isShadowText: true,
+                        ),
+                      ),
+                    ],
+
+                    const SizedBox(height: 3),
 
                     /* Genres: e.g. Action • Adventure */
                     Padding(
@@ -1024,7 +1023,7 @@ class HomeState extends State<Home> {
           ],
         ),
 
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
 
         /* ── Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] (Static, does not slide with carousel) ── */
         Consumer<SectionDataProvider>(
@@ -1048,7 +1047,7 @@ class HomeState extends State<Home> {
 
         /* ── Dot indicator ── */
         if (list.length > 1) ...[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Center(
             child: Consumer<SectionDataProvider>(
               builder: (context, sdp, _) {
@@ -1058,13 +1057,13 @@ class HomeState extends State<Home> {
                   count: list.length,
                   activeIndex: activeIndex,
                   effect: ScrollingDotsEffect(
-                    spacing: 7,
-                    radius: 4,
+                    spacing: 6,
+                    radius: 3,
                     activeDotScale: 1.25,
                     activeDotColor: white,
                     dotColor: white.withValues(alpha: 0.30),
-                    dotHeight: 5,
-                    dotWidth: 5,
+                    dotHeight: 4.5,
+                    dotWidth: 4.5,
                   ),
                 );
               },
