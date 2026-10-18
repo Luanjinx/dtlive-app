@@ -146,9 +146,9 @@ class SectionViewAllState extends State<SectionViewAll> {
             Dimens.heightGen,
             Dimens.widthGen,
             3,
-            3,
-            3,
-            25,
+            14,
+            12,
+            12,
           ),
         );
       } else if (widget.videoType == Constant.channelType) {
@@ -157,10 +157,10 @@ class SectionViewAllState extends State<SectionViewAll> {
             context,
             Dimens.heightChannel,
             Dimens.widthChannel,
-            3,
-            3,
-            3,
-            25,
+            4,
+            14,
+            12,
+            12,
           ),
         );
       } else {
@@ -170,8 +170,8 @@ class SectionViewAllState extends State<SectionViewAll> {
             Dimens.heightPortOther,
             Dimens.widthPortOther,
             3,
-            3,
-            3,
+            14,
+            12,
             12,
           ),
         );
@@ -248,13 +248,16 @@ class SectionViewAllState extends State<SectionViewAll> {
   }
 
   Widget _buildVideoItem() {
+    final bool isLandscape = widget.screenLayout.contains("landscape");
+    final double cardRadius = Dimens.isBigScreen(context) ? 10.0 : 8.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 15),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: ResponsiveGridList(
-        minItemWidth: Dimens.widthPortOther,
-        verticalGridSpacing: 3,
-        horizontalGridSpacing: 3,
-        minItemsPerRow: 3,
+        minItemWidth: isLandscape ? 160 : Dimens.widthPortOther,
+        verticalGridSpacing: 14,
+        horizontalGridSpacing: 12,
+        minItemsPerRow: isLandscape ? 2 : 3,
         maxItemsPerRow: 8,
         listViewBuilderOptions: ListViewBuilderOptions(
           shrinkWrap: true,
@@ -263,64 +266,77 @@ class SectionViewAllState extends State<SectionViewAll> {
         children: List.generate(
           (sectionViewAllProvider.sectionDetailList?.length ?? 0),
           (position) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(Dimens.cardRadiusSmall),
-              child: InkWell(
-                onTap: () {
-                  printLog("Clicked on position ==> $position");
-                  Utils.openDetails(
-                    context: context,
-                    videoId:
-                        sectionViewAllProvider
-                            .sectionDetailList?[position]
-                            .id ??
-                        0,
-                    subVideoType:
-                        sectionViewAllProvider
-                            .sectionDetailList?[position]
-                            .subVideoType ??
-                        0,
-                    videoType:
-                        sectionViewAllProvider
-                            .sectionDetailList?[position]
-                            .videoType ??
-                        0,
-                    typeId:
-                        sectionViewAllProvider
-                            .sectionDetailList?[position]
-                            .typeId ??
-                        0,
-                    newPage:
-                        ((sectionViewAllProvider
-                                        .sectionDetailList?[position]
-                                        .subVideoType ??
-                                    0) ==
-                                2 ||
-                            (sectionViewAllProvider
-                                        .sectionDetailList?[position]
-                                        .videoType ??
-                                    0) ==
-                                2)
-                        ? RoutesConstant.contentDetailsPage
-                        : RoutesConstant.contentDetailsPage,
-                    oldPage: "",
-                    reqText: "",
-                  );
-                },
-                child: Container(
-                  width: Dimens.widthPortOther,
-                  height: Dimens.heightPortOther,
-                  alignment: Alignment.center,
-                  child: MyNetworkImage(
-                    imageUrl:
-                        sectionViewAllProvider
-                            .sectionDetailList?[position]
-                            .thumbnail
-                            .toString() ??
-                        "",
-                    fit: BoxFit.cover,
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
+            final item = sectionViewAllProvider.sectionDetailList?[position];
+            final String imageUrl = isLandscape
+                ? ((item?.landscape != null &&
+                        item!.landscape!.isNotEmpty &&
+                        !item.landscape!.contains('no_img'))
+                    ? item.landscape!
+                    : (item?.thumbnail ?? ""))
+                : ((item?.thumbnail != null &&
+                        item!.thumbnail!.isNotEmpty &&
+                        !item.thumbnail!.contains('no_img'))
+                    ? item.thumbnail!
+                    : (item?.landscape ?? ""));
+
+            return AspectRatio(
+              aspectRatio: isLandscape
+                  ? (16 / 9)
+                  : (Dimens.widthPortOther / Dimens.heightPortOther),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: lightBlack,
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withValues(alpha: 0.35),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(cardRadius),
+                    onTap: () {
+                      printLog("Clicked on position ==> $position");
+                      Utils.openDetails(
+                        context: context,
+                        videoId: item?.id ?? 0,
+                        subVideoType: item?.subVideoType ?? 0,
+                        videoType: item?.videoType ?? 0,
+                        typeId: item?.typeId ?? 0,
+                        newPage: RoutesConstant.contentDetailsPage,
+                        oldPage: "",
+                        reqText: "",
+                      );
+                    },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        MyNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.cover,
+                          height: double.infinity,
+                          width: double.infinity,
+                        ),
+                        /* Rent / Premium Tag */
+                        if ((item?.isPremium ?? 0) == 1 ||
+                            (item?.isRent ?? 0) == 1)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Utils.buildRentPremiumTAG(
+                              context: context,
+                              isPremium: item?.isPremium ?? 0,
+                              isRent: item?.isRent ?? 0,
+                              rentPrice: item?.price ?? 0,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -332,12 +348,14 @@ class SectionViewAllState extends State<SectionViewAll> {
   }
 
   Widget _buildChannelItem() {
+    final double cardRadius = Dimens.isBigScreen(context) ? 10.0 : 8.0;
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(8, 8, 8, 15),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: ResponsiveGridList(
         minItemWidth: Dimens.widthChannel,
-        verticalGridSpacing: 7,
-        horizontalGridSpacing: 7,
+        verticalGridSpacing: 14,
+        horizontalGridSpacing: 12,
         minItemsPerRow: 4,
         maxItemsPerRow: 8,
         listViewBuilderOptions: ListViewBuilderOptions(
@@ -347,61 +365,53 @@ class SectionViewAllState extends State<SectionViewAll> {
         children: List.generate(
           (sectionViewAllProvider.sectionDetailList?.length ?? 0),
           (position) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(Dimens.cardRadiusMedium),
-              clipBehavior: Clip.antiAliasWithSaveLayer,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(Dimens.cardRadiusMedium),
-                focusColor: white,
-                onTap: () async {
-                  printLog("Clicked on position ==> $position");
-                  final videoByIDProvider = Provider.of<VideoByIDProvider>(
-                    context,
-                    listen: false,
-                  );
-                  videoByIDProvider.setLoading(true);
-                  if (!mounted) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) {
-                        return ContentByID(
-                          sectionViewAllProvider
-                                  .sectionDetailList?[position]
-                                  .id ??
-                              0,
-                          sectionViewAllProvider
-                                  .sectionDetailList?[position]
-                                  .name ??
-                              "",
-                          "ByChannel",
-                        );
-                      },
-                    ),
-                  );
-                },
-                child: Container(
-                  height: Dimens.heightChannel,
-                  alignment: Alignment.center,
-                  decoration: Utils.setBackground(
-                    transparent,
-                    Dimens.cardRadiusMedium,
+            final item = sectionViewAllProvider.sectionDetailList?[position];
+            return Container(
+              decoration: BoxDecoration(
+                color: lightBlack,
+                borderRadius: BorderRadius.circular(cardRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: black.withValues(alpha: 0.25),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
                   ),
-                  constraints: const BoxConstraints(minWidth: 80),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(
-                      Dimens.cardRadiusMedium,
-                    ),
-                    clipBehavior: Clip.antiAliasWithSaveLayer,
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(cardRadius),
+                clipBehavior: Clip.antiAlias,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  focusColor: white,
+                  onTap: () async {
+                    printLog("Clicked on position ==> $position");
+                    final videoByIDProvider = Provider.of<VideoByIDProvider>(
+                      context,
+                      listen: false,
+                    );
+                    videoByIDProvider.setLoading(true);
+                    if (!mounted) return;
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return ContentByID(
+                            item?.id ?? 0,
+                            item?.name ?? "",
+                            "ByChannel",
+                          );
+                        },
+                      ),
+                    );
+                  },
+                  child: AspectRatio(
+                    aspectRatio: Dimens.widthChannel / Dimens.heightChannel,
                     child: MyNetworkImage(
-                      imageUrl:
-                          sectionViewAllProvider
-                              .sectionDetailList?[position]
-                              .landscapeImg
-                              .toString() ??
-                          "",
+                      imageUrl: item?.landscapeImg?.toString() ?? "",
                       fit: BoxFit.fill,
-                      width: Dimens.widthChannel,
+                      width: double.infinity,
+                      height: double.infinity,
                     ),
                   ),
                 ),
@@ -415,11 +425,11 @@ class SectionViewAllState extends State<SectionViewAll> {
 
   Widget _buildLanguage() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 15, 12, 15),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: ResponsiveGridList(
         minItemWidth: Dimens.widthLangViewAll,
-        verticalGridSpacing: 13,
-        horizontalGridSpacing: 13,
+        verticalGridSpacing: 14,
+        horizontalGridSpacing: 12,
         minItemsPerRow: 3,
         maxItemsPerRow: 8,
         listViewBuilderOptions: ListViewBuilderOptions(
@@ -492,11 +502,11 @@ class SectionViewAllState extends State<SectionViewAll> {
 
   Widget _buildGenres() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 15, 12, 15),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       child: ResponsiveGridList(
         minItemWidth: Dimens.widthGen,
-        verticalGridSpacing: 13,
-        horizontalGridSpacing: 13,
+        verticalGridSpacing: 14,
+        horizontalGridSpacing: 12,
         minItemsPerRow: 3,
         maxItemsPerRow: 8,
         listViewBuilderOptions: ListViewBuilderOptions(
@@ -512,7 +522,7 @@ class SectionViewAllState extends State<SectionViewAll> {
               alignment: Alignment.center,
               child: InkWell(
                 focusColor: white,
-                borderRadius: BorderRadius.circular(Dimens.cardRadius),
+                borderRadius: BorderRadius.circular(8.0),
                 onTap: () async {
                   printLog("Clicked on position ==> $position");
                   final videoByIDProvider = Provider.of<VideoByIDProvider>(

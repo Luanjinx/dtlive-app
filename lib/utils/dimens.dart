@@ -46,10 +46,10 @@ class Dimens {
   static double widthEpiBigWeb = 224;
   static double heightEpiBigWeb = 224;
 
-  static double cardRadius = 6;
-  static double cardRadiusMedium = 3;
-  static double cardRadiusSmall = 1;
-  static double spaceBetweenCards = 5;
+  static double cardRadius = 8;
+  static double cardRadiusMedium = 6;
+  static double cardRadiusSmall = 4;
+  static double spaceBetweenCards = 8;
   static double spaceBetweenShorts = 10;
   static double spaceBetweenCardsWeb = 8;
   static double spaceBetweenCategory = 8;

@@ -300,8 +300,8 @@ class ViewAllState extends State<ViewAll> {
           Dimens.heightPortOther,
           Dimens.widthPortOther,
           3,
-          3,
-          3,
+          14,
+          12,
           12,
         ),
       );
@@ -368,11 +368,11 @@ class ViewAllState extends State<ViewAll> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 15),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         child: ResponsiveGridList(
           minItemWidth: Dimens.widthPortOther,
-          verticalGridSpacing: 3,
-          horizontalGridSpacing: 3,
+          verticalGridSpacing: 14,
+          horizontalGridSpacing: 12,
           minItemsPerRow: 3,
           maxItemsPerRow: 8,
           listViewBuilderOptions: ListViewBuilderOptions(
@@ -382,45 +382,65 @@ class ViewAllState extends State<ViewAll> {
           children: List.generate((viewAllProvider.relatedList?.length ?? 0), (
             position,
           ) {
-            return ClipRRect(
-              borderRadius: BorderRadius.circular(Dimens.cardRadiusSmall),
-              child: InkWell(
-                onTap: () async {
-                  printLog("Clicked on position ==> $position");
-                  Utils.openDetailsWithReplace(
-                    context: context,
-                    videoId: viewAllProvider.relatedList?[position].id ?? 0,
-                    subVideoType:
-                        viewAllProvider.relatedList?[position].subVideoType ??
-                        0,
-                    videoType:
-                        viewAllProvider.relatedList?[position].videoType ?? 0,
-                    typeId: viewAllProvider.relatedList?[position].typeId ?? 0,
-                    newPage:
-                        ((viewAllProvider.relatedList?[position].subVideoType ??
-                                    0) ==
-                                2 ||
-                            (viewAllProvider.relatedList?[position].videoType ??
-                                    0) ==
-                                2)
-                        ? RoutesConstant.contentDetailsPage
-                        : RoutesConstant.contentDetailsPage,
-                    oldPage: "",
-                    reqText: "",
-                  );
-                },
-                child: Container(
-                  width: Dimens.widthPortOther,
-                  height: Dimens.heightPortOther,
-                  alignment: Alignment.center,
-                  child: MyNetworkImage(
-                    imageUrl:
-                        viewAllProvider.relatedList?[position].thumbnail
-                            .toString() ??
-                        "",
-                    fit: BoxFit.cover,
-                    height: MediaQuery.of(context).size.height,
-                    width: MediaQuery.of(context).size.width,
+            final item = viewAllProvider.relatedList?[position];
+            final double cardRadius = Dimens.isBigScreen(context) ? 10.0 : 8.0;
+
+            return AspectRatio(
+              aspectRatio: Dimens.widthPortOther / Dimens.heightPortOther,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: lightBlack,
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: black.withValues(alpha: 0.35),
+                      blurRadius: 5,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(cardRadius),
+                  clipBehavior: Clip.antiAlias,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(cardRadius),
+                    onTap: () async {
+                      printLog("Clicked on position ==> $position");
+                      Utils.openDetailsWithReplace(
+                        context: context,
+                        videoId: item?.id ?? 0,
+                        subVideoType: item?.subVideoType ?? 0,
+                        videoType: item?.videoType ?? 0,
+                        typeId: item?.typeId ?? 0,
+                        newPage: RoutesConstant.contentDetailsPage,
+                        oldPage: "",
+                        reqText: "",
+                      );
+                    },
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        MyNetworkImage(
+                          imageUrl: item?.thumbnail?.toString() ?? "",
+                          fit: BoxFit.cover,
+                          height: double.infinity,
+                          width: double.infinity,
+                        ),
+                        /* Rent / Premium Tag */
+                        if ((item?.isPremium ?? 0) == 1 ||
+                            (item?.isRent ?? 0) == 1)
+                          Positioned(
+                            top: 6,
+                            right: 6,
+                            child: Utils.buildRentPremiumTAG(
+                              context: context,
+                              isPremium: item?.isPremium ?? 0,
+                              isRent: item?.isRent ?? 0,
+                              rentPrice: item?.price ?? 0,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -447,11 +467,11 @@ class ViewAllState extends State<ViewAll> {
         });
       },
       child: Container(
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 15),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         child: ResponsiveGridList(
           minItemWidth: Dimens.widthLand,
-          verticalGridSpacing: 3,
-          horizontalGridSpacing: 3,
+          verticalGridSpacing: 14,
+          horizontalGridSpacing: 12,
           minItemsPerRow: 2,
           maxItemsPerRow: 8,
           listViewBuilderOptions: ListViewBuilderOptions(

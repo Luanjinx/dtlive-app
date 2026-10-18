@@ -927,7 +927,7 @@ class ShimmerUtils {
               child: ShimmerWidget.roundcorner(
                 height: itemHeight,
                 shapeBorder: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(Dimens.cardRadiusSmall),
+                  borderRadius: BorderRadius.circular(8.0),
                 ),
               ),
             );

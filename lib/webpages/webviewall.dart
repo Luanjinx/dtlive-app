@@ -198,10 +198,15 @@ class WebViewAllState extends State<WebViewAll> {
           return const NoData(title: 'no_data', subTitle: 'no_video_show');
         }
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          padding: EdgeInsets.fromLTRB(
+            Dimens.isBigScreen(context) ? 40 : 20,
+            16,
+            Dimens.isBigScreen(context) ? 40 : 20,
+            32,
+          ),
           child: Wrap(
-            spacing: Dimens.isBigScreen(context) ? 12 : 8,
-            runSpacing: Dimens.isBigScreen(context) ? 16 : 10,
+            spacing: Dimens.isBigScreen(context) ? 16 : 12,
+            runSpacing: Dimens.isBigScreen(context) ? 20 : 14,
             alignment: WrapAlignment.start,
             children: List.generate(
               (viewAllProvider.relatedList?.length ?? 0),
@@ -213,7 +218,7 @@ class WebViewAllState extends State<WebViewAll> {
                   cardH: Dimens.isBigScreen(context)
                       ? Dimens.heightPortOtherWeb
                       : Dimens.heightPortOther,
-                  borderRadius: Dimens.cardRadiusSmall,
+                  borderRadius: Dimens.isBigScreen(context) ? 10.0 : 8.0,
                   imageUrl:
                       viewAllProvider.relatedList?[position].thumbnail
                           .toString() ??
@@ -287,10 +292,15 @@ class WebViewAllState extends State<WebViewAll> {
           return const NoData(title: 'no_video_show', subTitle: 'no_data');
         }
         return Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+          padding: EdgeInsets.fromLTRB(
+            Dimens.isBigScreen(context) ? 40 : 20,
+            16,
+            Dimens.isBigScreen(context) ? 40 : 20,
+            32,
+          ),
           child: Wrap(
-            spacing: Dimens.isBigScreen(context) ? 12 : 8,
-            runSpacing: Dimens.isBigScreen(context) ? 16 : 10,
+            spacing: Dimens.isBigScreen(context) ? 16 : 12,
+            runSpacing: Dimens.isBigScreen(context) ? 20 : 14,
             alignment: WrapAlignment.start,
             children: List.generate(
               (viewAllProvider.continueWatchList?.length ?? 0),
@@ -302,7 +312,7 @@ class WebViewAllState extends State<WebViewAll> {
                   cardH: Dimens.isBigScreen(context)
                       ? Dimens.heightPortOtherWeb
                       : Dimens.heightPortOther,
-                  borderRadius: Dimens.cardRadiusSmall,
+                  borderRadius: Dimens.isBigScreen(context) ? 10.0 : 8.0,
                   imageUrl:
                       viewAllProvider.continueWatchList?[position].thumbnail
                           .toString() ??

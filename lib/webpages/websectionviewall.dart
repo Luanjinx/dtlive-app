@@ -263,17 +263,22 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
         : Dimens.heightPortOther;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+        bigScreen ? 40 : 20,
+        16,
+        bigScreen ? 40 : 20,
+        32,
+      ),
       child: Wrap(
-        spacing: bigScreen ? 12 : 8,
-        runSpacing: bigScreen ? 16 : 10,
+        spacing: bigScreen ? 16 : 12,
+        runSpacing: bigScreen ? 20 : 14,
         alignment: WrapAlignment.start,
         children: List.generate(
           sectionViewAllProvider.sectionDetailList?.length ?? 0,
           (position) => WebHoverCard(
             cardW: cardW,
             cardH: cardH,
-            borderRadius: Dimens.cardRadiusMedium,
+            borderRadius: bigScreen ? 10.0 : 8.0,
             imageUrl:
                 sectionViewAllProvider.sectionDetailList?[position].thumbnail
                     .toString() ??
@@ -320,17 +325,22 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
         : Dimens.heightChannel;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+        bigScreen ? 40 : 20,
+        16,
+        bigScreen ? 40 : 20,
+        32,
+      ),
       child: Wrap(
-        spacing: bigScreen ? 20 : 10,
-        runSpacing: bigScreen ? 20 : 10,
+        spacing: bigScreen ? 16 : 12,
+        runSpacing: bigScreen ? 20 : 14,
         alignment: WrapAlignment.start,
         children: List.generate(
           sectionViewAllProvider.sectionDetailList?.length ?? 0,
           (position) => WebHoverCard(
             cardW: cardW,
             cardH: cardH,
-            borderRadius: Dimens.cardRadiusMedium,
+            borderRadius: bigScreen ? 10.0 : 8.0,
             imageUrl:
                 sectionViewAllProvider.sectionDetailList?[position].landscapeImg
                     .toString() ??
