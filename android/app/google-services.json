@@ -12,7 +12,20 @@
           "package_name": "com.nexstream.prjkt"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "124709066369-9rbfrasv1a1q9p141pdkg0ecr8dd2nv5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.nexstream.prjkt",
+            "certificate_hash": "b10784ce6f26543934d7b7f48078a04310abc464"
+          }
+        },
+        {
+          "client_id": "124709066369-5gva9p8s53787qd783dc2d61vpt2oc4j.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBuaBe8GUExCNm_MAqdEA51ohQGeGLCO40"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "124709066369-5gva9p8s53787qd783dc2d61vpt2oc4j.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "124709066369-gakel96k2g588fpmjthnhfi97bf3t42r.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.nexstream.prjkt"
+              }
+            }
+          ]
         }
       }
     }
