@@ -56,6 +56,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   final JSHelper jsHelper = JSHelper();
 
   final ScrollController _mainScrollController = ScrollController();
+  final ScrollController _mobileTabScrollController = ScrollController();
 
   late SectionDataProvider sectionDataProvider;
   late RentStoreProvider rentStoreProvider;
@@ -595,27 +596,37 @@ class _WebCommanState extends State<WebComman> with RouteAware {
     int position,
     List<type.Result>? sectionTypeList,
   ) async {
+    await sectionDataProvider.clearOldData();
     sectionDataProvider.setLoading(true);
-    if (position == -1) {
-      await setSelectedTab(0);
-      sectionDataProvider.getSectionBanner("0", "1");
-      sectionDataProvider.getSectionList("0", "1", 1);
-    } else {
-      await setSelectedTab(position + 1);
-      sectionDataProvider.getSectionBanner(
-        sectionTypeList?[position].id ?? 0,
-        "2",
-      );
-      sectionDataProvider.getSectionList(
-        sectionTypeList?[position].id ?? 0,
-        "2",
-        1,
-      );
-    }
+    final bool isDefaultTab = position == -1;
+    final String tabId = isDefaultTab
+        ? "0"
+        : (sectionTypeList?[position].id ?? 0).toString();
+    final String type = isDefaultTab ? "1" : "2";
+
+    await setSelectedTab(isDefaultTab ? 0 : position + 1);
+
+    await Future.wait([
+      sectionDataProvider.getSectionBanner(tabId, type),
+      sectionDataProvider.getSectionList(tabId, type, 1),
+    ]);
+  }
+
+  void _scrollToCurrentMobileTab(int index) {
+    if (!_mobileTabScrollController.hasClients) return;
+    _mobileTabScrollController.animateTo(
+      (index * 85.0).clamp(
+        0.0,
+        _mobileTabScrollController.position.maxScrollExtent,
+      ),
+      curve: Curves.easeInOut,
+      duration: const Duration(milliseconds: 300),
+    );
   }
 
   @override
   void dispose() {
+    _mobileTabScrollController.dispose();
     routeObserver.unsubscribe(this);
     super.dispose();
   }
@@ -677,68 +688,185 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   Widget _buildAppBar() {
     final bool isBig = Dimens.isBigScreen(context);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-      width: MediaQuery.of(context).size.width,
-      height: Dimens.homeTabHeight,
-      padding: EdgeInsets.fromLTRB(isBig ? 28 : 16, 0, isBig ? 28 : 16, 0),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: _isNavScrolled
-              ? [
-                  appBgColor.withValues(alpha: 0.98),
-                  appBgColor.withValues(alpha: 0.95),
-                  appBgColor.withValues(alpha: 0.60),
-                  transparent,
-                ]
-              : [
-                  appBgColor.withValues(alpha: 0.75),
-                  appBgColor.withValues(alpha: 0.40),
-                  appBgColor.withValues(alpha: 0.10),
-                  transparent,
-                ],
-          stops: const [0.0, 0.50, 0.80, 1.0],
-        ),
-        border: _isNavScrolled
-            ? Border(
-                bottom: BorderSide(
-                  color: white.withValues(alpha: 0.07),
-                  width: 1,
+    return Consumer2<SectionDataProvider, HomeProvider>(
+      builder: (context, sectionDataProvider, homeProvider, child) {
+        final bool isHomePage = currentPage == RoutesConstant.homePage;
+        final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
+            (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
+        final bool hasHeroBanner = isHomePage &&
+            sectionDataProvider.sectionBannerModel.status == 200 &&
+            (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ??
+                false);
+
+        final bool isTransparentHeader =
+            isBig && isHomePage && hasHeroBanner && !_isNavScrolled;
+
+        final double appBarHeight = (!isBig && isHomePage && hasTypes)
+            ? (56.0 + 42.0)
+            : Dimens.homeTabHeight;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeInOut,
+          width: MediaQuery.of(context).size.width,
+          height: appBarHeight,
+          padding: EdgeInsets.fromLTRB(isBig ? 28 : 16, 0, isBig ? 28 : 16, 0),
+          decoration: BoxDecoration(
+            color: isTransparentHeader ? transparent : appBgColor,
+            gradient: isTransparentHeader
+                ? LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      appBgColor.withValues(alpha: 0.85),
+                      appBgColor.withValues(alpha: 0.50),
+                      appBgColor.withValues(alpha: 0.15),
+                      transparent,
+                    ],
+                    stops: const [0.0, 0.40, 0.75, 1.0],
+                  )
+                : null,
+            border: !isTransparentHeader
+                ? Border(
+                    bottom: BorderSide(
+                      color: white.withValues(alpha: 0.08),
+                      width: 1,
+                    ),
+                  )
+                : null,
+            boxShadow: !isTransparentHeader
+                ? [
+                    BoxShadow(
+                      color: black.withValues(alpha: 0.45),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ]
+                : null,
+          ),
+          child: isBig
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    if (currentPage == RoutesConstant.homePage)
+                      _buildLogoButton()
+                    else
+                      _buildBackButton(),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: tabTitle(homeProvider.sectionTypeModel.result),
+                    ),
+                    const SizedBox(width: 8),
+                    if (currentPage != RoutesConstant.searchPage)
+                      _buildSearchButton(),
+                    const SizedBox(width: 6),
+                    _buildUserLogin(),
+                  ],
+                )
+              : Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 56,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (currentPage == RoutesConstant.homePage)
+                            _buildMobileMenuButton(),
+                          if (currentPage == RoutesConstant.homePage)
+                            _buildLogoButton()
+                          else
+                            _buildBackButton(),
+                          const Expanded(child: SizedBox.shrink()),
+                          if (currentPage != RoutesConstant.searchPage)
+                            _buildSearchButton(),
+                          const SizedBox(width: 6),
+                          _buildUserLogin(),
+                        ],
+                      ),
+                    ),
+                    if (isHomePage && hasTypes)
+                      SizedBox(
+                        height: 42,
+                        child: _buildMobileCategoryPills(
+                          homeProvider.sectionTypeModel.result,
+                        ),
+                      ),
+                  ],
                 ),
-              )
-            : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          /* Hamburger (mobile) — only on home page */
-          if (!isBig && currentPage == RoutesConstant.homePage)
-            _buildMobileMenuButton(),
+        );
+      },
+    );
+  }
 
-          /* Logo or Back */
-          if (currentPage == RoutesConstant.homePage)
-            _buildLogoButton()
-          else
-            _buildBackButton(),
+  Widget _buildMobileCategoryPills(List<type.Result>? sectionTypeList) {
+    return Consumer<HomeProvider>(
+      builder: (context, homeProvider, child) {
+        final list = sectionTypeList ?? [];
+        final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
-          /* Nav tabs (desktop only) */
-          if (isBig)
-            Expanded(child: tabTitle(homeProvider.sectionTypeModel.result))
-          else
-            const Expanded(child: SizedBox.shrink()),
+        return ListView.separated(
+          controller: _mobileTabScrollController,
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 6),
+          itemCount: itemCount,
+          separatorBuilder: (context, index) => const SizedBox(width: 6),
+          itemBuilder: (context, index) {
+            final bool isHomeTab = index == 0;
+            final bool isSelected = isHomeTab
+                ? (homeProvider.selectedIndex <= 0)
+                : (homeProvider.selectedIndex == index);
 
-          const SizedBox(width: 8),
+            final String title = isHomeTab
+                ? "Home"
+                : (list[index - 1].name?.toString() ?? "");
 
-          /* Search */
-          if (currentPage != RoutesConstant.searchPage) _buildSearchButton(),
-
-          const SizedBox(width: 6),
-          _buildUserLogin(),
-        ],
-      ),
+            return InkWell(
+              borderRadius: BorderRadius.circular(20),
+              splashColor: transparent,
+              highlightColor: transparent,
+              onTap: () async {
+                if (isSelected) return;
+                _scrollToCurrentMobileTab(index);
+                await getTabData(
+                  isHomeTab ? -1 : (index - 1),
+                  sectionTypeList,
+                );
+              },
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSelected ? 14 : 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? colorPrimary : transparent,
+                  borderRadius: BorderRadius.circular(20),
+                  border: !isSelected
+                      ? Border.all(
+                          color: white.withValues(alpha: 0.15),
+                          width: 1,
+                        )
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: MyText(
+                  color: isSelected ? black : white.withValues(alpha: 0.90),
+                  text: title,
+                  multilanguage: false,
+                  fontsizeNormal: 13,
+                  fontsizeWeb: 14,
+                  fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                  maxline: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textalign: TextAlign.center,
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

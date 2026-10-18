@@ -62,7 +62,6 @@ class WebHomeState extends State<WebHome> {
 
   final TextEditingController searchController = TextEditingController();
   CarouselSliderController carouselController = CarouselSliderController();
-  final tabScrollController = ScrollController();
 
   bool isSearchEnable = false;
   String? currentPage,
@@ -328,17 +327,7 @@ class WebHomeState extends State<WebHome> {
 
   @override
   void dispose() {
-    tabScrollController.dispose();
     super.dispose();
-  }
-
-  void _scrollToCurrent(int index) {
-    if (!tabScrollController.hasClients) return;
-    tabScrollController.animateTo(
-      (index * 95.0).clamp(0.0, tabScrollController.position.maxScrollExtent),
-      curve: Curves.easeInOut,
-      duration: const Duration(milliseconds: 300),
-    );
   }
 
   @override
@@ -390,56 +379,45 @@ class WebHomeState extends State<WebHome> {
   Widget _buildBannerSections(List<type.Result>? sectionTypeList) {
     final bool isBig = Dimens.isBigScreen(context);
     final bool hasTypes = sectionTypeList != null && sectionTypeList.isNotEmpty;
+    final bool hasBanners = sectionDataProvider.sectionBannerModel.status == 200 &&
+        sectionDataProvider.sectionBannerModel.result != null &&
+        (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false);
+
+    // Calculate top spacer to guarantee content never overlaps with header:
+    // - On big screen with hero banner: hero banner sits at Y = 0 (underneath transparent header). Spacer is 0.
+    // - On big screen without hero banner (e.g. Drama, Movies, etc.): Spacer is Dimens.homeTabHeight + 20 (75 + 20 = 95px).
+    // - On mobile/tablet web: Header has top bar (56) + pinned category tabs (42 if hasTypes). Spacer is 56 + (hasTypes ? 42 : 0) + 12px.
+    final double topSpacerHeight = isBig
+        ? (hasBanners || sectionDataProvider.loadingBanner
+            ? 0.0
+            : Dimens.homeTabHeight + 20.0)
+        : (56.0 + (hasTypes ? 42.0 : 0.0) + 12.0);
 
     return SizedBox(
       width: MediaQuery.of(context).size.width,
       child: Column(
         children: [
-          /* Top spacer for mobile web to sit right below the AppBar */
-          if (!isBig) SizedBox(height: Dimens.homeTabHeight),
+          /* Top spacer ensuring content starts cleanly below the header */
+          if (topSpacerHeight > 0) SizedBox(height: topSpacerHeight),
 
           /* Banner */
           if (sectionDataProvider.loadingBanner)
             if (isBig)
               ShimmerUtils.bannerWeb(context)
             else
-              Stack(
-                children: [
-                  ShimmerUtils.bannerMobile(
-                    context,
-                    showCategoryPills: !hasTypes,
-                  ),
-                  if (hasTypes)
-                    Positioned(
-                      top: 8,
-                      left: 0,
-                      right: 0,
-                      child: _buildCategoryPillsRow(sectionTypeList),
-                    ),
-                ],
+              ShimmerUtils.bannerMobile(
+                context,
+                showCategoryPills: false,
               )
-          else if (sectionDataProvider.sectionBannerModel.status == 200 &&
-              sectionDataProvider.sectionBannerModel.result != null &&
-              (sectionDataProvider.sectionBannerModel.result?.isNotEmpty ?? false))
+          else if (hasBanners)
             if (isBig)
               _tvHomeBanner(sectionDataProvider.sectionBannerModel.result)
-            else ...[
-              if (hasTypes)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 4, 0, 8),
-                  child: _buildCategoryPillsRow(sectionTypeList),
-                ),
+            else
               _mobileHomeBanner(
                 sectionDataProvider.sectionBannerModel.result,
-              ),
-            ]
-          else if (!isBig && hasTypes)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: _buildCategoryPillsRow(sectionTypeList),
-            )
+              )
           else
-            SizedBox(height: isBig ? 0 : Dimens.homeTabHeight),
+            const SizedBox.shrink(),
 
           /* Continue Watching & Remaining Sections */
           if (sectionDataProvider.loadingSection &&
@@ -1123,75 +1101,7 @@ class WebHomeState extends State<WebHome> {
     );
   }
 
-  /* Category Pills START (HiTV themed style) ************** */
-  Widget _buildCategoryPillsRow(List<type.Result>? sectionTypeList) {
-    return Consumer<HomeProvider>(
-      builder: (context, homeProvider, child) {
-        final list = sectionTypeList ?? [];
-        final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
-        return SizedBox(
-          height: 36,
-          child: ListView.separated(
-            controller: tabScrollController,
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemCount: itemCount,
-            separatorBuilder: (context, index) => const SizedBox(width: 6),
-            itemBuilder: (context, index) {
-              final bool isHomeTab = index == 0;
-              final bool isSelected = isHomeTab
-                  ? (homeProvider.selectedIndex <= 0)
-                  : (homeProvider.selectedIndex == index);
-
-              final String title = isHomeTab
-                  ? "Home"
-                  : (list[index - 1].name?.toString() ?? "");
-
-              return InkWell(
-                borderRadius: BorderRadius.circular(20),
-                splashColor: transparent,
-                highlightColor: transparent,
-                onTap: () async {
-                  if (isSelected) return;
-                  _scrollToCurrent(index);
-                  await getTabData(
-                    isHomeTab ? -1 : (index - 1),
-                    sectionTypeList,
-                  );
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSelected ? 14 : 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected ? colorPrimary : transparent,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  alignment: Alignment.center,
-                  child: MyText(
-                    color: isSelected ? black : white.withValues(alpha: 0.90),
-                    text: title,
-                    multilanguage: false,
-                    fontsizeNormal: 14,
-                    fontsizeWeb: 15,
-                    fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.center,
-                  ),
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-  /* **************** Category Pills END */
 
   Widget _buildBannerGenres(banner.Result item) {
     final List<String> parts = [];
