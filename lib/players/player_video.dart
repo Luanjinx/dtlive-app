@@ -119,6 +119,7 @@ class _PlayerVideoState extends State<PlayerVideo>
 
   bool _hasShownNextEpisodePopup = false;
   bool _isSwitchingEpisode = false;
+  bool _isExiting = false;
   int _initialPositionMs = 0;
   double _popupOpacity = 1.0;
   double _countdownProgress = 1.0; // 1.0 = full bar, 0.0 = empty
@@ -334,9 +335,6 @@ class _PlayerVideoState extends State<PlayerVideo>
   void didChangeDependencies() {
     printLog("========= didChangeDependencies =========");
     routeObserver.subscribe(this, ModalRoute.of(context)!);
-    if (!kIsWeb) {
-      OrientationManager.forceLandscape();
-    }
     super.didChangeDependencies();
   }
 
@@ -349,7 +347,7 @@ class _PlayerVideoState extends State<PlayerVideo>
   @override
   void didPopNext() {
     printLog("========= didPopNext =========");
-    if (!kIsWeb) {
+    if (!kIsWeb && !_isExiting && !_isSwitchingEpisode) {
       OrientationManager.forceLandscape();
     }
     super.didPopNext();
@@ -3761,17 +3759,22 @@ class _PlayerVideoState extends State<PlayerVideo>
   /* ************************************ Brightness/Volume UI END */
 
   Future<void> onBackPressed(bool didPop) async {
-    if (didPop) return;
+    if (didPop || _isExiting) return;
+    _isExiting = true;
     _isSwitchingEpisode = false;
-    // [NEW] FEATURE-9: Animate out before dismissing
-    await _enterExitAnim.reverse();
-    if (!mounted) return;
+
+    // Restore portrait immediately on exit
     if (!kIsWeb) {
       OrientationManager.forcePortrait();
     } else {
       _isWebFullscreen = false; // [WEB-2] Reset fullscreen state on exit
       _jsHelper.callBrowserFullscreen(false);
     }
+
+    // Play exit animation
+    await _enterExitAnim.reverse();
+    if (!mounted) return;
+
     if (kDebugMode) {
       printLog("onBackPressed playerCPosition :===> $playerCPosition");
     }
@@ -3792,9 +3795,9 @@ class _PlayerVideoState extends State<PlayerVideo>
             widget.playerModel.playType == "Show") &&
         Constant.userID != null) {
       if ((playerCPosition ?? 0) > 0) {
-        /* Add to Continue */
+        /* Add to Continue asynchronously */
         if (connectivityProvider.isOnline) {
-          await playerProvider.addToContinue(
+          playerProvider.addToContinue(
             "${widget.playerModel.videoId}",
             "${widget.playerModel.episodeId}",
             "${widget.playerModel.videoType}",
@@ -3802,16 +3805,11 @@ class _PlayerVideoState extends State<PlayerVideo>
             "$playerCPosition",
           );
         }
-        if (!mounted) return;
-        Utils.exitPage(context);
-      } else {
-        if (!mounted) return;
-        Utils.exitPage(context);
       }
-    } else {
-      if (!mounted) return;
-      Utils.exitPage(context);
     }
+
+    if (!mounted) return;
+    Utils.exitPage(context);
   }
 }
 

@@ -13,8 +13,9 @@ class OrientationManager {
     await SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
     ]);
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
-        overlays: SystemUiOverlay.values);
+    await SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
   }
 }
