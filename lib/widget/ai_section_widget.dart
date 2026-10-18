@@ -5,9 +5,9 @@ import '../model/sectionlistmodel.dart' as list;
 import '../utils/color.dart';
 import '../utils/dimens.dart';
 import 'myimage.dart';
+import 'mynetworkimg.dart';
 import 'mytext.dart';
 import '../webwidget/interactive_icon.dart';
-import '../webwidget/web_hover_card.dart';
 
 class AISectionWidget extends StatefulWidget {
   final list.Result section;
@@ -88,44 +88,43 @@ class _AISectionWidgetState extends State<AISectionWidget>
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         /* Deep card background */
-        color: secondaryBgColor,
+        color: const Color(0xFF0F1410),
         boxShadow: [
-          /* Wide outer glow — animated */
+          /* Wide outer neon glow — animated */
           BoxShadow(
             color: colorPrimary.withValues(
-              alpha: 0.22 + (_pulseAnim.value * 0.16),
+              alpha: 0.18 + (_pulseAnim.value * 0.14),
             ),
-            blurRadius: 40,
-            spreadRadius: 2,
-            offset: const Offset(0, 6),
+            blurRadius: 32,
+            spreadRadius: 1,
+            offset: const Offset(0, 4),
           ),
-          /* Tight inner glow */
-          BoxShadow(
-            color: colorPrimary.withValues(alpha: 0.10),
-            blurRadius: 10,
-            spreadRadius: 0,
-          ),
-          /* Deep base shadow */
+          /* Base drop shadow */
           BoxShadow(
             color: black.withValues(alpha: 0.70),
-            blurRadius: 24,
+            blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
+      ),
+      /* Foreground border is always on top so it never gets obscured */
+      foregroundDecoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: colorPrimary.withValues(
-            alpha: 0.28 + (_pulseAnim.value * 0.18),
+            alpha: 0.50 + (_pulseAnim.value * 0.25),
           ),
           width: 1.5,
         ),
       ),
-      child: Stack(
-        clipBehavior: Clip.none,
-        children: [
-          /* Background layers clipped inside the rounded card */
-          Positioned.fill(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+      /* Inner clipping prevents cards from overflowing past the container line when swiped */
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(19),
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
+          children: [
+            /* Background layers */
+            Positioned.fill(
               child: Stack(
                 children: [
                   _buildStarfield(context),
@@ -134,18 +133,19 @@ class _AISectionWidgetState extends State<AISectionWidget>
                 ],
               ),
             ),
-          ),
 
-          /* Content — NOT clipped so hover scale can paint outside card bounds */
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              _buildPosterList(context, items),
-              _buildViewAllButton(context),
-            ],
-          ),
-        ],
+            /* Foreground content */
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildHeader(context),
+                _buildPosterList(context, items),
+                _buildViewAllButton(context),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -174,7 +174,7 @@ class _AISectionWidgetState extends State<AISectionWidget>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    colorPrimary.withValues(alpha: 0.28 + pulse * 0.12),
+                    colorPrimary.withValues(alpha: 0.22 + pulse * 0.10),
                     colorPrimary.withValues(alpha: 0.0),
                   ],
                 ),
@@ -192,27 +192,7 @@ class _AISectionWidgetState extends State<AISectionWidget>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    infoBG.withValues(alpha: 0.20 + pulse * 0.08),
-                    transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
-          /* Center orb — colorPrimaryDark */
-          Positioned(
-            top: 40,
-            left: 60,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: RadialGradient(
-                  colors: [
-                    colorPrimaryDark.withValues(
-                      alpha: 0.12 + (1 - pulse) * 0.08,
-                    ),
+                    infoBG.withValues(alpha: 0.16 + pulse * 0.06),
                     transparent,
                   ],
                 ),
@@ -235,9 +215,9 @@ class _AISectionWidgetState extends State<AISectionWidget>
               end: Alignment(_shimmerAnim.value, 1),
               colors: [
                 transparent,
-                white.withValues(alpha: 0.04),
-                white.withValues(alpha: 0.09),
-                white.withValues(alpha: 0.04),
+                white.withValues(alpha: 0.03),
+                white.withValues(alpha: 0.07),
+                white.withValues(alpha: 0.03),
                 transparent,
               ],
               stops: const [0.0, 0.35, 0.5, 0.65, 1.0],
@@ -251,98 +231,92 @@ class _AISectionWidgetState extends State<AISectionWidget>
 
   /* ── Header ─────────────────────────────────────────────── */
   Widget _buildHeader(BuildContext context) {
-    final bool bigScreen = Dimens.isWeb(context);
     final title = (widget.section.title ?? "").trim();
     final subtitle = (widget.section.shortTitle ?? "").trim();
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(12, 15, 12, 12),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          /* AI Badge — bright lime green pill */
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 10,
+              vertical: 4,
+            ),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: colorPrimary,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                /* AI Badge */
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    color: colorPrimary.withValues(alpha: 0.18),
-                    border: Border.all(
-                      color: colorPrimary.withValues(alpha: 0.55),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      MyImage(
-                        imagePath: "ic_ai.png",
-                        height: 12,
-                        width: 12,
-                        color: colorPrimary,
-                      ),
-                      const SizedBox(width: 5),
-                      MyText(
-                        color: colorPrimary,
-                        text: "AI Powered",
-                        multilanguage: false,
-                        textalign: TextAlign.start,
-                        fontsizeNormal: 10,
-                        fontsizeWeb: 11,
-                        fontweight: FontWeight.w700,
-                        maxline: 1,
-                        overflow: TextOverflow.ellipsis,
-                        fontstyle: FontStyle.normal,
-                      ),
-                    ],
+                MyImage(
+                  imagePath: "ic_ai.png",
+                  height: 12,
+                  width: 12,
+                  color: black,
+                ),
+                const SizedBox(width: 5),
+                const Text(
+                  "AI POWERED",
+                  style: TextStyle(
+                    color: black,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                   ),
                 ),
-                const SizedBox(height: 10),
-
-                /* Title */
-                if (title.isNotEmpty)
-                  MyText(
-                    color: white,
-                    text: title,
-                    multilanguage: false,
-                    textalign: TextAlign.start,
-                    fontsizeNormal: 18,
-                    fontsizeWeb: 24,
-                    fontweight: FontWeight.w700,
-                    maxline: 2,
-                    overflow: TextOverflow.ellipsis,
-                    fontstyle: FontStyle.normal,
-                  ),
-
-                /* Subtitle */
-                if (subtitle.isNotEmpty) ...[
-                  const SizedBox(height: 5),
-                  MyText(
-                    color: descTextColor,
-                    text: subtitle,
-                    multilanguage: false,
-                    fontweight: FontWeight.w400,
-                    fontsizeNormal: 12,
-                    fontsizeWeb: 14,
-                    maxline: 2,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.start,
-                    fontstyle: FontStyle.normal,
-                  ),
-                ],
               ],
             ),
           ),
-          MyImage(
-            imagePath: "ic_ai_3d.png",
-            height: bigScreen ? 110 : 75,
-            width: bigScreen ? 110 : 75,
+          const SizedBox(height: 10),
+
+          /* Title */
+          MyText(
+            color: white,
+            text: title.isNotEmpty ? title : "Recommendations for you",
+            multilanguage: false,
+            textalign: TextAlign.start,
+            fontsizeNormal: 20,
+            fontsizeWeb: 24,
+            fontweight: FontWeight.w700,
+            maxline: 2,
+            overflow: TextOverflow.ellipsis,
+            fontstyle: FontStyle.normal,
           ),
+
+          /* Subtitle */
+          if (subtitle.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            MyText(
+              color: descTextColor,
+              text: subtitle,
+              multilanguage: false,
+              fontweight: FontWeight.w400,
+              fontsizeNormal: 12,
+              fontsizeWeb: 14,
+              maxline: 2,
+              overflow: TextOverflow.ellipsis,
+              textalign: TextAlign.start,
+              fontstyle: FontStyle.normal,
+            ),
+          ] else ...[
+            const SizedBox(height: 4),
+            MyText(
+              color: descTextColor,
+              text: "Top Picks For You",
+              multilanguage: false,
+              fontweight: FontWeight.w400,
+              fontsizeNormal: 12,
+              fontsizeWeb: 14,
+              maxline: 1,
+              overflow: TextOverflow.ellipsis,
+              textalign: TextAlign.start,
+              fontstyle: FontStyle.normal,
+            ),
+          ],
         ],
       ),
     );
@@ -355,21 +329,24 @@ class _AISectionWidgetState extends State<AISectionWidget>
     final bool isLandscape = layout == "landscape" || layout == "big_landscape";
 
     final double cardW = isLandscape
-        ? (bigScreen ? Dimens.widthLandWeb : Dimens.widthLand)
-        : (bigScreen ? Dimens.widthPortWeb : Dimens.widthPort);
-    final double cardH = isLandscape
-        ? (bigScreen ? Dimens.heightLandWeb : Dimens.heightLand)
-        : (bigScreen ? Dimens.heightPortWeb : Dimens.heightPort);
+        ? (bigScreen ? 230.0 : 160.0)
+        : (bigScreen ? 160.0 : 120.0);
+    final double posterH = isLandscape
+        ? (bigScreen ? 140.0 : 98.0)
+        : (bigScreen ? 232.0 : 174.0);
+
+    /* Total list height: posterH + spacing (8) + title (18) + vertical padding (8) */
+    final double listH = posterH + 34.0;
 
     return SizedBox(
-      height: cardH + 20,
+      height: listH,
       child: ListView.separated(
-        clipBehavior: Clip.none,
+        clipBehavior: Clip.hardEdge,
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         itemCount: items.length,
         separatorBuilder: (context, i) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
@@ -383,7 +360,7 @@ class _AISectionWidgetState extends State<AISectionWidget>
             index,
             imageUrl,
             cardW,
-            cardH,
+            posterH,
           );
         },
       ),
@@ -396,88 +373,127 @@ class _AISectionWidgetState extends State<AISectionWidget>
     int index,
     String imageUrl,
     double cardW,
-    double cardH,
+    double posterH,
   ) {
-    return WebHoverCard(
-      cardW: cardW,
-      cardH: cardH,
-      borderRadius: Dimens.cardRadius,
-      imageUrl: imageUrl,
+    final bool isPremium =
+        (datum.isPremium ?? 0) == 1 || (datum.isRent ?? 0) == 1;
+
+    return _AIHoverPoster(
       onTap: () => widget.onItemTap?.call(datum, index),
-      overlay: Stack(
-        fit: StackFit.expand,
-        children: [
-          /* Subtle primary color tint overlay */
-          Positioned.fill(
-            child: IgnorePointer(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      colorPrimary.withValues(alpha: 0.05),
-                      transparent,
-                      appBgColor.withValues(alpha: 0.85),
-                    ],
-                    stops: const [0.0, 0.45, 1.0],
+      child: SizedBox(
+        width: cardW,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            /* Poster image container with badges */
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Stack(
+                children: [
+                  /* Poster Network Image */
+                  MyNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.cover,
+                    width: cardW,
+                    height: posterH,
                   ),
-                ),
-              ),
-            ),
-          ),
 
-          /* Content name at bottom */
-          if ((datum.name ?? "").isNotEmpty)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(6, 0, 6, 7),
-                child: MyText(
-                  color: white,
-                  text: datum.name ?? "",
-                  multilanguage: false,
-                  fontsizeNormal: 10,
-                  fontsizeWeb: 11,
-                  fontweight: FontWeight.w600,
-                  maxline: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textalign: TextAlign.center,
-                  fontstyle: FontStyle.normal,
-                ),
-              ),
-            ),
+                  /* Subtle gradient at bottom of poster */
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              transparent,
+                              transparent,
+                              black.withValues(alpha: 0.35),
+                            ],
+                            stops: const [0.0, 0.65, 1.0],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
 
-          /* Top-right AI spark dot */
-          Positioned(
-            top: 6,
-            right: 6,
-            child: Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: colorPrimary.withValues(alpha: 0.90),
-                boxShadow: [
-                  BoxShadow(
-                    color: colorPrimary.withValues(alpha: 0.6),
-                    blurRadius: 6,
+                  /* Top-Left: PREMIUM Badge if premium or rent */
+                  if (isPremium)
+                    Positioned(
+                      top: 7,
+                      left: 7,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: complimentryColor,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text(
+                          "PREMIUM",
+                          style: TextStyle(
+                            color: white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  /* Top-Right: AI Sparkle Circle Badge */
+                  Positioned(
+                    top: 7,
+                    right: 7,
+                    child: Container(
+                      width: 22,
+                      height: 22,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colorPrimary,
+                        boxShadow: [
+                          BoxShadow(
+                            color: colorPrimary.withValues(alpha: 0.45),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: MyImage(
+                          imagePath: "ic_ai.png",
+                          height: 11,
+                          width: 11,
+                          color: black,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: Center(
-                child: MyImage(
-                  imagePath: "ic_ai.png",
-                  height: 11,
-                  width: 11,
-                  color: black,
-                ),
-              ),
             ),
-          ),
-        ],
+
+            /* Movie Title below poster (NO rating, NO text movie as requested) */
+            if ((datum.name ?? "").isNotEmpty) ...[
+              const SizedBox(height: 8),
+              MyText(
+                color: white,
+                text: datum.name ?? "",
+                multilanguage: false,
+                fontsizeNormal: 12,
+                fontsizeWeb: 13,
+                fontweight: FontWeight.w600,
+                maxline: 1,
+                overflow: TextOverflow.ellipsis,
+                textalign: TextAlign.start,
+                fontstyle: FontStyle.normal,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -486,39 +502,33 @@ class _AISectionWidgetState extends State<AISectionWidget>
   Widget _buildViewAllButton(BuildContext context) {
     final bool bigScreen = Dimens.isWeb(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       child: Center(
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           width: bigScreen
-              ? (MediaQuery.sizeOf(context).width * 0.22)
+              ? (MediaQuery.sizeOf(context).width * 0.26).clamp(240.0, 360.0)
               : double.infinity,
-          height: bigScreen ? 50 : 42,
+          height: 44,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            /* Dark fill so colorPrimary text/icon are always visible */
-            color: appBgColor,
+            /* Dark fill */
+            color: lightBlack,
             border: Border.all(
               color: colorPrimary.withValues(
                 alpha: 0.70 + _pulseAnim.value * 0.30,
               ),
-              width: 2,
+              width: 1.5,
             ),
             boxShadow: [
               /* Animated outer glow */
               BoxShadow(
                 color: colorPrimary.withValues(
-                  alpha: 0.30 + _pulseAnim.value * 0.20,
+                  alpha: 0.15 + _pulseAnim.value * 0.15,
                 ),
-                blurRadius: 18,
-                spreadRadius: 1,
-                offset: const Offset(0, 3),
-              ),
-              /* Inner light to lift button off card */
-              BoxShadow(
-                color: colorPrimary.withValues(alpha: 0.08),
-                blurRadius: 6,
-                spreadRadius: -2,
+                blurRadius: 14,
+                spreadRadius: 0,
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -529,43 +539,69 @@ class _AISectionWidgetState extends State<AISectionWidget>
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 color: isHovered
-                    ? colorPrimary.withValues(alpha: 0.10)
+                    ? colorPrimary.withValues(alpha: 0.12)
                     : transparent,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     MyImage(
                       imagePath: "ic_ai.png",
-                      height: 16,
-                      width: 16,
+                      height: 14,
+                      width: 14,
                       color: colorPrimary,
                     ),
-                    const SizedBox(width: 9),
+                    const SizedBox(width: 8),
                     Flexible(
                       child: MyText(
                         color: colorPrimary,
                         text: "view_all_recommendations",
                         multilanguage: true,
                         fontsizeNormal: 13,
-                        fontsizeWeb: 15,
-                        fontweight: FontWeight.w700,
+                        fontsizeWeb: 14,
+                        fontweight: FontWeight.w600,
                         maxline: 1,
                         overflow: TextOverflow.ellipsis,
                         textalign: TextAlign.center,
                         fontstyle: FontStyle.normal,
                       ),
                     ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: colorPrimary,
-                      size: 22,
-                    ),
                   ],
                 ),
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/* ── Interactive hover wrapper for poster cards ────────────── */
+class _AIHoverPoster extends StatefulWidget {
+  final Widget child;
+  final VoidCallback? onTap;
+  const _AIHoverPoster({required this.child, this.onTap});
+
+  @override
+  State<_AIHoverPoster> createState() => _AIHoverPosterState();
+}
+
+class _AIHoverPosterState extends State<_AIHoverPoster> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: AnimatedScale(
+          scale: _isHovered ? 1.03 : 1.0,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: widget.child,
         ),
       ),
     );
@@ -582,11 +618,11 @@ class _StarfieldPainter extends CustomPainter {
     final rng = math.Random(seed);
     final paint = Paint()..style = PaintingStyle.fill;
 
-    for (int i = 0; i < 55; i++) {
+    for (int i = 0; i < 50; i++) {
       final x = rng.nextDouble() * size.width;
       final y = rng.nextDouble() * size.height;
-      final radius = rng.nextDouble() * 1.2 + 0.3;
-      final opacity = rng.nextDouble() * 0.35 + 0.10;
+      final radius = rng.nextDouble() * 1.1 + 0.3;
+      final opacity = rng.nextDouble() * 0.30 + 0.10;
       paint.color = white.withValues(alpha: opacity);
       canvas.drawCircle(Offset(x, y), radius, paint);
     }
