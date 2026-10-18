@@ -961,6 +961,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   Widget tabTitle(List<type.Result>? sectionTypeList) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -971,12 +972,16 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                 shrinkWrap: true,
                 scrollDirection: Axis.horizontal,
                 physics: const NeverScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(13, 15, 0, 15),
-                separatorBuilder: (context, index) => const SizedBox(width: 5),
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                separatorBuilder: (context, index) => const SizedBox(width: 6),
                 itemBuilder: (BuildContext context, int index) {
                   final bool isActive =
                       widget.newPage == RoutesConstant.homePage &&
                       homeProvider.selectedIndex == index;
+
+                  final String title = index == 0
+                      ? "Home"
+                      : (sectionTypeList?[index - 1].name?.toString() ?? "");
 
                   return InteractiveIcon(
                     builder: (isHovered) {
@@ -988,9 +993,6 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                           hoverColor: transparent,
                           splashColor: transparent,
                           highlightColor: transparent,
-                          borderRadius: BorderRadius.circular(
-                            Dimens.cardRadius,
-                          ),
                           onTap: () async {
                             printLog("<===============================>");
                             printLog("HOME index ======> $index");
@@ -1013,48 +1015,59 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                               context.go('/', extra: widget.newPage ?? "");
                             }
                           },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            curve: Curves.easeInOut,
-                            constraints: const BoxConstraints(maxHeight: 34),
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 7,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
-                            decoration: BoxDecoration(
-                              color: isActive
-                                  ? white
-                                  : isHovered
-                                  ? white.withValues(alpha: 0.08)
-                                  : transparent,
-                              borderRadius: BorderRadius.circular(
-                                Dimens.cardRadius,
+                            child: IntrinsicWidth(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: GoogleFonts.inter(
+                                      color: isActive
+                                          ? white
+                                          : (isHovered
+                                              ? white
+                                              : white.withValues(alpha: 0.70)),
+                                      fontSize: 15,
+                                      fontWeight: isActive
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      letterSpacing: 0.2,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  AnimatedContainer(
+                                    duration: const Duration(milliseconds: 200),
+                                    curve: Curves.easeInOut,
+                                    height: 3,
+                                    decoration: BoxDecoration(
+                                      color: isActive
+                                          ? colorPrimary
+                                          : transparent,
+                                      borderRadius: BorderRadius.circular(2),
+                                      boxShadow: isActive
+                                          ? [
+                                              BoxShadow(
+                                                color: colorPrimary.withValues(
+                                                  alpha: 0.50,
+                                                ),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ]
+                                          : null,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              border: (!isActive && isHovered)
-                                  ? Border.all(
-                                      color: white.withValues(alpha: 0.12),
-                                      width: 1,
-                                    )
-                                  : null,
-                            ),
-                            alignment: Alignment.center,
-                            child: MyText(
-                              color: isActive ? black : white,
-                              multilanguage: false,
-                              text: index == 0
-                                  ? "Home"
-                                  : (sectionTypeList?[index - 1].name
-                                            .toString() ??
-                                        ""),
-                              fontsizeNormal: 12,
-                              fontweight: isActive
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              fontsizeWeb: 14,
-                              maxline: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textalign: TextAlign.center,
-                              fontstyle: FontStyle.normal,
                             ),
                           ),
                         ),
@@ -1068,79 +1081,84 @@ class _WebCommanState extends State<WebComman> with RouteAware {
           /* Store */
           if ((rentMenuStatus != null && rentMenuStatus == "1") &&
               Constant.userIsKid == false) ...[
-            const SizedBox(width: 5),
-            Container(
-              padding: const EdgeInsets.fromLTRB(0, 15, 0, 15),
-              child: InteractiveIcon(
-                builder: (isHovered) {
-                  return Material(
-                    type: MaterialType.transparency,
-                    child: InkWell(
-                      focusColor: transparent,
-                      hoverColor: transparent,
-                      splashColor: transparent,
-                      highlightColor: transparent,
-                      onTap: () async {
-                        printLog("newPage ======> ${widget.newPage}");
-                        if (!mounted) return;
-                        context.go(
-                          '/${RoutesConstant.storePage}',
-                          extra: widget.newPage ?? "",
-                        );
-                      },
-                      borderRadius: BorderRadius.circular(Dimens.cardRadius),
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        constraints: const BoxConstraints(minHeight: 34),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 7,
-                        ),
-                        decoration: BoxDecoration(
-                          color: widget.newPage == RoutesConstant.storePage
-                              ? white
-                              : isHovered
-                              ? white.withValues(alpha: 0.08)
-                              : transparent,
-                          borderRadius: BorderRadius.circular(
-                            Dimens.cardRadius,
-                          ),
-                          border:
-                              (widget.newPage != RoutesConstant.storePage &&
-                                  isHovered)
-                              ? Border.all(
-                                  color: white.withValues(alpha: 0.12),
-                                  width: 1,
-                                )
-                              : null,
-                        ),
-                        alignment: Alignment.center,
-                        child: Consumer<HomeProvider>(
-                          builder: (context, homeProvider, child) {
-                            return MyText(
-                              color: widget.newPage == RoutesConstant.storePage
-                                  ? black
-                                  : white,
+            const SizedBox(width: 6),
+            InteractiveIcon(
+              builder: (isHovered) {
+                final bool isStoreActive =
+                    widget.newPage == RoutesConstant.storePage;
+                return Material(
+                  type: MaterialType.transparency,
+                  child: InkWell(
+                    focusColor: transparent,
+                    hoverColor: transparent,
+                    splashColor: transparent,
+                    highlightColor: transparent,
+                    onTap: () async {
+                      printLog("newPage ======> ${widget.newPage}");
+                      if (!mounted) return;
+                      context.go(
+                        '/${RoutesConstant.storePage}',
+                        extra: widget.newPage ?? "",
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
+                      child: IntrinsicWidth(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            MyText(
+                              color: isStoreActive
+                                  ? white
+                                  : (isHovered
+                                      ? white
+                                      : white.withValues(alpha: 0.70)),
                               multilanguage: true,
                               text: "bottommenu4",
                               maxline: 1,
                               overflow: TextOverflow.ellipsis,
-                              fontsizeNormal: 12,
-                              fontweight:
-                                  (widget.newPage == RoutesConstant.storePage)
+                              fontsizeNormal: 14,
+                              fontweight: isStoreActive
                                   ? FontWeight.w700
                                   : FontWeight.w500,
-                              fontsizeWeb: 14,
+                              fontsizeWeb: 15,
                               textalign: TextAlign.center,
                               fontstyle: FontStyle.normal,
-                            );
-                          },
+                            ),
+                            const SizedBox(height: 6),
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              curve: Curves.easeInOut,
+                              height: 3,
+                              decoration: BoxDecoration(
+                                color: isStoreActive
+                                    ? colorPrimary
+                                    : transparent,
+                                borderRadius: BorderRadius.circular(2),
+                                boxShadow: isStoreActive
+                                    ? [
+                                        BoxShadow(
+                                          color: colorPrimary.withValues(
+                                            alpha: 0.50,
+                                          ),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 1),
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
           ],
         ],
