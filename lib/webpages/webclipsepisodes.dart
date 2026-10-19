@@ -809,7 +809,7 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
                                     builder: (context) {
                                       final rawName = clipsProvider.shortFilmEpisodeModel.result?[position].name ?? "";
                                       final match = RegExp(r'\d+').firstMatch(rawName);
-                                      final epBadge = match != null ? match.group(0)! : '${(clipsProvider.shortFilmEpisodeModel.result?.length ?? 0) - position}';
+                                      final epBadge = match != null ? match.group(0)! : '${position + 1}';
                                       return MyText(
                                         color: black,
                                         text: epBadge,

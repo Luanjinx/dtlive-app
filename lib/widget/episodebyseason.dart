@@ -503,8 +503,6 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         itemBuilder: (BuildContext context, int position) {
           final episodeItem = episodeProvider.episodeList?[position];
           final String rawName = (episodeItem?.name ?? "").trim();
-          final int totalEps = episodeProvider.totalRows ??
-              (episodeProvider.episodeList?.length ?? 0);
 
           int? parsedEpNum;
           final match = RegExp(r'(?:episode|ep\.?)\s*(\d+)', caseSensitive: false)
@@ -517,9 +515,7 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
               parsedEpNum = int.tryParse(numMatch.group(0) ?? "");
             }
           }
-          final int fallbackEpNum = (totalEps >= position + 1)
-              ? (totalEps - position)
-              : (position + 1);
+          final int fallbackEpNum = position + 1;
           final int epNum = parsedEpNum ?? fallbackEpNum;
 
           final String titleText =
