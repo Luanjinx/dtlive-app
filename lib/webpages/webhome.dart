@@ -1799,6 +1799,7 @@ class WebHomeState extends State<WebHome> {
     required List<list.Result>? sectionList,
     required int index,
   }) {
+    final int? sectionIsTitle = sectionList?[index].isTitle;
     /* screen_layout =>  landscape, big_landscape, index_landscape, portrait, big_portrait, index_portrait, 
                          square, category, language, channel */
     if ((sectionList?[index].screenLayout ?? "") == "landscape") {
@@ -1806,42 +1807,49 @@ class WebHomeState extends State<WebHome> {
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "big_landscape") {
       return _buildLandscapeBigUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "index_landscape") {
       return _buildLandscapeIndexUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "portrait") {
       return _buildPortraitUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "big_portrait") {
       return _buildPortraitBigUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "index_portrait") {
       return _buildPortraitIndexUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "square") {
       return _buildSquareUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "shorts") {
       return _buildShortsUI(
@@ -1875,6 +1883,7 @@ class WebHomeState extends State<WebHome> {
         sectionList?[index].videoType,
         sectionList?[index].data,
         sectionList?[index].scrollController,
+        sectionIsTitle: sectionIsTitle,
       );
     }
   }
@@ -1942,10 +1951,14 @@ class WebHomeState extends State<WebHome> {
   Widget _buildContinueWatchingUI(
     int? videoType,
     int index,
-    List<Datum>? sectionDataList,
-  ) {
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
+    final bool showItemTitle =
+        (sectionIsTitle == 1) || ((sectionDataList?[index].isTitle ?? 0) != 0);
+
     if (videoType != Constant.continueWatchType) {
-      if (sectionDataList?[index].isTitle == 0) {
+      if (!showItemTitle) {
         return const SizedBox.shrink();
       }
       return Container(
@@ -2012,9 +2025,9 @@ class WebHomeState extends State<WebHome> {
                 child: Row(
                   children: [
                     MyImage(width: 20, height: 20, imagePath: "play.png"),
-                    if (sectionDataList?[index].isTitle != 0)
+                    if (showItemTitle)
                       const SizedBox(width: 10),
-                    if (sectionDataList?[index].isTitle == 0)
+                    if (!showItemTitle)
                       const SizedBox.shrink()
                     else
                       Expanded(
@@ -2068,12 +2081,14 @@ class WebHomeState extends State<WebHome> {
   Widget _buildLandscapeUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.landscape,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2083,20 +2098,28 @@ class WebHomeState extends State<WebHome> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
   Widget _buildLandscapeIndexUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.indexLandscape,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2112,12 +2135,14 @@ class WebHomeState extends State<WebHome> {
   Widget _buildLandscapeBigUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.bigLandscape,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2127,20 +2152,28 @@ class WebHomeState extends State<WebHome> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
   Widget _buildPortraitUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.portrait,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2150,20 +2183,28 @@ class WebHomeState extends State<WebHome> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
   Widget _buildPortraitBigUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.bigPortrait,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2173,20 +2214,28 @@ class WebHomeState extends State<WebHome> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
   Widget _buildPortraitIndexUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.indexPortrait,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2202,12 +2251,14 @@ class WebHomeState extends State<WebHome> {
   Widget _buildSquareUI(
     int? videoType,
     List<Datum>? sectionDataList,
-    ScrollController? scrollController,
-  ) {
+    ScrollController? scrollController, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.square,
       scrollController: scrollController,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -2217,8 +2268,14 @@ class WebHomeState extends State<WebHome> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 

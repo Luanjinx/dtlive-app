@@ -1574,42 +1574,50 @@ class HomeState extends State<Home> {
     required List<list.Result>? sectionList,
     required int index,
   }) {
+    final int? sectionIsTitle = sectionList?[index].isTitle;
     /* screen_layout =>  landscape, big_landscape, index_landscape, portrait, big_portrait, index_portrait, 
                          square, category, language, channel */
     if ((sectionList?[index].screenLayout ?? "") == "landscape") {
       return _buildLandscapeUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "big_landscape") {
       return _buildLandscapeBigUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "index_landscape") {
       return _buildLandscapeIndexUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "portrait") {
       return _buildPortraitUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "big_portrait") {
       return _buildPortraitBigUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "index_portrait") {
       return _buildPortraitIndexUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "square") {
       return _buildSquareUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     } else if ((sectionList?[index].screenLayout ?? "") == "shorts") {
       return _buildShortsUI(sectionList?[index].id, sectionList?[index].data);
@@ -1635,6 +1643,7 @@ class HomeState extends State<Home> {
       return _buildLandscapeUI(
         sectionList?[index].videoType,
         sectionList?[index].data,
+        sectionIsTitle: sectionIsTitle,
       );
     }
   }
@@ -1676,10 +1685,14 @@ class HomeState extends State<Home> {
   Widget _buildContinueWatchingUI(
     int? videoType,
     int index,
-    List<Datum>? sectionDataList,
-  ) {
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
+    final bool showItemTitle =
+        (sectionIsTitle == 1) || ((sectionDataList?[index].isTitle ?? 0) != 0);
+
     if (videoType != Constant.continueWatchType) {
-      if (sectionDataList?[index].isTitle == 0) {
+      if (!showItemTitle) {
         return const SizedBox.shrink();
       }
       return Container(
@@ -1746,9 +1759,9 @@ class HomeState extends State<Home> {
                 child: Row(
                   children: [
                     MyImage(width: 20, height: 20, imagePath: "play.png"),
-                    if (sectionDataList?[index].isTitle != 0)
+                    if (showItemTitle)
                       const SizedBox(width: 10),
-                    if (sectionDataList?[index].isTitle == 0)
+                    if (!showItemTitle)
                       const SizedBox.shrink()
                     else
                       Expanded(
@@ -1799,12 +1812,17 @@ class HomeState extends State<Home> {
   }
   /* **************** Continue Watching END */
 
-  Widget _buildLandscapeUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildLandscapeUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.landscape,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1814,17 +1832,28 @@ class HomeState extends State<Home> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
-  Widget _buildLandscapeIndexUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildLandscapeIndexUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.indexLandscape,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1837,12 +1866,17 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _buildLandscapeBigUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildLandscapeBigUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.bigLandscape,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1852,17 +1886,28 @@ class HomeState extends State<Home> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
-  Widget _buildPortraitUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildPortraitUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.portrait,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1872,17 +1917,28 @@ class HomeState extends State<Home> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
-  Widget _buildPortraitBigUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildPortraitBigUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.bigPortrait,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1892,17 +1948,28 @@ class HomeState extends State<Home> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 
-  Widget _buildPortraitIndexUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildPortraitIndexUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.indexPortrait,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1915,12 +1982,17 @@ class HomeState extends State<Home> {
     );
   }
 
-  Widget _buildSquareUI(int? videoType, List<Datum>? sectionDataList) {
+  Widget _buildSquareUI(
+    int? videoType,
+    List<Datum>? sectionDataList, {
+    int? sectionIsTitle,
+  }) {
     return ContentSectionWidget(
       items: sectionDataList,
       layout: ContentCardLayout.square,
       showScrollArrows: false,
       horizontalPadding: 14,
+      sectionIsTitle: sectionIsTitle,
       onItemTap: (datum, index) {
         printLog("Clicked on index ==> $index");
         openDetailPage(
@@ -1930,8 +2002,14 @@ class HomeState extends State<Home> {
           datum.typeId ?? 0,
         );
       },
-      continueWatchingBuilder: (datum, index) =>
-          _buildContinueWatchingUI(videoType, index, sectionDataList),
+      continueWatchingBuilder: videoType == Constant.continueWatchType
+          ? (datum, index) => _buildContinueWatchingUI(
+                videoType,
+                index,
+                sectionDataList,
+                sectionIsTitle: sectionIsTitle,
+              )
+          : null,
     );
   }
 

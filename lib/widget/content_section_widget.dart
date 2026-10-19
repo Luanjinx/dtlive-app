@@ -31,6 +31,7 @@ class ContentSectionWidget extends StatelessWidget {
   final bool showScrollArrows;
   final double? horizontalPadding;
   final ScrollController? scrollController;
+  final int? sectionIsTitle;
   final Function(list.Datum datum, int index) onItemTap;
   final Widget? Function(list.Datum datum, int index)? continueWatchingBuilder;
 
@@ -42,6 +43,7 @@ class ContentSectionWidget extends StatelessWidget {
     this.showScrollArrows = true,
     this.horizontalPadding,
     this.scrollController,
+    this.sectionIsTitle,
     this.continueWatchingBuilder,
   });
 
@@ -283,6 +285,7 @@ class ContentSectionWidget extends StatelessWidget {
             cardH: cardH,
             imageUrl: _imageUrl(datum),
             isBig: big,
+            sectionIsTitle: sectionIsTitle,
             onTap: () => onItemTap(datum, index),
             continueWatching: continueWatchingBuilder?.call(datum, index),
           );
@@ -337,6 +340,7 @@ class ContentSectionWidget extends StatelessWidget {
                 cardH: cardH,
                 imageUrl: _imageUrl(datum),
                 isBig: big,
+                sectionIsTitle: sectionIsTitle,
                 onTap: () => onItemTap(datum, index),
                 continueWatching: null,
               ),
@@ -366,6 +370,7 @@ class _ContentCard extends StatefulWidget {
   final double cardH;
   final String imageUrl;
   final bool isBig;
+  final int? sectionIsTitle;
   final VoidCallback onTap;
   final Widget? continueWatching;
 
@@ -376,6 +381,7 @@ class _ContentCard extends StatefulWidget {
     required this.cardH,
     required this.imageUrl,
     required this.isBig,
+    this.sectionIsTitle,
     required this.onTap,
     this.continueWatching,
   });
@@ -417,7 +423,9 @@ class _ContentCardState extends State<_ContentCard>
   Widget build(BuildContext context) {
     final double radius = widget.isBig ? 10.0 : 8.0;
     final String name = widget.datum.name?.toString() ?? "";
-    final bool showTitle = (widget.datum.isTitle ?? 0) != 0 && name.isNotEmpty;
+    final bool showTitle =
+        ((widget.datum.isTitle ?? 0) != 0 || widget.sectionIsTitle == 1) &&
+            name.isNotEmpty;
     final double btnSize = widget.isBig ? 52.0 : 44.0;
     final double iconSize = widget.isBig ? 30.0 : 26.0;
 
