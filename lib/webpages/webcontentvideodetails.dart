@@ -37,6 +37,7 @@ import '../widget/mytext.dart';
 import '../utils/utils.dart';
 import '../widget/mynetworkimg.dart';
 import '../widget/ratingreview.dart';
+import '../widget/download_sheet_helper.dart';
 
 class WebContentVideoDetails extends StatefulWidget {
   final String? newPage, oldPage;
@@ -1494,6 +1495,34 @@ class WebContentVideoDetailsState extends State<WebContentVideoDetails>
             Utils.openShareDialog(context: context, shareModel: shareModel);
           },
         ),
+        if ((videoDetailsProvider.contentDetailModel.result?[0].isDownload ??
+                0) ==
+            1)
+          _buildIconActionBtn(
+            icon: Icons.download_rounded,
+            label: "Download",
+            isActive: false,
+            onTap: () async {
+              final content =
+                  videoDetailsProvider.contentDetailModel.result?[0];
+              final qualities = DownloadSheetHelper.buildQualityOptions(
+                video320: content?.video320,
+                video480: content?.video480,
+                video720: content?.video720,
+                video1080: content?.video1080,
+              );
+              if (qualities.isNotEmpty) {
+                await DownloadSheetHelper.showDownloadFlow(
+                  context: context,
+                  title: content?.name ?? "",
+                  qualities: qualities,
+                  onInAppDownload: (selectedUrl) {},
+                );
+              } else {
+                Utils.showSnackbar(context, "fail", "invalid_url", true);
+              }
+            },
+          ),
       ],
     );
   }

@@ -1689,8 +1689,9 @@ class ApiService {
 /* ========================== Download Videos ========================== */
 Future<void> prepareVideoDownload(
   BuildContext context,
-  contentdetails.Result? contentDetails,
-) async {
+  contentdetails.Result? contentDetails, {
+  String? customDownloadUrl,
+}) async {
   contentdetails.Result? sectionDetails = contentDetails;
   printLog('videoExtension ============> ${sectionDetails?.videoExtension}');
   final downloadProvider = Provider.of<VideoDownloadProvider>(
@@ -1790,12 +1791,14 @@ Future<void> prepareVideoDownload(
     );
 
     /* Video Download */
-    String downloadUrl = Utils.getPrimaryVideoUrl(
-      video320: sectionDetails?.video320,
-      video480: sectionDetails?.video480,
-      video720: sectionDetails?.video720,
-      video1080: sectionDetails?.video1080,
-    );
+    String downloadUrl = (customDownloadUrl != null && customDownloadUrl.isNotEmpty)
+        ? customDownloadUrl
+        : Utils.getPrimaryVideoUrl(
+            video320: sectionDetails?.video320,
+            video480: sectionDetails?.video480,
+            video720: sectionDetails?.video720,
+            video1080: sectionDetails?.video1080,
+          );
     await dio.download(
       downloadUrl,
       mTargetFile?.path,
@@ -1880,6 +1883,7 @@ Future<void> prepareShowDownload(
   required int? seasonPos,
   required int? episodePos,
   required episode.Result? episodeDetails,
+  String? customDownloadUrl,
 }) async {
   contentdetails.Result? sectionDetails = contentDetails;
   int seasonPosition = seasonPos ?? 0;
@@ -2079,12 +2083,14 @@ Future<void> prepareShowDownload(
     );
 
     /* Video Download */
-    String epiDownloadUrl = Utils.getPrimaryVideoUrl(
-      video320: epiDetails?.video320,
-      video480: epiDetails?.video480,
-      video720: epiDetails?.video720,
-      video1080: epiDetails?.video1080,
-    );
+    String epiDownloadUrl = (customDownloadUrl != null && customDownloadUrl.isNotEmpty)
+        ? customDownloadUrl
+        : Utils.getPrimaryVideoUrl(
+            video320: epiDetails?.video320,
+            video480: epiDetails?.video480,
+            video720: epiDetails?.video720,
+            video1080: epiDetails?.video1080,
+          );
     await dio.download(
       epiDownloadUrl,
       mTargetFile?.path,

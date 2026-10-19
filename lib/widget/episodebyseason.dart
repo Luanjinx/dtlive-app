@@ -32,6 +32,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../widget/mynetworkimg.dart';
 import '../webwidget/web_hover_card.dart';
 import '../widget/mytext.dart';
+import '../widget/download_sheet_helper.dart';
 
 class EpisodeBySeason extends StatefulWidget {
   final int? videoId, upcomingType, typeId, seasonPos;
@@ -982,9 +983,6 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
 
   /* ========= Download ========= */
   Widget _buildDownloadWithSubCheck({required int epiPos}) {
-    if (kIsWeb) {
-      return const SizedBox.shrink();
-    }
     if ((episodeProvider.episodeList?[epiPos].isDownload ?? 0) == 0) {
       return const SizedBox.shrink();
     }
@@ -1137,23 +1135,31 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
       return;
     }
     final episode = episodeProvider.episodeList?[position];
-    String epiDownloadUrl = Utils.getPrimaryVideoUrl(
+    final qualities = DownloadSheetHelper.buildQualityOptions(
       video320: episode?.video320,
       video480: episode?.video480,
       video720: episode?.video720,
       video1080: episode?.video1080,
     );
-    printLog("epiDownloadUrl ----------> $epiDownloadUrl");
-    if (epiDownloadUrl.isNotEmpty) {
+    printLog("qualities length ----------> ${qualities.length}");
+    if (qualities.isNotEmpty) {
       printLog("seasonPos ---------> ${showDetailsProvider.seasonPos}");
       printLog("episode Length ----> ${episodeProvider.episodeList?.length}");
       if (!mounted) return;
-      prepareShowDownload(
-        context,
-        contentDetails: showDetailsProvider.contentDetailModel.result?[0],
-        seasonPos: showDetailsProvider.seasonPos,
-        episodePos: position,
-        episodeDetails: episode,
+      await DownloadSheetHelper.showDownloadFlow(
+        context: context,
+        title: episode?.name ?? "Episode ${(position + 1)}",
+        qualities: qualities,
+        onInAppDownload: (selectedUrl) {
+          prepareShowDownload(
+            context,
+            contentDetails: showDetailsProvider.contentDetailModel.result?[0],
+            seasonPos: showDetailsProvider.seasonPos,
+            episodePos: position,
+            episodeDetails: episode,
+            customDownloadUrl: selectedUrl,
+          );
+        },
       );
     } else {
       if (!mounted) return;

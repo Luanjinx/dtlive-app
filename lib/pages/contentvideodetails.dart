@@ -44,6 +44,7 @@ import '../widget/mytext.dart';
 import '../utils/utils.dart';
 import '../widget/mynetworkimg.dart';
 import '../widget/ratingreview.dart';
+import '../widget/download_sheet_helper.dart';
 
 class ContentVideoDetails extends StatefulWidget {
   final int videoId, subVideoType, videoType, typeId;
@@ -2156,21 +2157,30 @@ class ContentVideoDetailsState extends State<ContentVideoDetails>
       return;
     }
     final content = videoDetailsProvider.contentDetailModel.result?[0];
-    String downloadUrl = Utils.getPrimaryVideoUrl(
+    final qualities = DownloadSheetHelper.buildQualityOptions(
       video320: content?.video320,
       video480: content?.video480,
       video720: content?.video720,
       video1080: content?.video1080,
     );
-    if (downloadUrl.isNotEmpty) {
-      try {
-        prepareVideoDownload(
-          context,
-          content,
-        );
-      } catch (e) {
-        printLog("Downloading... Exception ======> $e");
-      }
+
+    if (qualities.isNotEmpty) {
+      await DownloadSheetHelper.showDownloadFlow(
+        context: context,
+        title: content?.name ?? "",
+        qualities: qualities,
+        onInAppDownload: (selectedUrl) {
+          try {
+            prepareVideoDownload(
+              context,
+              content,
+              customDownloadUrl: selectedUrl,
+            );
+          } catch (e) {
+            printLog("Downloading... Exception ======> $e");
+          }
+        },
+      );
     } else {
       if (!mounted) return;
       Utils.showSnackbar(context, "fail", "invalid_url", true);

@@ -506,5 +506,16 @@
     "see_all_reviews": "See All Reviews",
     "write_review": "Write a Review",
     "mute": "Mute",
-    "unmute": "Unmute"
+    "unmute": "Unmute",
+    "select_download_quality": "Select download quality",
+    "select_download_quality_desc": "Select quality to download this content",
+    "select_download_method": "Select Download Method",
+    "select_download_method_desc": "Choose how to download this content ({0})",
+    "direct_in_app": "Direct In-App",
+    "direct_in_app_desc": "Download and watch offline inside the app",
+    "external_browser": "External Browser",
+    "external_browser_desc": "Download file via external browser",
+    "unduh": "Download",
+    "default_quality": "Default",
+    "opening_browser_to_download": "Opening browser to download..."
 }

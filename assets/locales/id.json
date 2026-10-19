@@ -506,5 +506,16 @@
     "see_all_reviews": "Lihat semua ulasan",
     "write_review": "Tulis ulasan",
     "mute": "Bisukan",
-    "unmute": "Bunyikan"
+    "unmute": "Bunyikan",
+    "select_download_quality": "Pilih kualitas unduhan",
+    "select_download_quality_desc": "Pilih Kualitas Untuk Mengunduh Konten Ini",
+    "select_download_method": "Pilih Metode Unduhan",
+    "select_download_method_desc": "Pilih cara mengunduh konten ini ({0})",
+    "direct_in_app": "Direct In-App",
+    "direct_in_app_desc": "Unduh dan tonton offline di dalam aplikasi",
+    "external_browser": "External Browser",
+    "external_browser_desc": "Unduh file melalui browser eksternal",
+    "unduh": "Unduh",
+    "default_quality": "Bawaan",
+    "opening_browser_to_download": "Membuka browser untuk mengunduh..."
 }
