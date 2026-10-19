@@ -467,20 +467,15 @@ class HomeState extends State<Home> {
               ScrollDirection.forward) {
             bottombarProvider.toggleVisibility(true);
           }
-          return true;
+          return false;
         },
         child: NestedScrollView(
           headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
             return <Widget>[
-              SliverOverlapAbsorber(
-                handle: NestedScrollView.sliverOverlapAbsorberHandleFor(
-                  context,
-                ),
-                sliver: Consumer2<HomeProvider, BottombarProvider>(
-                  builder: (context, homeProvider, bottombarProvider, child) {
-                    return _buildAppBar(innerBoxIsScrolled);
-                  },
-                ),
+              Consumer2<HomeProvider, BottombarProvider>(
+                builder: (context, homeProvider, bottombarProvider, child) {
+                  return _buildAppBar(innerBoxIsScrolled);
+                },
               ),
             ];
           },
@@ -730,10 +725,6 @@ class HomeState extends State<Home> {
         final list = sectionTypeList ?? [];
         final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
-        if (homeProvider.selectedIndex == -1) {
-          _resetHomeScroll();
-        }
-
         return SizedBox(
           height: 36,
           child: ListView.separated(
@@ -758,7 +749,12 @@ class HomeState extends State<Home> {
                 splashColor: transparent,
                 highlightColor: transparent,
                 onTap: () async {
-                  if (isSelected) return;
+                  if (isSelected) {
+                    if (isHomeTab) {
+                      _resetHomeScroll();
+                    }
+                    return;
+                  }
                   _scrollToCurrent(index);
                   AdHelper.checkAndShowAds(
                     context: context,
