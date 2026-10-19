@@ -356,7 +356,9 @@ class BottombarState extends State<Bottombar> with RouteAware {
               curve: Curves.easeInOut,
               child: IgnorePointer(
                 ignoring: !bottombarProvider.isShowBottombar,
-                child: Center(
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  heightFactor: 1.0,
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 560),
                     child: Container(
