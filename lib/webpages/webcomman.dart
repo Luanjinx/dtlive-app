@@ -704,9 +704,9 @@ class _WebCommanState extends State<WebComman> with RouteAware {
         final bool isTransparentHeader =
             isBig && isHomePage && hasHeroBanner && !_isNavScrolled;
 
-        final double appBarHeight = (!isBig && isHomePage && hasTypes)
-            ? (56.0 + 42.0)
-            : Dimens.homeTabHeight;
+        final double appBarHeight = isBig
+            ? Dimens.homeTabHeight
+            : ((isHomePage && hasTypes) ? (56.0 + 42.0) : 56.0);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 250),
@@ -755,14 +755,14 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                       _buildLogoButton()
                     else
                       _buildBackButton(),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: tabTitle(homeProvider.sectionTypeModel.result),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 12),
                     if (currentPage != RoutesConstant.searchPage)
                       _buildSearchButton(),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 10),
                     _buildUserLogin(),
                   ],
                 )
@@ -909,6 +909,8 @@ class _WebCommanState extends State<WebComman> with RouteAware {
   }
 
   Widget _buildLogoButton() {
+    final bool isBig = Dimens.isBigScreen(context);
+    final double logoHeight = isBig ? 48.0 : 40.0;
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -918,11 +920,14 @@ class _WebCommanState extends State<WebComman> with RouteAware {
           await getTabData(-1, homeProvider.sectionTypeModel.result);
         },
         child: Padding(
-          padding: const EdgeInsets.all(4.0),
-          child: MyImage(
-            width: Dimens.appIconSizeWeb,
-            height: Dimens.appIconSizeWeb,
-            imagePath: "appicon.png",
+          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+          child: SizedBox(
+            height: logoHeight,
+            child: MyImage(
+              height: logoHeight,
+              fit: BoxFit.contain,
+              imagePath: "appicon.png",
+            ),
           ),
         ),
       ),
@@ -950,8 +955,8 @@ class _WebCommanState extends State<WebComman> with RouteAware {
             }
           },
           child: Container(
-            width: 40,
-            height: 40,
+            width: 38,
+            height: 38,
             alignment: Alignment.center,
             padding: const EdgeInsets.all(8),
             child: MyImage(fit: BoxFit.contain, imagePath: "back_web.png"),
@@ -963,75 +968,71 @@ class _WebCommanState extends State<WebComman> with RouteAware {
 
   Widget tabTitle(List<type.Result>? sectionTypeList) {
     return SizedBox(
-      height: Dimens.homeTabHeight,
+      height: 44,
       child: Align(
         alignment: Alignment.centerLeft,
         child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           physics: const ClampingScrollPhysics(),
-          child: Container(
-            height: Dimens.homeTabHeight,
-            alignment: Alignment.centerLeft,
-            child: Consumer<HomeProvider>(
-              builder: (context, homeProvider, child) {
-                final int itemCount = (sectionTypeList?.length ?? 0) + 1;
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    for (int index = 0; index < itemCount; index++) ...[
-                      _buildDesktopTabItem(
-                        title: index == 0
-                            ? "Home"
-                            : (sectionTypeList?[index - 1].name?.toString() ?? ""),
-                        isActive: widget.newPage == RoutesConstant.homePage &&
-                            homeProvider.selectedIndex == index,
-                        onTap: () async {
-                          printLog("<===============================>");
-                          printLog("HOME index ======> $index");
-                          printLog("HOME oldPage ====> ${widget.oldPage}");
-                          printLog("HOME newPage ====> ${widget.newPage}");
-                          printLog("<===============================>");
-                          if (index == 0) {
-                            await getTabData(
-                              -1,
-                              homeProvider.sectionTypeModel.result,
-                            );
-                          } else {
-                            await getTabData(
-                              (index - 1),
-                              homeProvider.sectionTypeModel.result,
-                            );
-                          }
-                          if (widget.newPage != RoutesConstant.homePage) {
-                            if (!context.mounted) return;
-                            context.go('/', extra: widget.newPage ?? "");
-                          }
-                        },
-                      ),
-                      if (index < itemCount - 1) const SizedBox(width: 4),
-                    ],
-                    /* Store */
-                    if ((rentMenuStatus != null && rentMenuStatus == "1") &&
-                        Constant.userIsKid == false) ...[
-                      const SizedBox(width: 4),
-                      _buildDesktopTabItem(
-                        title: Locales.string(context, "bottommenu4"),
-                        isActive: widget.newPage == RoutesConstant.storePage,
-                        onTap: () async {
-                          printLog("newPage ======> ${widget.newPage}");
-                          if (!mounted) return;
-                          context.go(
-                            '/${RoutesConstant.storePage}',
-                            extra: widget.newPage ?? "",
+          child: Consumer<HomeProvider>(
+            builder: (context, homeProvider, child) {
+              final int itemCount = (sectionTypeList?.length ?? 0) + 1;
+              return Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (int index = 0; index < itemCount; index++) ...[
+                    _buildDesktopTabItem(
+                      title: index == 0
+                          ? "Home"
+                          : (sectionTypeList?[index - 1].name?.toString() ?? ""),
+                      isActive: widget.newPage == RoutesConstant.homePage &&
+                          homeProvider.selectedIndex == index,
+                      onTap: () async {
+                        printLog("<===============================>");
+                        printLog("HOME index ======> $index");
+                        printLog("HOME oldPage ====> ${widget.oldPage}");
+                        printLog("HOME newPage ====> ${widget.newPage}");
+                        printLog("<===============================>");
+                        if (index == 0) {
+                          await getTabData(
+                            -1,
+                            homeProvider.sectionTypeModel.result,
                           );
-                        },
-                      ),
-                    ],
+                        } else {
+                          await getTabData(
+                            (index - 1),
+                            homeProvider.sectionTypeModel.result,
+                          );
+                        }
+                        if (widget.newPage != RoutesConstant.homePage) {
+                          if (!context.mounted) return;
+                          context.go('/', extra: widget.newPage ?? "");
+                        }
+                      },
+                    ),
+                    if (index < itemCount - 1) const SizedBox(width: 4),
                   ],
-                );
-              },
-            ),
+                  /* Store */
+                  if ((rentMenuStatus != null && rentMenuStatus == "1") &&
+                      Constant.userIsKid == false) ...[
+                    const SizedBox(width: 4),
+                    _buildDesktopTabItem(
+                      title: Locales.string(context, "bottommenu4"),
+                      isActive: widget.newPage == RoutesConstant.storePage,
+                      onTap: () async {
+                        printLog("newPage ======> ${widget.newPage}");
+                        if (!mounted) return;
+                        context.go(
+                          '/${RoutesConstant.storePage}',
+                          extra: widget.newPage ?? "",
+                        );
+                      },
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ),
       ),
@@ -1055,16 +1056,17 @@ class _WebCommanState extends State<WebComman> with RouteAware {
             highlightColor: transparent,
             borderRadius: BorderRadius.circular(6),
             onTap: onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 14,
-                vertical: 8,
-              ),
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              alignment: Alignment.center,
               child: IntrinsicWidth(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
+                    const SizedBox(height: 7),
                     Text(
                       title,
                       style: GoogleFonts.inter(
@@ -1080,7 +1082,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                       maxLines: 1,
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       curve: Curves.easeInOut,
@@ -1136,8 +1138,8 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: MyImage(
-                      width: 36,
-                      height: 36,
+                      width: 42,
+                      height: 42,
                       imagePath: "appicon.png",
                     ),
                   ),
@@ -1653,7 +1655,7 @@ class _WebCommanState extends State<WebComman> with RouteAware {
                 focusColor: transparent,
                 hoverColor: transparent,
                 child: Container(
-                  height: 36,
+                  height: 38,
                   constraints: const BoxConstraints(minWidth: 80),
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   alignment: Alignment.center,

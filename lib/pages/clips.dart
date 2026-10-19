@@ -16,6 +16,7 @@ import '../provider/clipsprovider.dart';
 import '../utils/adhelper.dart';
 import '../utils/color.dart';
 import '../utils/constant.dart';
+import '../utils/dimens.dart';
 import '../utils/loadingoverlay.dart';
 import '../utils/utils.dart';
 import '../widget/mytext.dart';
@@ -108,27 +109,40 @@ class _ClipsState extends State<Clips> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isBig = Dimens.isBigScreen(context);
+    final double topHeaderOffset = kIsWeb
+        ? (isBig ? Dimens.homeTabHeight : 56.0)
+        : 0.0;
+
     return Consumer<ClipsProvider>(
       builder: (context, cp, _) {
         if (cp.isLoading && !cp.loadMore) {
+          Widget shimmerBody = ShimmerUtils.buildClipsShimmer(
+            context,
+            widget.openFrom == "bottom",
+          );
+          if (kIsWeb) {
+            shimmerBody = Padding(
+              padding: EdgeInsets.only(top: topHeaderOffset),
+              child: SizedBox(
+                height: MediaQuery.of(context).size.height - topHeaderOffset,
+                child: shimmerBody,
+              ),
+            );
+          }
           return Scaffold(
             backgroundColor: appBgColor,
-            body: ShimmerUtils.buildClipsShimmer(
-              context,
-              widget.openFrom == "bottom",
-            ),
+            body: shimmerBody,
           );
         }
 
         final clipsList = cp.shortFilmsList ?? [];
 
-        return Scaffold(
-          backgroundColor: appBgColor,
-          body: SafeArea(
-            top: false,
-            child: Stack(
-              children: [
-                PageView.builder(
+        Widget mainBody = SafeArea(
+          top: false,
+          child: Stack(
+            children: [
+              PageView.builder(
                   controller: _pageController,
                   scrollDirection: Axis.vertical,
                   physics: const BouncingScrollPhysics(),
@@ -176,7 +190,21 @@ class _ClipsState extends State<Clips> {
                   ),
               ],
             ),
-          ),
+          );
+
+        if (kIsWeb) {
+          mainBody = Padding(
+            padding: EdgeInsets.only(top: topHeaderOffset),
+            child: SizedBox(
+              height: MediaQuery.of(context).size.height - topHeaderOffset,
+              child: mainBody,
+            ),
+          );
+        }
+
+        return Scaffold(
+          backgroundColor: appBgColor,
+          body: mainBody,
         );
       },
     );

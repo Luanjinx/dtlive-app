@@ -376,7 +376,7 @@ class WebMySpaceState extends State<WebMySpace> with RouteAware {
           Container(
             alignment: Alignment.centerLeft,
             child: MyImage(
-              height: (Dimens.isBigScreen(context)) ? 40 : 32,
+              height: (Dimens.isBigScreen(context)) ? 48 : 38,
               imagePath: "appicon.png",
               fit: BoxFit.contain,
             ),

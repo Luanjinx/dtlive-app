@@ -19,16 +19,11 @@ import '../widget/myimage.dart';
 import '../widget/mytext.dart';
 import '../utils/sharedpre.dart';
 
-const _lime = colorPrimary; // #BAFA34
-const _cyan = colorPrimaryDark;
-const _purple = complimentryColor; // #792BEC
-const _red = colorAccent; // #EC2B4E
-const _orange = warningBG;
-
 const _kNavFadeMs = 500;
 
 class Splash extends StatefulWidget {
   const Splash({super.key});
+
   @override
   State<Splash> createState() => _SplashState();
 }
@@ -40,77 +35,25 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
   late HomeProvider _home;
   final SharedPre _prefs = SharedPre();
 
-  // ── Background (starts at 0ms) ─────────────────────────────────────────
-  late AnimationController _bgCtrl; // 600ms one-shot
-  late Animation<double> _bgFade;
+  // ── Phase 1: Equalizer Controllers ────────────────────────────────────
+  late AnimationController _eqCtrl; // continuous audio oscillation
+  late AnimationController _eqFadeCtrl; // fade-out & scale down at 800ms
 
-  // ── Glow blobs (all loop forever) ──────────────────────────────────────
-  late AnimationController _orbitCtrl; // 9000ms
-  late AnimationController _pulse1; // 2400ms
-  late AnimationController _pulse2; // 3000ms
-  late AnimationController _pulse3; // 3600ms
-  late Animation<double> _orbitAngle;
-  late Animation<double> _p1s, _p1o;
-  late Animation<double> _p2s, _p2o;
-  late Animation<double> _p3s, _p3o;
+  // ── Phase 2: Stage & Laser Controllers ────────────────────────────────
+  late AnimationController _stageCtrl; // reveals stage at 950ms
+  late AnimationController _laserCtrl; // sweeps across logo
 
-  // ── Icon reveal (starts at 300ms, 700ms duration) ──────────────────────
-  // opacity 0→1 + scale 0.88→1.0 — NO setState, pure controller
-  late AnimationController _iconCtrl;
-  late Animation<double> _iconOpacity;
-  late Animation<double> _iconScale;
+  // ── Phase 3 & 4: Radar, Taglines & Subtitle Controllers ───────────────
+  late AnimationController _radarCtrl; // concentric expanding pulse rings
+  late AnimationController _tag1Ctrl; // Line 1: Stream Everything.
+  late AnimationController _tag2Ctrl; // Line 2: Miss Nothing.
+  late AnimationController _subCtrl; // Subtitle: Unlimited Entertainment Awaits
 
-  // ── Shine sweep — fully controller-driven, no bool flag ────────────────
-  // _shineOpCtrl fades the shine band in/out (no setState needed)
-  // _shineProgCtrl sweeps the position left→right
-  late AnimationController _shineOpCtrl; // 150ms one-shot (fade in)
-  late AnimationController _shineProgCtrl; // 450ms one-shot (sweep)
-  late AnimationController _shineOutCtrl; // 150ms one-shot (fade out)
-  late Animation<double> _shineOpacity;
-  late Animation<double> _shineProg;
-
-  // ── Separator (starts at 1000ms, 550ms duration) ───────────────────────
-  late AnimationController _sepCtrl;
-  late Animation<double> _sepFade;
-  late Animation<double> _sepLineScale;
-
-  // ── Separator dot ring (loop, starts at 1200ms) ────────────────────────
-  late AnimationController _dotRingCtrl;
-  late Animation<double> _dotRingScale;
-  late Animation<double> _dotRingOpacity;
-
-  // ── Tagline (starts at 1200ms, 750ms duration) ────────────────────────
-  late AnimationController _tagCtrl;
-  late Animation<double> _tagOpacity;
-  late Animation<Offset> _tagSlide;
-
-  // ── Subtitle (starts at 1900ms, 550ms duration) ───────────────────────
-  late AnimationController _subCtrl;
-  late Animation<double> _subOpacity;
-
-  // ── Late elements: stripe + dots + bar (starts at 2000ms, 450ms) ──────
-  late AnimationController _lateCtrl;
-  late Animation<double> _lateFade;
-
-  // ── Dots bounce + colour wave (loop) ──────────────────────────────────
-  late AnimationController _dotsCtrl; // 1100ms loop
-  late AnimationController _waveCtrl; // 2000ms loop
-
-  // ── Bottom progress strip shimmer (loop) ──────────────────────────────
-  late AnimationController _stripCtrl; // 1800ms loop
-
-  // ── Logo geometry — plain fields, no setState ─────────────────────────
-  // AnimatedBuilder reads these on every tick, so no rebuild needed.
-  Size _logoSize = Size.zero;
-  Offset _logoOffset = Offset.zero;
-  final GlobalKey _logoKey = GlobalKey();
-
-  // ── Navigation ─────────────────────────────────────────────────────────
+  // ── Navigation Gate ───────────────────────────────────────────────────
   bool _animDone = false;
   bool _dataDone = false;
   Widget? _nextPage;
 
-  // ──────────────────────────────────────────────────────────────────────
   @override
   void initState() {
     super.initState();
@@ -118,260 +61,109 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     _home = Provider.of<HomeProvider>(context, listen: false);
     _conn = Provider.of<ConnectivityProvider>(context, listen: false);
 
-    _createControllers();
-    _startSequence();
+    _initControllers();
+    _startTimeline();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _readLogoGeometry();
       _fetchData();
     });
   }
 
-  // Reads logo rect without setState — AnimatedBuilder picks it up on next tick
-  void _readLogoGeometry() {
-    final box = _logoKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box == null) return;
-    _logoSize = box.size;
-    _logoOffset = box.localToGlobal(Offset.zero);
-  }
+  void _initControllers() {
+    // Phase 1: Equalizer continuous wave loop (1000ms cycle)
+    _eqCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
 
-  // ── Controller factory ────────────────────────────────────────────────
-  void _createControllers() {
-    // Background
-    _bgCtrl = AnimationController(
+    // Phase 1 -> 2: Equalizer fade-out (350ms duration)
+    _eqFadeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 350),
+    );
+
+    // Phase 2: Stage reveal fade-in (450ms duration)
+    _stageCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 450),
+    );
+
+    // Phase 2: Laser horizontal sweep (850ms duration)
+    _laserCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    );
+
+    // Phase 3 & 4: Radar concentric rings (2800ms repeating loop)
+    _radarCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    );
+
+    // Phase 3: Tagline 1 reveal (600ms duration)
+    _tag1Ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _bgFade = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _bgCtrl, curve: Curves.easeOut));
 
-    // Orbit
-    _orbitCtrl = AnimationController(
+    // Phase 4: Tagline 2 reveal (600ms duration)
+    _tag2Ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 9000),
-    );
-    _orbitAngle = Tween<double>(
-      begin: 0,
-      end: 2 * math.pi,
-    ).animate(CurvedAnimation(parent: _orbitCtrl, curve: Curves.linear));
-
-    _pulse1 = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
-    );
-    _p1s = Tween<double>(
-      begin: .80,
-      end: 1.24,
-    ).animate(CurvedAnimation(parent: _pulse1, curve: Curves.easeInOut));
-    _p1o = Tween<double>(
-      begin: .17,
-      end: .52,
-    ).animate(CurvedAnimation(parent: _pulse1, curve: Curves.easeInOut));
-
-    _pulse2 = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3000),
-    );
-    _p2s = Tween<double>(
-      begin: .86,
-      end: 1.30,
-    ).animate(CurvedAnimation(parent: _pulse2, curve: Curves.easeInOut));
-    _p2o = Tween<double>(
-      begin: .13,
-      end: .46,
-    ).animate(CurvedAnimation(parent: _pulse2, curve: Curves.easeInOut));
-
-    _pulse3 = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 3600),
-    );
-    _p3s = Tween<double>(
-      begin: .76,
-      end: 1.20,
-    ).animate(CurvedAnimation(parent: _pulse3, curve: Curves.easeInOut));
-    _p3o = Tween<double>(
-      begin: .11,
-      end: .40,
-    ).animate(CurvedAnimation(parent: _pulse3, curve: Curves.easeInOut));
-
-    // Icon
-    _iconCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 700),
-    );
-    _iconOpacity = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(
-        parent: _iconCtrl,
-        curve: const Interval(0.0, 0.65, curve: Curves.easeOut),
-      ),
-    );
-    _iconScale = Tween<double>(begin: .88, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _iconCtrl,
-        curve: const Interval(0.0, 1.0, curve: Curves.easeOutCubic),
-      ),
+      duration: const Duration(milliseconds: 600),
     );
 
-    // Shine — 3 separate controllers, no bool flag
-    _shineOpCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-    _shineOpacity = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _shineOpCtrl, curve: Curves.easeIn));
-
-    _shineProgCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 450),
-    );
-    _shineProg = Tween<double>(
-      begin: -.38,
-      end: 1.38,
-    ).animate(CurvedAnimation(parent: _shineProgCtrl, curve: Curves.easeInOut));
-
-    _shineOutCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 150),
-    );
-
-    // Separator
-    _sepCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 550),
-    );
-    _sepFade = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _sepCtrl, curve: Curves.easeOut));
-    _sepLineScale = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _sepCtrl, curve: Curves.easeOut));
-
-    // Dot ring (loop)
-    _dotRingCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    );
-    _dotRingScale = Tween<double>(
-      begin: 1.0,
-      end: 2.6,
-    ).animate(CurvedAnimation(parent: _dotRingCtrl, curve: Curves.easeOut));
-    _dotRingOpacity = Tween<double>(
-      begin: .70,
-      end: 0.0,
-    ).animate(CurvedAnimation(parent: _dotRingCtrl, curve: Curves.easeOut));
-
-    // Tagline
-    _tagCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 750),
-    );
-    _tagOpacity = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _tagCtrl, curve: Curves.easeOut));
-    _tagSlide = Tween<Offset>(
-      begin: const Offset(0, .14),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _tagCtrl, curve: Curves.easeOutCubic));
-
-    // Subtitle
+    // Phase 4: Subtitle reveal (600ms duration)
     _subCtrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 550),
-    );
-    _subOpacity = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _subCtrl, curve: Curves.easeOut));
-
-    // Late elements
-    _lateCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 450),
-    );
-    _lateFade = Tween<double>(
-      begin: 0,
-      end: 1,
-    ).animate(CurvedAnimation(parent: _lateCtrl, curve: Curves.easeOut));
-
-    // Dots + wave
-    _dotsCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1100),
-    );
-    _waveCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-
-    // Strip
-    _stripCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 600),
     );
   }
 
-  // ── Sequence — all via Future.delayed, zero setState ─────────────────
-  void _startSequence() {
-    // 0 ms — BG + blobs
-    _bgCtrl.forward();
-    _orbitCtrl.repeat();
-    _pulse1.repeat(reverse: true);
-    _pulse2.repeat(reverse: true);
-    _pulse3.repeat(reverse: true);
-    _dotsCtrl.repeat();
-    _waveCtrl.repeat();
-    _stripCtrl.repeat();
+  void _startTimeline() {
+    // 0ms: Equalizer starts dancing immediately
+    _eqCtrl.repeat();
 
-    // 300 ms — icon fades + scales in
-    _at(300, _iconCtrl.forward);
-
-    // 600 ms — shine fade-in, then sweep, then fade-out
-    // All chained via whenComplete — no setState, no bool
-    _at(600, () {
-      _shineOpCtrl.forward().whenComplete(() {
-        _shineProgCtrl.forward().whenComplete(() {
-          _shineOutCtrl.forward();
-        });
-      });
+    // 800ms: Equalizer fades out
+    _delayed(800, () {
+      _eqFadeCtrl.forward();
     });
 
-    // 1 000 ms — separator lines sweep in
-    _at(1000, () {
-      _sepCtrl.forward();
-      _dotRingCtrl.repeat();
+    // 950ms: Stage reveals, laser sweeps across logo
+    _delayed(950, () {
+      _stageCtrl.forward();
+      _laserCtrl.forward();
     });
 
-    // 1 200 ms — tagline slides up
-    _at(1200, _tagCtrl.forward);
+    // 1500ms: Radar rings pulse, Tagline 1 appears
+    _delayed(1500, () {
+      _radarCtrl.repeat();
+      _tag1Ctrl.forward();
+    });
 
-    // 1 900 ms — subtitle fades in
-    _at(1900, _subCtrl.forward);
+    // 2000ms: Tagline 2 appears
+    _delayed(2000, () {
+      _tag2Ctrl.forward();
+    });
 
-    // 2 000 ms — stripe + dots + bar
-    _at(2000, _lateCtrl.forward);
+    // 2400ms: Subtitle appears
+    _delayed(2400, () {
+      _subCtrl.forward();
+    });
 
-    // 3 500 ms — minimum splash duration, mark animation complete
-    // This guarantees ALL animations finish before navigation fires
-    _at(3500, () {
+    // 3400ms: Minimum splash duration reached, allow smooth exit
+    _delayed(3400, () {
       _animDone = true;
       _tryNavigate();
     });
   }
 
-  void _at(int ms, VoidCallback fn) {
+  void _delayed(int ms, VoidCallback callback) {
     Future.delayed(Duration(milliseconds: ms), () {
-      if (mounted) fn();
+      if (mounted) callback();
     });
   }
 
-  // ── Data ──────────────────────────────────────────────────────────────
+  // ── Data Loading ───────────────────────────────────────────────────────
   Future<void> _fetchData() async {
     if (_conn.isOnline) await _gen.getGeneralsetting(context);
     if (!mounted) return;
@@ -406,7 +198,7 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     _tryNavigate();
   }
 
-  // Gate: both flags AND minimum splash time must pass
+  // Gate: both data and minimum splash animation sequence must be complete
   void _tryNavigate() {
     if (!_animDone || !_dataDone || !mounted || _nextPage == null) return;
     Navigator.pushReplacement(
@@ -414,8 +206,8 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
       PageRouteBuilder(
         pageBuilder: (_, _, _) => _nextPage!,
         transitionDuration: const Duration(milliseconds: _kNavFadeMs),
-        transitionsBuilder: (_, a, _, child) => FadeTransition(
-          opacity: CurvedAnimation(parent: a, curve: Curves.easeOut),
+        transitionsBuilder: (_, animation, _, child) => FadeTransition(
+          opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
           child: child,
         ),
       ),
@@ -424,23 +216,14 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _bgCtrl.dispose();
-    _orbitCtrl.dispose();
-    _pulse1.dispose();
-    _pulse2.dispose();
-    _pulse3.dispose();
-    _iconCtrl.dispose();
-    _shineOpCtrl.dispose();
-    _shineProgCtrl.dispose();
-    _shineOutCtrl.dispose();
-    _sepCtrl.dispose();
-    _dotRingCtrl.dispose();
-    _tagCtrl.dispose();
+    _eqCtrl.dispose();
+    _eqFadeCtrl.dispose();
+    _stageCtrl.dispose();
+    _laserCtrl.dispose();
+    _radarCtrl.dispose();
+    _tag1Ctrl.dispose();
+    _tag2Ctrl.dispose();
     _subCtrl.dispose();
-    _lateCtrl.dispose();
-    _dotsCtrl.dispose();
-    _waveCtrl.dispose();
-    _stripCtrl.dispose();
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
@@ -458,140 +241,54 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
 
     return Scaffold(
       backgroundColor: appBgColor,
-      body: AnimatedBuilder(
-        animation: Listenable.merge([
-          _bgCtrl,
-          _orbitCtrl,
-          _pulse1,
-          _pulse2,
-          _pulse3,
-          _iconCtrl,
-          _shineOpCtrl,
-          _shineProgCtrl,
-          _shineOutCtrl,
-          _sepCtrl,
-          _dotRingCtrl,
-          _tagCtrl,
-          _subCtrl,
-          _lateCtrl,
-          _dotsCtrl,
-          _waveCtrl,
-          _stripCtrl,
-        ]),
-        builder: (_, _) {
-          // Refresh logo geometry on every frame (no setState needed)
-          _readLogoGeometry();
-
-          // Resolved shine opacity = fade-in value × fade-out value
-          final shineAlpha =
-              _shineOpacity.value * (1.0 - _shineOutCtrl.value).clamp(0.0, 1.0);
-
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              // 1 — Background
-              _buildBg(),
-
-              // 2 — Rotating glow blobs
-              _buildBlobs(size),
-
-              // 3 — Shine overlay (always in tree, opacity drives visibility)
-              if (_logoSize != Size.zero && shineAlpha > 0.0)
-                _buildShine(shineAlpha),
-
-              // 4 — Content column
-              _buildContent(size),
-
-              // 5 — Top brand stripe
-              Positioned(top: 0, left: 0, right: 0, child: _buildStripe()),
-
-              // 6 — Bottom progress strip
-              Positioned(bottom: 0, left: 0, right: 0, child: _buildStripe()),
-
-              // 7 — Version label
-              Positioned(
-                bottom: size.height * .022,
-                left: 0,
-                right: 0,
-                child: Opacity(
-                  opacity: _lateFade.value.clamp(0, 1),
-                  child: MyText(
-                    text: 'v1.0.0',
-                    color: titleTextColor.withValues(alpha: .16),
-                    fontsizeNormal: 10,
-                    fontsizeWeb: 11,
-                    fontweight: FontWeight.w400,
-                    letterSpacing: 1.6,
-                    maxline: 1,
-                    multilanguage: false,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.center,
-                    fontstyle: FontStyle.normal,
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  // ── Background ──────────────────────────────────────────────────────────
-  Widget _buildBg() => Opacity(
-    opacity: _bgFade.value,
-    child: Container(color: appBgColor),
-  );
-
-  // ── Glow blobs ──────────────────────────────────────────────────────────
-  Widget _buildBlobs(Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-    final r = size.width * 0.36;
-    final a = _orbitAngle.value;
-    final b3 = Color.lerp(_cyan, _orange, _pulse1.value)!;
-
-    return Opacity(
-      opacity: _bgFade.value,
-      child: Stack(
+      body: Stack(
         fit: StackFit.expand,
+        alignment: Alignment.center,
         children: [
-          _blob(
-            cx + r * math.cos(a),
-            cy + r * .40 * math.sin(a),
-            size.width * .80,
-            _lime,
-            _p1s.value,
-            _p1o.value,
-          ),
-          _blob(
-            cx + r * math.cos(a + 2.094),
-            cy + r * .40 * math.sin(a + 2.094),
-            size.width * .72,
-            _purple,
-            _p2s.value,
-            _p2o.value,
-          ),
-          _blob(
-            cx + r * math.cos(a + 4.189),
-            cy + r * .40 * math.sin(a + 4.189),
-            size.width * .66,
-            b3,
-            _p3s.value,
-            _p3o.value,
-          ),
-          // Dark radial vignette — keeps centre readable
+          // Ambient Dark Vignette Background
           Container(
             decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment.center,
-                radius: .86,
+                radius: 0.9,
                 colors: [
-                  transparent,
-                  black.withValues(alpha: 0.80),
-                  black.withValues(alpha: 0.97),
+                  const Color(0xFF0A1923).withValues(alpha: 0.65),
+                  appBgColor,
                 ],
-                stops: [.24, .60, 1.0],
+                stops: const [0.0, 0.70],
+              ),
+            ),
+          ),
+
+          // Fase 1: Audio Equalizer / Soundwave (centered)
+          Center(
+            child: _buildEqualizer(),
+          ),
+
+          // Fase 2, 3, 4: Stage Container with Radar, Logo, Laser, and Taglines
+          Center(
+            child: _buildStage(size),
+          ),
+
+          // Version label at bottom
+          Positioned(
+            bottom: size.height * 0.03,
+            left: 0,
+            right: 0,
+            child: Opacity(
+              opacity: 0.22,
+              child: MyText(
+                text: 'v${Constant.appVersion.isNotEmpty ? Constant.appVersion : "2.1.0"}',
+                color: titleTextColor,
+                fontsizeNormal: 10,
+                fontsizeWeb: 11,
+                fontweight: FontWeight.w400,
+                letterSpacing: 1.6,
+                maxline: 1,
+                multilanguage: false,
+                overflow: TextOverflow.ellipsis,
+                textalign: TextAlign.center,
+                fontstyle: FontStyle.normal,
               ),
             ),
           ),
@@ -600,339 +297,304 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     );
   }
 
-  Widget _blob(
-    double cx,
-    double cy,
-    double sz,
-    Color color,
-    double scale,
-    double opacity,
-  ) {
-    final s = sz * scale;
-    return Positioned(
-      left: cx - s / 2,
-      top: cy - s / 2,
-      width: s,
-      height: s,
-      child: Opacity(
-        opacity: opacity,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(
-              colors: [
-                color.withValues(alpha: .50),
-                color.withValues(alpha: .13),
-                transparent, // [TASK-1]
-              ],
-              stops: const [0.0, .45, 1.0],
-            ),
-          ),
-        ),
+  // ── Fase 1: Equalizer ─────────────────────────────────────────────────
+  Widget _buildEqualizer() {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 1.0, end: 0.0).animate(
+        CurvedAnimation(parent: _eqFadeCtrl, curve: Curves.easeInOut),
       ),
-    );
-  }
-
-  // ── Shine sweep — opacity driven, no bool ──────────────────────────────
-  Widget _buildShine(double opacity) => Positioned(
-    left: _logoOffset.dx,
-    top: _logoOffset.dy,
-    width: _logoSize.width,
-    height: _logoSize.height,
-    child: ClipRect(
-      child: Opacity(
-        opacity: opacity.clamp(0, 1),
-        child: CustomPaint(painter: _ShinePainter(progress: _shineProg.value)),
-      ),
-    ),
-  );
-
-  // ── Brand stripe ────────────────────────────────────────────────────────
-  Widget _buildStripe() => Opacity(
-    opacity: _lateFade.value.clamp(0, 1),
-    child: Container(
-      height: 2,
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          colors: [transparent, _lime, _cyan, transparent], // [TASK-1]
-          stops: [0.0, .38, .62, 1.0],
+      child: ScaleTransition(
+        scale: Tween<double>(begin: 1.0, end: 0.85).animate(
+          CurvedAnimation(parent: _eqFadeCtrl, curve: Curves.easeInOut),
         ),
-      ),
-    ),
-  );
-
-  // ── Content column ──────────────────────────────────────────────────────
-  Widget _buildContent(Size size) {
-    final logoW = size.width * 0.62;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // ── App Icon — opacity + scale, no jumps, no burst ─────────
-        Opacity(
-          opacity: _iconOpacity.value.clamp(0, 1),
-          child: Transform.scale(
-            scale: _iconScale.value,
-            child: SizedBox(
-              key: _logoKey,
-              width: logoW,
-              child: MyImage(
-                imagePath: (kIsWeb || Constant.isTV)
-                    ? 'appicon.png'
-                    : 'appicon.png',
-                width: logoW,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ),
-
-        SizedBox(height: size.height * .052),
-
-        // ── Separator ──────────────────────────────────────────────
-        Opacity(
-          opacity: _sepFade.value.clamp(0, 1),
+        child: SizedBox(
+          height: 100,
           child: Row(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: List.generate(21, (index) {
+              return AnimatedBuilder(
+                animation: _eqCtrl,
+                builder: (context, child) {
+                  final double t = _eqCtrl.value * 2 * math.pi;
+                  // Center bars are taller, edge bars shorter
+                  final double dist = (index - 10).abs() / 10.0;
+                  final double centerFactor = 1.0 - (dist * 0.42);
+                  final double freq = 1.2 + (index % 4) * 0.35;
+                  final double phase = index * 0.65;
+                  final double wave = 0.5 + 0.5 * math.sin(t * freq + phase);
+                  final double h =
+                      (10.0 + (48.0 * centerFactor - 10.0) * wave).clamp(8.0, 52.0);
+
+                  return Container(
+                    width: 3.8,
+                    height: h,
+                    margin: const EdgeInsets.symmetric(horizontal: 2.2),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      gradient: const LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Color(0xFF00E5FF),
+                          Color(0xFF10B981),
+                          Color(0xFFBAFA34),
+                        ],
+                        stops: [0.0, 0.55, 1.0],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // ── Fase 2, 3, 4: Stage ────────────────────────────────────────────────
+  Widget _buildStage(Size size) {
+    final double logoW = (size.width * 0.64).clamp(180.0, 270.0);
+    final double logoH = logoW * 0.32;
+
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _stageCtrl, curve: Curves.easeOut),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Logo Area with Ambient Glow, Radar Rings, and Laser Scanner
+          Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
             children: [
-              // Left line — sweeps from centre outward
-              Transform.scale(
-                scaleX: _sepLineScale.value,
-                alignment: Alignment.centerRight,
-                child: Container(
-                  width: size.width * .22,
-                  height: 1,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [transparent, _lime], // [TASK-1]
-                    ),
-                  ),
-                ),
-              ),
-
-              // Pulsing dot with expanding ring
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      // Expanding ring
-                      Transform.scale(
-                        scale: _dotRingScale.value,
-                        child: Container(
-                          width: 8,
-                          height: 8,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: _lime.withValues(
-                                alpha: _dotRingOpacity.value.clamp(0, 1),
-                              ),
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                      ),
-                      // Solid lime dot
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _lime,
-                        ),
-                      ),
+              // Radial Ambient Glow
+              Container(
+                width: logoW * 1.45,
+                height: logoH * 2.2,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      const Color(0xFF00E5FF).withValues(alpha: 0.18),
+                      const Color(0xFFBAFA34).withValues(alpha: 0.12),
+                      transparent,
                     ],
+                    stops: const [0.0, 0.45, 0.72],
                   ),
                 ),
               ),
 
-              // Right line
-              Transform.scale(
-                scaleX: _sepLineScale.value,
-                alignment: Alignment.centerLeft,
-                child: Container(
-                  width: size.width * .22,
-                  height: 1,
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [_lime, transparent], // [TASK-1]
-                    ),
-                  ),
+              // Fase 3: Concentric Radar Rings
+              SizedBox(
+                width: logoW * 1.5,
+                height: logoW * 1.5,
+                child: AnimatedBuilder(
+                  animation: _radarCtrl,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      painter: _RadarPainter(progress: _radarCtrl.value),
+                    );
+                  },
                 ),
               ),
+
+              // Nexstream Logo Image
+              SizedBox(
+                width: logoW,
+                height: logoH,
+                child: MyImage(
+                  imagePath: 'appicon.png',
+                  width: logoW,
+                  fit: BoxFit.contain,
+                ),
+              ),
+
+              // Fase 2: Neon Laser Sweep Scanner
+              _buildLaser(logoW, logoH),
             ],
           ),
-        ),
 
-        SizedBox(height: size.height * .030),
+          SizedBox(height: (size.height * 0.04).clamp(18.0, 32.0)),
 
-        // ── Tagline ────────────────────────────────────────────────
-        FadeTransition(
-          opacity: _tagOpacity,
-          child: SlideTransition(
-            position: _tagSlide,
-            child: _buildTagline(size),
-          ),
-        ),
-
-        SizedBox(height: size.height * .018),
-
-        // ── Subtitle ───────────────────────────────────────────────
-        FadeTransition(
-          opacity: _subOpacity,
-          child: MyText(
-            text: 'Unlimited Entertainment Awaits',
-            color: titleTextColor.withValues(alpha: .36),
-            fontsizeNormal: 11,
-            fontsizeWeb: 12,
-            fontweight: FontWeight.w400,
-            letterSpacing: 3.0,
-            maxline: 1,
-            multilanguage: false,
-            overflow: TextOverflow.ellipsis,
-            textalign: TextAlign.center,
-            fontstyle: FontStyle.normal,
-          ),
-        ),
-
-        SizedBox(height: size.height * .060),
-
-        // ── Loading dots ───────────────────────────────────────────
-        Opacity(opacity: _lateFade.value.clamp(0, 1), child: _buildDots()),
-      ],
-    );
-  }
-
-  // ── Tagline ─────────────────────────────────────────────────────────────
-  Widget _buildTagline(Size size) {
-    final fs = size.width * .062;
-    return Column(
-      children: [
-        _tagLine('Stream ', 'Everything.', fs),
-        _tagLine('Miss ', 'Nothing.', fs),
-      ],
-    );
-  }
-
-  Widget _tagLine(String plain, String grad, double fontSize) => RichText(
-    textAlign: TextAlign.center,
-    text: TextSpan(
-      style: TextStyle(
-        fontSize: fontSize,
-        fontWeight: FontWeight.w700,
-        letterSpacing: -.3,
-        height: 1.22,
+          // Fase 3 & 4: Taglines & Subtitle
+          _buildTaglines(size),
+        ],
       ),
+    );
+  }
+
+  // ── Fase 2: Neon Laser Scanner Beam ───────────────────────────────────
+  Widget _buildLaser(double logoW, double logoH) {
+    return AnimatedBuilder(
+      animation: _laserCtrl,
+      builder: (context, child) {
+        if (_laserCtrl.value == 0.0 || _laserCtrl.value == 1.0) {
+          return const SizedBox.shrink();
+        }
+        final double x = -0.15 * logoW + (1.30 * logoW) * _laserCtrl.value;
+        final double opacity = (_laserCtrl.value < 0.10)
+            ? (_laserCtrl.value / 0.10)
+            : (_laserCtrl.value > 0.88)
+                ? ((1.0 - _laserCtrl.value) / 0.12).clamp(0.0, 1.0)
+                : 1.0;
+
+        return Positioned(
+          left: (logoW * 0.25) + x - (logoW * 0.25),
+          top: -10,
+          bottom: -10,
+          child: Opacity(
+            opacity: opacity.clamp(0.0, 1.0),
+            child: Container(
+              width: 3.5,
+              decoration: BoxDecoration(
+                color: const Color(0xFFBAFA34),
+                borderRadius: BorderRadius.circular(999),
+                boxShadow: [
+                  const BoxShadow(
+                    color: Color(0xFFBAFA34),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                  BoxShadow(
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.85),
+                    blurRadius: 22,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // ── Fase 3 & 4: Taglines ──────────────────────────────────────────────
+  Widget _buildTaglines(Size size) {
+    final double fs = (size.width * 0.065).clamp(20.0, 30.0);
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        TextSpan(
-          text: plain,
-          style: const TextStyle(color: white), // [TASK-1]
+        // Line 1: Stream Everything.
+        SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.35),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: _tag1Ctrl, curve: Curves.easeOutCubic)),
+          child: FadeTransition(
+            opacity: _tag1Ctrl,
+            child: _buildRichTagline('Stream ', 'Everything.', fs),
+          ),
         ),
-        WidgetSpan(
-          child: ShaderMask(
-            shaderCallback: (b) =>
-                const LinearGradient(colors: [_lime, _cyan]).createShader(b),
+        const SizedBox(height: 4),
+
+        // Line 2: Miss Nothing.
+        SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.35),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: _tag2Ctrl, curve: Curves.easeOutCubic)),
+          child: FadeTransition(
+            opacity: _tag2Ctrl,
+            child: _buildRichTagline('Miss ', 'Nothing.', fs),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        // Subtitle: UNLIMITED ENTERTAINMENT AWAITS
+        SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.40),
+            end: Offset.zero,
+          ).animate(CurvedAnimation(parent: _subCtrl, curve: Curves.easeOutCubic)),
+          child: FadeTransition(
+            opacity: _subCtrl,
             child: Text(
-              grad,
+              'UNLIMITED ENTERTAINMENT AWAITS',
+              textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w700,
-                letterSpacing: -.3,
-                height: 1.22,
-                color: white, // [TASK-1]
+                color: const Color(0xFF8FA0B5).withValues(alpha: 0.85),
+                fontSize: (size.width * 0.026).clamp(10.0, 12.5),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 2.6,
               ),
             ),
           ),
         ),
       ],
-    ),
-  );
+    );
+  }
 
-  // ── Colour-cycling bounce dots ──────────────────────────────────────────
-  Widget _buildDots() {
-    const phases = [.00, .20, .40, .60, .80];
-    const palette = [_lime, _cyan, _purple, _red, _orange];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(5, (i) {
-        return AnimatedBuilder(
-          animation: Listenable.merge([_dotsCtrl, _waveCtrl]),
-          builder: (_, _) {
-            final t = math.sin(((_dotsCtrl.value + phases[i]) % 1.0) * math.pi);
-            final ct = (_waveCtrl.value + i * .20) % 1.0;
-            final ci = (ct * palette.length).floor();
-            final cf = ct * palette.length - ci;
-            final col = Color.lerp(
-              palette[ci % palette.length],
-              palette[(ci + 1) % palette.length],
-              cf,
-            )!;
-            return Container(
-              width: 8,
-              height: 8 + 13.0 * t,
-              margin: const EdgeInsets.symmetric(horizontal: 5),
-              decoration: BoxDecoration(
-                color: col.withValues(alpha: .42 + .58 * t),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            );
-          },
-        );
-      }),
+  Widget _buildRichTagline(String plain, String neon, double fontSize) {
+    return RichText(
+      textAlign: TextAlign.center,
+      text: TextSpan(
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w800,
+          letterSpacing: -0.4,
+          height: 1.25,
+        ),
+        children: [
+          TextSpan(
+            text: plain,
+            style: const TextStyle(color: white),
+          ),
+          TextSpan(
+            text: neon,
+            style: TextStyle(
+              color: const Color(0xFFBAFA34),
+              shadows: [
+                Shadow(
+                  color: const Color(0xFFBAFA34).withValues(alpha: 0.65),
+                  blurRadius: 18,
+                ),
+                Shadow(
+                  color: const Color(0xFFBAFA34).withValues(alpha: 0.25),
+                  blurRadius: 36,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shine painter — diagonal light band sweeping left → right
+// Fase 3 & 4: Concentric Radar Rings Painter
 // ─────────────────────────────────────────────────────────────────────────────
-class _ShinePainter extends CustomPainter {
-  final double progress; // -0.38 → 1.38
-  const _ShinePainter({required this.progress});
+class _RadarPainter extends CustomPainter {
+  final double progress; // 0.0 -> 1.0 loop
+  _RadarPainter({required this.progress});
 
   @override
   void paint(Canvas canvas, Size size) {
-    const bw = 0.26;
-    final cx = size.width * progress;
-    final skew = size.height * 0.36;
+    final center = Offset(size.width / 2, size.height / 2);
+    final maxRadius = size.width * 0.70;
 
-    final path = Path()
-      ..moveTo(cx - size.width * bw / 2 - skew, 0)
-      ..lineTo(cx + size.width * bw / 2 - skew, 0)
-      ..lineTo(cx + size.width * bw / 2 + skew, size.height)
-      ..lineTo(cx - size.width * bw / 2 + skew, size.height)
-      ..close();
+    for (int i = 0; i < 3; i++) {
+      final double p = (progress + (i * 0.333)) % 1.0;
+      final double currentRadius = maxRadius * (0.22 + 0.78 * p);
+      final double alpha = (1.0 - p).clamp(0.0, 0.75);
 
-    canvas.drawPath(
-      path,
-      Paint()
-        ..shader =
-            LinearGradient(
-              colors: [
-                white.withValues(alpha: 0), // [TASK-1]
-                white.withValues(alpha: 0.40), // [TASK-1]
-                white.withValues(alpha: 0.60), // [TASK-1]
-                white.withValues(alpha: 0.40), // [TASK-1]
-                white.withValues(alpha: 0), // [TASK-1]
-              ],
-              stops: const [0.0, .35, .50, .65, 1.0],
-            ).createShader(
-              Rect.fromLTWH(
-                cx - size.width * bw / 2,
-                0,
-                size.width * bw,
-                size.height,
-              ),
-            ),
-    );
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = Color.lerp(
+          const Color(0xFF00E5FF),
+          const Color(0xFFBAFA34),
+          p,
+        )!.withValues(alpha: alpha);
+
+      canvas.drawCircle(center, currentRadius, paint);
+    }
   }
 
   @override
-  bool shouldRepaint(_ShinePainter o) => o.progress != progress;
+  bool shouldRepaint(_RadarPainter oldDelegate) => oldDelegate.progress != progress;
 }

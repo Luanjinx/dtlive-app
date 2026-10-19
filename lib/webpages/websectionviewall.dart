@@ -156,8 +156,9 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
       builder: (context, sectionViewAllProvider, child) {
         if (sectionViewAllProvider.loading &&
             !sectionViewAllProvider.loadMore) {
+          Widget shimmerContent;
           if (widget.videoType == Constant.genresType) {
-            return ShimmerUtils.responsiveGrid2(
+            shimmerContent = ShimmerUtils.responsiveGrid2(
               context,
               Dimens.isBigScreen(context)
                   ? Dimens.heightGenWeb
@@ -172,7 +173,7 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
             );
           } else if (widget.videoType == Constant.languageType ||
               widget.videoType == Constant.channelType) {
-            return ShimmerUtils.responsiveGrid2(
+            shimmerContent = ShimmerUtils.responsiveGrid2(
               context,
               Dimens.isBigScreen(context)
                   ? Dimens.heightChannelWeb
@@ -186,7 +187,7 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
               25,
             );
           } else {
-            return ShimmerUtils.responsiveGrid(
+            shimmerContent = ShimmerUtils.responsiveGrid(
               context,
               Dimens.isBigScreen(context)
                   ? Dimens.heightPortOtherWeb
@@ -198,6 +199,13 @@ class WebSectionViewAllState extends State<WebSectionViewAll> {
               Dimens.isBigScreen(context) ? 40 : 20,
             );
           }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              SizedBox(height: Dimens.homeTabHeight),
+              shimmerContent,
+            ],
+          );
         }
         if (sectionViewAllProvider.sectionDetailList == null ||
             (sectionViewAllProvider.sectionDetailList?.length ?? 0) > 0) {

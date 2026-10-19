@@ -740,18 +740,31 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   }
 
   Widget _buildPageUI() {
+    final bool isBig = Dimens.isBigScreen(context);
+    final double topHeaderOffset = isBig ? Dimens.homeTabHeight : 56.0;
+
     if (showDetailsProvider.loading) {
       return SingleChildScrollView(
-        child: Dimens.isBigScreen(context)
-            ? ShimmerUtils.buildDetailWebShimmer(context, "show")
-            : ShimmerUtils.buildDetailMobileShimmer(context, "show"),
+        child: Column(
+          children: [
+            SizedBox(height: topHeaderOffset),
+            isBig
+                ? ShimmerUtils.buildDetailWebShimmer(context, "show")
+                : ShimmerUtils.buildDetailMobileShimmer(context, "show"),
+          ],
+        ),
       );
     } else {
       if (showDetailsProvider.contentDetailModel.status == 200 &&
           showDetailsProvider.contentDetailModel.result != null) {
         return _buildTVWebData();
       } else {
-        return const NoData(title: '', subTitle: '');
+        return Column(
+          children: [
+            SizedBox(height: topHeaderOffset),
+            const NoData(title: '', subTitle: ''),
+          ],
+        );
       }
     }
   }
@@ -759,9 +772,16 @@ class WebContentShowDetailsState extends State<WebContentShowDetails>
   Widget _buildTVWebData() {
     final item = showDetailsProvider.contentDetailModel.result?[0];
     if (item == null) return const NoData(title: '', subTitle: '');
+    final bool isBig = Dimens.isBigScreen(context);
+    final double topHeaderOffset = isBig ? Dimens.homeTabHeight : 56.0;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [_buildHero(item), _buildBody(item)],
+      children: [
+        SizedBox(height: topHeaderOffset),
+        _buildHero(item),
+        _buildBody(item),
+      ],
     );
   }
 

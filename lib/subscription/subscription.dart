@@ -318,29 +318,43 @@ class SubscriptionState extends State<Subscription> {
   // ─────────────────────────── MAIN COLUMN ─────────────────────────────────
 
   Widget _buildSubscription() {
+    final bool isBig = Dimens.isBigScreen(context);
+    final double topHeaderOffset = kIsWeb
+        ? (isBig ? (Dimens.homeTabHeight + 20.0) : (56.0 + 20.0))
+        : 20.0;
+
     if (subscriptionProvider.loading) {
-      return Dimens.isBigScreen(context)
-          ? ShimmerUtils.buildSubscribeWebShimmer(context)
-          : ShimmerUtils.buildSubscribeShimmer(context);
-    }
-    if (subscriptionProvider.subscriptionModel.status == 200) {
-      final bool isWeb = Dimens.isBigScreen(context);
       return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(height: isWeb ? (Dimens.homeTabHeight + 20) : 20),
-          _buildPremiumHeroSection(),
-          SizedBox(height: isWeb ? 44 : 28),
-          _buildPlansSection(subscriptionProvider.subscriptionModel.result),
-          SizedBox(height: isWeb ? 44 : 32),
-          _buildHistoryBtn(),
-          SizedBox(height: isWeb ? 20 : 16),
-          _buildBottomView(),
-          SizedBox(height: isWeb ? 40 : 24),
+          SizedBox(height: topHeaderOffset),
+          isBig
+              ? ShimmerUtils.buildSubscribeWebShimmer(context)
+              : ShimmerUtils.buildSubscribeShimmer(context),
         ],
       );
     }
-    return const NoData(title: '', subTitle: '');
+    if (subscriptionProvider.subscriptionModel.status == 200) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(height: topHeaderOffset),
+          _buildPremiumHeroSection(),
+          SizedBox(height: isBig ? 44 : 28),
+          _buildPlansSection(subscriptionProvider.subscriptionModel.result),
+          SizedBox(height: isBig ? 44 : 32),
+          _buildHistoryBtn(),
+          SizedBox(height: isBig ? 20 : 16),
+          _buildBottomView(),
+          SizedBox(height: isBig ? 40 : 24),
+        ],
+      );
+    }
+    return Column(
+      children: [
+        SizedBox(height: topHeaderOffset),
+        const NoData(title: '', subTitle: ''),
+      ],
+    );
   }
 
   // ─────────────────────────── HERO SECTION ────────────────────────────────
