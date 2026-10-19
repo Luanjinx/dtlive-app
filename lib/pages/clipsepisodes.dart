@@ -1456,7 +1456,10 @@ class _EpisodePlayerState extends State<_EpisodePlayer>
                   final isPremiumLocked =
                       widget.episodeList[position].isPremium == 1 &&
                       widget.episodeList[position].isBuy != 1;
-                  final epLabel = 'S$seasonNum E${position + 1}';
+                  final rawName = widget.episodeList[position].name ?? '';
+                  final match = RegExp(r'\d+').firstMatch(rawName);
+                  final epNum = match != null ? match.group(0) : '${widget.episodeList.length - position}';
+                  final epLabel = 'S$seasonNum E$epNum';
 
                   return GestureDetector(
                     onTap: () {

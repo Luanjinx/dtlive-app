@@ -1269,7 +1269,12 @@ class _PlayerVideoState extends State<PlayerVideo>
                             ),
                             const SizedBox(height: 3),
                             Text(
-                              isCurrent ? "Sedang diputar" : "Episode ${i + 1}",
+                              isCurrent
+                                  ? "Sedang diputar"
+                                  : ((ep.videoDuration != null &&
+                                          ep.videoDuration! > 0)
+                                      ? Utils.convertInMin(ep.videoDuration!)
+                                      : (ep.name ?? "")),
                               style: GoogleFonts.inter(
                                 color: isCurrent
                                     ? colorPrimary.withValues(alpha: 0.85)

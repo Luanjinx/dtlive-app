@@ -805,17 +805,24 @@ class _WebClipsEpisodesState extends State<WebClipsEpisodes> {
                                     ),
                                   ),
                                   alignment: Alignment.center,
-                                  child: MyText(
-                                    color: black,
-                                    text: "${position + 1}",
-                                    multilanguage: false,
-                                    textalign: TextAlign.center,
-                                    fontsizeNormal: 12,
-                                    fontweight: FontWeight.w600,
-                                    fontsizeWeb: 14,
-                                    maxline: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    fontstyle: FontStyle.normal,
+                                  child: Builder(
+                                    builder: (context) {
+                                      final rawName = clipsProvider.shortFilmEpisodeModel.result?[position].name ?? "";
+                                      final match = RegExp(r'\d+').firstMatch(rawName);
+                                      final epBadge = match != null ? match.group(0)! : '${(clipsProvider.shortFilmEpisodeModel.result?.length ?? 0) - position}';
+                                      return MyText(
+                                        color: black,
+                                        text: epBadge,
+                                        multilanguage: false,
+                                        textalign: TextAlign.center,
+                                        fontsizeNormal: 12,
+                                        fontweight: FontWeight.w600,
+                                        fontsizeWeb: 14,
+                                        maxline: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        fontstyle: FontStyle.normal,
+                                      );
+                                    },
                                   ),
                                 ),
                               ),

@@ -502,14 +502,32 @@ class _EpisodeBySeasonState extends State<EpisodeBySeason> {
         itemBuilder: (BuildContext context, int position) {
           final episodeItem = episodeProvider.episodeList?[position];
           final String rawName = (episodeItem?.name ?? "").trim();
+          final int totalEps = episodeProvider.totalRows ??
+              (episodeProvider.episodeList?.length ?? 0);
+
+          int? parsedEpNum;
+          final match = RegExp(r'(?:episode|ep\.?)\s*(\d+)', caseSensitive: false)
+              .firstMatch(rawName);
+          if (match != null) {
+            parsedEpNum = int.tryParse(match.group(1) ?? "");
+          } else {
+            final numMatch = RegExp(r'\d+').firstMatch(rawName);
+            if (numMatch != null) {
+              parsedEpNum = int.tryParse(numMatch.group(0) ?? "");
+            }
+          }
+          final int fallbackEpNum = (totalEps >= position + 1)
+              ? (totalEps - position)
+              : (position + 1);
+          final int epNum = parsedEpNum ?? fallbackEpNum;
+
           final String titleText =
-              rawName.isNotEmpty ? rawName : "Episode ${position + 1}";
+              rawName.isNotEmpty ? rawName : "Episode $epNum";
 
           final int durationSec = episodeItem?.videoDuration ?? 0;
           final String durationStr =
               durationSec > 0 ? Utils.convertInMin(durationSec) : "";
           final bool isPremium = (episodeItem?.isPremium ?? 0) == 1;
-          final int epNum = position + 1;
 
           final bool hasEpInTitle =
               titleText.toLowerCase().startsWith("episode") ||
