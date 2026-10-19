@@ -479,7 +479,7 @@ class HomeState extends State<Home> {
               ),
             ];
           },
-          body: SafeArea(top: true, bottom: false, child: _buildPageUI()),
+          body: SafeArea(top: false, bottom: false, child: _buildPageUI()),
         ),
       ),
     );
@@ -489,12 +489,14 @@ class HomeState extends State<Home> {
     final bool hasTypes = homeProvider.sectionTypeModel.status == 200 &&
         (homeProvider.sectionTypeModel.result?.isNotEmpty ?? false);
     final bool isHeaderSolid = innerBoxIsScrolled || _isScrolled;
+    final bool isTablet = Dimens.isTablet(context);
 
     return SliverAppBar(
       centerTitle: false,
       automaticallyImplyLeading: false,
       toolbarHeight: kToolbarHeight,
       titleSpacing: 10,
+      leadingWidth: isTablet ? 140 : 110,
       backgroundColor: isHeaderSolid ? appBgColor : transparent,
       elevation: isHeaderSolid ? 4 : 0,
       flexibleSpace: AnimatedContainer(
@@ -518,8 +520,11 @@ class HomeState extends State<Home> {
       leading: Container(
         height: kToolbarHeight,
         alignment: Alignment.centerLeft,
-        padding: EdgeInsets.zero,
-        child: MyImage(imagePath: "appicon.png"),
+        padding: const EdgeInsets.only(left: 10),
+        child: MyImage(
+          imagePath: "appicon.png",
+          fit: BoxFit.contain,
+        ),
       ),
       title: _buildAppBarSubscribeBtn(),
       actions: [
@@ -726,12 +731,12 @@ class HomeState extends State<Home> {
         final int itemCount = 1 + list.length; // 1 for "Home" + all categories
 
         return SizedBox(
-          height: 36,
+          height: 38,
           child: ListView.separated(
             controller: tabScrollController,
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 14),
             itemCount: itemCount,
             separatorBuilder: (context, index) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
@@ -745,7 +750,7 @@ class HomeState extends State<Home> {
                   : (list[index - 1].name?.toString() ?? "");
 
               return InkWell(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(6),
                 splashColor: transparent,
                 highlightColor: transparent,
                 onTap: () async {
@@ -771,44 +776,49 @@ class HomeState extends State<Home> {
                     },
                   );
                 },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isSelected ? 16 : 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? colorPrimary
-                        : black.withValues(alpha: 0.40),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? colorPrimary
-                          : white.withValues(alpha: 0.22),
-                      width: 1,
-                    ),
-                    boxShadow: isSelected
-                        ? [
-                            BoxShadow(
-                              color: colorPrimary.withValues(alpha: 0.35),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
-                            ),
-                          ]
-                        : null,
-                  ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   alignment: Alignment.center,
-                  child: MyText(
-                    color: isSelected ? black : white,
-                    text: title,
-                    multilanguage: false,
-                    fontsizeNormal: 13,
-                    fontsizeWeb: 14,
-                    fontweight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                    maxline: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textalign: TextAlign.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      MyText(
+                        color: isSelected
+                            ? white
+                            : white.withValues(alpha: 0.65),
+                        text: title,
+                        multilanguage: false,
+                        fontsizeNormal: isSelected ? 15 : 14,
+                        fontsizeWeb: isSelected ? 16 : 15,
+                        fontweight:
+                            isSelected ? FontWeight.w700 : FontWeight.w500,
+                        maxline: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textalign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 4),
+                      AnimatedContainer(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeInOut,
+                        height: 3.5,
+                        width: isSelected ? 22 : 0,
+                        decoration: BoxDecoration(
+                          color: isSelected ? colorPrimary : transparent,
+                          borderRadius: BorderRadius.circular(2),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: colorPrimary.withValues(alpha: 0.65),
+                                    blurRadius: 6,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
@@ -855,8 +865,8 @@ class HomeState extends State<Home> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        /* Top spacer so banner starts right below top header bar and sits behind transparent category tabs */
-        const SizedBox(height: kToolbarHeight),
+        /* Subtle spacing below pinned app bar */
+        const SizedBox(height: 4),
 
         /* Top Banner */
         if (sectionDataProvider.loadingBanner)
@@ -903,10 +913,13 @@ class HomeState extends State<Home> {
     if ((sectionBannerList?.length ?? 0) == 0) return const SizedBox.shrink();
     final list = sectionBannerList!;
     final double screenW = MediaQuery.of(context).size.width;
+    final bool isTablet = Dimens.isTablet(context);
     final double imageH = kIsWeb
         ? (screenW * 0.42).clamp(240.0, 420.0)
-        : (screenW * (9 / 16)).clamp(215.0, 320.0);
-    final double carouselH = imageH + 58.0;
+        : isTablet
+            ? (screenW * 0.38).clamp(260.0, 440.0)
+            : (screenW * (9 / 16)).clamp(215.0, 320.0);
+    final double carouselH = imageH + 50.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -1066,7 +1079,7 @@ class HomeState extends State<Home> {
           ],
         ),
 
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
         /* ── Action Buttons: [ ▶ Cek Sekarang ]  [ + Daftarku ] (Static, does not slide with carousel) ── */
         Consumer<SectionDataProvider>(
@@ -1090,7 +1103,7 @@ class HomeState extends State<Home> {
 
         /* ── Dot indicator ── */
         if (list.length > 1) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Center(
             child: Consumer<SectionDataProvider>(
               builder: (context, sdp, _) {
@@ -1112,7 +1125,6 @@ class HomeState extends State<Home> {
               },
             ),
           ),
-          const SizedBox(height: 4),
         ],
       ],
     );
@@ -1213,8 +1225,9 @@ class HomeState extends State<Home> {
     bool isLive,
     double screenW,
   ) {
+    final bool isTablet = Dimens.isTablet(context);
     return Container(
-      constraints: const BoxConstraints(maxWidth: 320),
+      constraints: BoxConstraints(maxWidth: isTablet ? 380 : 320),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,

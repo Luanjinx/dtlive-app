@@ -356,33 +356,38 @@ class BottombarState extends State<Bottombar> with RouteAware {
               curve: Curves.easeInOut,
               child: IgnorePointer(
                 ignoring: !bottombarProvider.isShowBottombar,
-                child: Container(
-                  height: 50,
-                  margin: EdgeInsets.only(
-                    left: 20 + leftInset,
-                    right: 20 + rightInset,
-                    bottom: bottomInset > 0 ? bottomInset + 12 : 24,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xF216181F),
-                    borderRadius: BorderRadius.circular(25),
-                    border: Border.all(
-                      color: white.withValues(alpha: 0.10),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: black.withValues(alpha: 0.50),
-                        blurRadius: 16,
-                        spreadRadius: 1,
-                        offset: const Offset(0, 4),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 560),
+                    child: Container(
+                      height: 50,
+                      margin: EdgeInsets.only(
+                        left: 20 + leftInset,
+                        right: 20 + rightInset,
+                        bottom: bottomInset > 0 ? bottomInset + 12 : 24,
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: navItems,
+                      decoration: BoxDecoration(
+                        color: const Color(0xF216181F),
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(
+                          color: white.withValues(alpha: 0.10),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: black.withValues(alpha: 0.50),
+                            blurRadius: 16,
+                            spreadRadius: 1,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: navItems,
+                      ),
+                    ),
                   ),
                 ),
               ),

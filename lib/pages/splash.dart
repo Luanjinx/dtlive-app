@@ -16,7 +16,6 @@ import '../utils/color.dart';
 import '../utils/constant.dart';
 import '../utils/utils.dart';
 import '../widget/myimage.dart';
-import '../widget/mytext.dart';
 import '../utils/sharedpre.dart';
 
 const _kNavFadeMs = 500;
@@ -42,12 +41,6 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
   // ── Phase 2: Stage & Laser Controllers ────────────────────────────────
   late AnimationController _stageCtrl; // reveals stage at 950ms
   late AnimationController _laserCtrl; // sweeps across logo
-
-  // ── Phase 3 & 4: Radar, Taglines & Subtitle Controllers ───────────────
-  late AnimationController _radarCtrl; // concentric expanding pulse rings
-  late AnimationController _tag1Ctrl; // Line 1: Stream Everything.
-  late AnimationController _tag2Ctrl; // Line 2: Miss Nothing.
-  late AnimationController _subCtrl; // Subtitle: Unlimited Entertainment Awaits
 
   // ── Navigation Gate ───────────────────────────────────────────────────
   bool _animDone = false;
@@ -93,30 +86,6 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(milliseconds: 850),
     );
-
-    // Phase 3 & 4: Radar concentric rings (2800ms repeating loop)
-    _radarCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2800),
-    );
-
-    // Phase 3: Tagline 1 reveal (600ms duration)
-    _tag1Ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    // Phase 4: Tagline 2 reveal (600ms duration)
-    _tag2Ctrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
-
-    // Phase 4: Subtitle reveal (600ms duration)
-    _subCtrl = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    );
   }
 
   void _startTimeline() {
@@ -134,24 +103,8 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
       _laserCtrl.forward();
     });
 
-    // 1500ms: Radar rings pulse, Tagline 1 appears
-    _delayed(1500, () {
-      _radarCtrl.repeat();
-      _tag1Ctrl.forward();
-    });
-
-    // 2000ms: Tagline 2 appears
-    _delayed(2000, () {
-      _tag2Ctrl.forward();
-    });
-
-    // 2400ms: Subtitle appears
-    _delayed(2400, () {
-      _subCtrl.forward();
-    });
-
-    // 3400ms: Minimum splash duration reached, allow smooth exit
-    _delayed(3400, () {
+    // 2500ms: Minimum splash duration reached, allow smooth exit
+    _delayed(2500, () {
       _animDone = true;
       _tryNavigate();
     });
@@ -186,9 +139,7 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
         oldPage: RoutesConstant.homePage,
         reqText: '',
       );
-    } else if (intro != '1') {
-      _nextPage = const Bottombar();
-    } else if (seen == '1') {
+    } else if (intro != '1' || seen == '1') {
       _nextPage = const Bottombar();
     } else {
       _nextPage = has ? const Intro() : const Bottombar();
@@ -198,15 +149,16 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     _tryNavigate();
   }
 
-  // Gate: both data and minimum splash animation sequence must be complete
   void _tryNavigate() {
     if (!_animDone || !_dataDone || !mounted || _nextPage == null) return;
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
-        pageBuilder: (_, _, _) => _nextPage!,
         transitionDuration: const Duration(milliseconds: _kNavFadeMs),
-        transitionsBuilder: (_, animation, _, child) => FadeTransition(
+        pageBuilder: (context, animation, secondaryAnimation) => _nextPage!,
+        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+            FadeTransition(
           opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
           child: child,
         ),
@@ -220,10 +172,6 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     _eqFadeCtrl.dispose();
     _stageCtrl.dispose();
     _laserCtrl.dispose();
-    _radarCtrl.dispose();
-    _tag1Ctrl.dispose();
-    _tag2Ctrl.dispose();
-    _subCtrl.dispose();
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
@@ -237,7 +185,8 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
+    final bool isTablet = size.shortestSide >= 600 || size.width >= 600;
 
     return Scaffold(
       backgroundColor: appBgColor,
@@ -262,35 +211,12 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
 
           // Fase 1: Audio Equalizer / Soundwave (centered)
           Center(
-            child: _buildEqualizer(),
+            child: _buildEqualizer(isTablet),
           ),
 
-          // Fase 2, 3, 4: Stage Container with Radar, Logo, Laser, and Taglines
+          // Fase 2: Clean Logo with Ambient Glow and Laser Sweep (adaptive for phone & tablet, matches web)
           Center(
-            child: _buildStage(size),
-          ),
-
-          // Version label at bottom
-          Positioned(
-            bottom: size.height * 0.03,
-            left: 0,
-            right: 0,
-            child: Opacity(
-              opacity: 0.22,
-              child: MyText(
-                text: 'v${Constant.appVersion.isNotEmpty ? Constant.appVersion : "2.1.0"}',
-                color: titleTextColor,
-                fontsizeNormal: 10,
-                fontsizeWeb: 11,
-                fontweight: FontWeight.w400,
-                letterSpacing: 1.6,
-                maxline: 1,
-                multilanguage: false,
-                overflow: TextOverflow.ellipsis,
-                textalign: TextAlign.center,
-                fontstyle: FontStyle.normal,
-              ),
-            ),
+            child: _buildStage(size, isTablet),
           ),
         ],
       ),
@@ -298,7 +224,12 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
   }
 
   // ── Fase 1: Equalizer ─────────────────────────────────────────────────
-  Widget _buildEqualizer() {
+  Widget _buildEqualizer(bool isTablet) {
+    final double barWidth = isTablet ? 5.0 : 3.8;
+    final double barGap = isTablet ? 3.5 : 2.2;
+    final double maxBarHeight = isTablet ? 72.0 : 52.0;
+    final double minBarHeight = isTablet ? 14.0 : 10.0;
+
     return FadeTransition(
       opacity: Tween<double>(begin: 1.0, end: 0.0).animate(
         CurvedAnimation(parent: _eqFadeCtrl, curve: Curves.easeInOut),
@@ -308,7 +239,7 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
           CurvedAnimation(parent: _eqFadeCtrl, curve: Curves.easeInOut),
         ),
         child: SizedBox(
-          height: 100,
+          height: isTablet ? 140 : 100,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -323,13 +254,14 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
                   final double freq = 1.2 + (index % 4) * 0.35;
                   final double phase = index * 0.65;
                   final double wave = 0.5 + 0.5 * math.sin(t * freq + phase);
-                  final double h =
-                      (10.0 + (48.0 * centerFactor - 10.0) * wave).clamp(8.0, 52.0);
+                  final double h = (minBarHeight +
+                          (maxBarHeight * centerFactor - minBarHeight) * wave)
+                      .clamp(minBarHeight, maxBarHeight);
 
                   return Container(
-                    width: 3.8,
+                    width: barWidth,
                     height: h,
-                    margin: const EdgeInsets.symmetric(horizontal: 2.2),
+                    margin: EdgeInsets.symmetric(horizontal: barGap),
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(999),
                       gradient: const LinearGradient(
@@ -353,80 +285,65 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
     );
   }
 
-  // ── Fase 2, 3, 4: Stage ────────────────────────────────────────────────
-  Widget _buildStage(Size size) {
-    final double logoW = (size.width * 0.64).clamp(180.0, 270.0);
-    final double logoH = logoW * 0.32;
+  // ── Fase 2: Clean Stage (Logo + Laser + Ambient Glow) ───────────────────
+  Widget _buildStage(Size size, bool isTablet) {
+    // Adaptive sizing: on tablets use proportional optimal bounds so it doesn't look too small or stretched
+    final double logoW = isTablet
+        ? (size.width * 0.42).clamp(320.0, 520.0)
+        : (size.width * 0.66).clamp(180.0, 300.0);
+    final double logoH = logoW * (308.0 / 1200.0); // exact 1200x308 aspect ratio
 
     return FadeTransition(
       opacity: CurvedAnimation(parent: _stageCtrl, curve: Curves.easeOut),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
         children: [
-          // Logo Area with Ambient Glow, Radar Rings, and Laser Scanner
-          Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // Radial Ambient Glow
-              Container(
-                width: logoW * 1.45,
-                height: logoH * 2.2,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      const Color(0xFF00E5FF).withValues(alpha: 0.18),
-                      const Color(0xFFBAFA34).withValues(alpha: 0.12),
-                      transparent,
-                    ],
-                    stops: const [0.0, 0.45, 0.72],
-                  ),
+          // Radial Ambient Glow behind logo
+          IgnorePointer(
+            child: Container(
+              width: logoW * 1.55,
+              height: logoH * 2.6,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    const Color(0xFF00E5FF).withValues(alpha: 0.18),
+                    const Color(0xFFBAFA34).withValues(alpha: 0.12),
+                    transparent,
+                  ],
+                  stops: const [0.0, 0.45, 0.72],
                 ),
               ),
-
-              // Fase 3: Concentric Radar Rings
-              SizedBox(
-                width: logoW * 1.5,
-                height: logoW * 1.5,
-                child: AnimatedBuilder(
-                  animation: _radarCtrl,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      painter: _RadarPainter(progress: _radarCtrl.value),
-                    );
-                  },
-                ),
-              ),
-
-              // Nexstream Logo Image
-              SizedBox(
-                width: logoW,
-                height: logoH,
-                child: MyImage(
-                  imagePath: 'appicon.png',
-                  width: logoW,
-                  fit: BoxFit.contain,
-                ),
-              ),
-
-              // Fase 2: Neon Laser Sweep Scanner
-              _buildLaser(logoW, logoH),
-            ],
+            ),
           ),
 
-          SizedBox(height: (size.height * 0.04).clamp(18.0, 32.0)),
-
-          // Fase 3 & 4: Taglines & Subtitle
-          _buildTaglines(size),
+          // Nexstream Logo Image with bounded Laser Sweep
+          SizedBox(
+            width: logoW,
+            height: logoH,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                MyImage(
+                  imagePath: 'appicon.png',
+                  width: logoW,
+                  height: logoH,
+                  fit: BoxFit.contain,
+                ),
+                _buildLaser(logoW, logoH, isTablet),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
   // ── Fase 2: Neon Laser Scanner Beam ───────────────────────────────────
-  Widget _buildLaser(double logoW, double logoH) {
+  Widget _buildLaser(double logoW, double logoH, bool isTablet) {
+    final double beamWidth = isTablet ? 4.5 : 3.5;
+
     return AnimatedBuilder(
       animation: _laserCtrl,
       builder: (context, child) {
@@ -441,13 +358,13 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
                 : 1.0;
 
         return Positioned(
-          left: (logoW * 0.25) + x - (logoW * 0.25),
-          top: -10,
-          bottom: -10,
+          left: x,
+          top: -logoH * 0.15,
+          bottom: -logoH * 0.15,
           child: Opacity(
             opacity: opacity.clamp(0.0, 1.0),
             child: Container(
-              width: 3.5,
+              width: beamWidth,
               decoration: BoxDecoration(
                 color: const Color(0xFFBAFA34),
                 borderRadius: BorderRadius.circular(999),
@@ -470,131 +387,4 @@ class _SplashState extends State<Splash> with TickerProviderStateMixin {
       },
     );
   }
-
-  // ── Fase 3 & 4: Taglines ──────────────────────────────────────────────
-  Widget _buildTaglines(Size size) {
-    final double fs = (size.width * 0.065).clamp(20.0, 30.0);
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Line 1: Stream Everything.
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.35),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: _tag1Ctrl, curve: Curves.easeOutCubic)),
-          child: FadeTransition(
-            opacity: _tag1Ctrl,
-            child: _buildRichTagline('Stream ', 'Everything.', fs),
-          ),
-        ),
-        const SizedBox(height: 4),
-
-        // Line 2: Miss Nothing.
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.35),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: _tag2Ctrl, curve: Curves.easeOutCubic)),
-          child: FadeTransition(
-            opacity: _tag2Ctrl,
-            child: _buildRichTagline('Miss ', 'Nothing.', fs),
-          ),
-        ),
-        const SizedBox(height: 14),
-
-        // Subtitle: UNLIMITED ENTERTAINMENT AWAITS
-        SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(0, 0.40),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(parent: _subCtrl, curve: Curves.easeOutCubic)),
-          child: FadeTransition(
-            opacity: _subCtrl,
-            child: Text(
-              'UNLIMITED ENTERTAINMENT AWAITS',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: const Color(0xFF8FA0B5).withValues(alpha: 0.85),
-                fontSize: (size.width * 0.026).clamp(10.0, 12.5),
-                fontWeight: FontWeight.w600,
-                letterSpacing: 2.6,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRichTagline(String plain, String neon, double fontSize) {
-    return RichText(
-      textAlign: TextAlign.center,
-      text: TextSpan(
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -0.4,
-          height: 1.25,
-        ),
-        children: [
-          TextSpan(
-            text: plain,
-            style: const TextStyle(color: white),
-          ),
-          TextSpan(
-            text: neon,
-            style: TextStyle(
-              color: const Color(0xFFBAFA34),
-              shadows: [
-                Shadow(
-                  color: const Color(0xFFBAFA34).withValues(alpha: 0.65),
-                  blurRadius: 18,
-                ),
-                Shadow(
-                  color: const Color(0xFFBAFA34).withValues(alpha: 0.25),
-                  blurRadius: 36,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Fase 3 & 4: Concentric Radar Rings Painter
-// ─────────────────────────────────────────────────────────────────────────────
-class _RadarPainter extends CustomPainter {
-  final double progress; // 0.0 -> 1.0 loop
-  _RadarPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final maxRadius = size.width * 0.70;
-
-    for (int i = 0; i < 3; i++) {
-      final double p = (progress + (i * 0.333)) % 1.0;
-      final double currentRadius = maxRadius * (0.22 + 0.78 * p);
-      final double alpha = (1.0 - p).clamp(0.0, 0.75);
-
-      final paint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5
-        ..color = Color.lerp(
-          const Color(0xFF00E5FF),
-          const Color(0xFFBAFA34),
-          p,
-        )!.withValues(alpha: alpha);
-
-      canvas.drawCircle(center, currentRadius, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_RadarPainter oldDelegate) => oldDelegate.progress != progress;
 }

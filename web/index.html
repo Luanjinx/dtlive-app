@@ -211,65 +211,11 @@
       opacity: 1;
     }
 
-    /* ── Radar Concentric Rings (Fase 3 & 4) ── */
-    #sp-radar {
-      position: absolute;
-      top: 48px;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 0;
-      height: 0;
-      pointer-events: none;
-      z-index: 1;
-    }
-
-    .sp-ring {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: clamp(180px, 35vmin, 300px);
-      height: clamp(180px, 35vmin, 300px);
-      border-radius: 50%;
-      border: 1.5px solid rgba(0, 229, 255, 0.45);
-      box-shadow: 0 0 14px rgba(0, 229, 255, 0.25), inset 0 0 14px rgba(0, 229, 255, 0.15);
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.25);
-      pointer-events: none;
-      will-change: transform, opacity;
-    }
-
-    @keyframes radarPulse {
-      0% {
-        transform: translate(-50%, -50%) scale(0.25);
-        opacity: 0.85;
-        border-color: rgba(0, 229, 255, 0.65);
-      }
-      45% {
-        opacity: 0.40;
-        border-color: rgba(186, 250, 52, 0.55);
-      }
-      100% {
-        transform: translate(-50%, -50%) scale(2.85);
-        opacity: 0;
-        border-color: rgba(186, 250, 52, 0);
-      }
-    }
-
-    .sp-ring.r1.pulse-1 {
-      animation: radarPulse 2.8s cubic-bezier(0.12, 0.7, 0.3, 1) infinite;
-    }
-    .sp-ring.r2.pulse-2 {
-      animation: radarPulse 2.8s cubic-bezier(0.12, 0.7, 0.3, 1) 0.65s infinite;
-    }
-    .sp-ring.r3.pulse-3 {
-      animation: radarPulse 2.8s cubic-bezier(0.12, 0.7, 0.3, 1) 1.30s infinite;
-    }
-
     /* ── Logo Box & Laser Scan (Fase 2) ── */
     #sp-logo-box {
       position: relative;
-      width: clamp(170px, 38vmin, 270px);
-      height: clamp(60px, 13vmin, 90px);
+      width: clamp(200px, 42vmin, 460px);
+      height: clamp(60px, 11vmin, 120px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -282,7 +228,7 @@
       max-height: 100%;
       object-fit: contain;
       opacity: 0;
-      filter: brightness(1.05) drop-shadow(0 0 20px rgba(186, 250, 52, 0.3));
+      filter: brightness(1.05) drop-shadow(0 0 24px rgba(186, 250, 52, 0.35));
       transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1);
       will-change: opacity;
     }
@@ -295,7 +241,7 @@
       position: absolute;
       top: -15%;
       bottom: -15%;
-      width: 3px;
+      width: 3.5px;
       left: -15%;
       opacity: 0;
       background: #bafa34;
@@ -324,59 +270,6 @@
 
     #sp-laser.sweep {
       animation: laserSweep 0.85s cubic-bezier(0.35, 0, 0.25, 1) forwards;
-    }
-
-    /* ── Taglines (Fase 3 & 4) ── */
-    #sp-taglines {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      margin-top: clamp(20px, 4.5vmin, 32px);
-      gap: clamp(2px, 0.6vmin, 6px);
-      text-align: center;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      z-index: 3;
-    }
-
-    .sp-tag-line {
-      font-size: clamp(20px, 4.4vmin, 32px);
-      font-weight: 800;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-      line-height: 1.25;
-      opacity: 0;
-      transform: translateY(12px);
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
-    }
-
-    .sp-tag-line.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .sp-neon {
-      color: #bafa34;
-      text-shadow: 0 0 18px rgba(186, 250, 52, 0.6), 0 0 36px rgba(186, 250, 52, 0.25);
-    }
-
-    #sp-sub {
-      margin-top: clamp(8px, 1.8vmin, 14px);
-      font-size: clamp(9px, 1.8vmin, 12px);
-      font-weight: 600;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: #8fa0b5;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-      will-change: opacity, transform;
-    }
-
-    #sp-sub.show {
-      opacity: 0.85;
-      transform: translateY(0);
     }
   </style>
   <!-- ═════════════════
@@ -418,28 +311,14 @@
       <span class="eq-bar eb-21"></span>
     </div>
 
-    <!-- Fase 2, 3, 4: Stage with Radar, Laser, Logo, and Taglines -->
+    <!-- Stage with Ambient Glow, Logo, and Laser Sweep (Clean & Tablet-Optimized) -->
     <div id="sp-stage">
       <div id="sp-ambient-glow"></div>
 
-      <!-- Fase 3: Concentric Radar Rings -->
-      <div id="sp-radar">
-        <div class="sp-ring r1"></div>
-        <div class="sp-ring r2"></div>
-        <div class="sp-ring r3"></div>
-      </div>
-
-      <!-- Fase 2: Logo Reveal with Neon Laser Sweep -->
+      <!-- Logo Reveal with Neon Laser Sweep -->
       <div id="sp-logo-box">
         <img id="sp-logo-img" src="assets/appicon.png" alt="nexstream" width="280" height="90">
         <div id="sp-laser"></div>
-      </div>
-
-      <!-- Fase 3 & 4: Taglines -->
-      <div id="sp-taglines">
-        <span class="sp-tag-line line-1">Stream <span class="sp-neon">Everything.</span></span>
-        <span class="sp-tag-line line-2">Miss <span class="sp-neon">Nothing.</span></span>
-        <span id="sp-sub">Unlimited Entertainment Awaits</span>
       </div>
     </div>
   </div>
@@ -505,13 +384,6 @@
       var glow = document.getElementById('sp-ambient-glow');
       var logo = document.getElementById('sp-logo-img');
       var laser = document.getElementById('sp-laser');
-      var ring1 = document.querySelector('.sp-ring.r1');
-      var ring2 = document.querySelector('.sp-ring.r2');
-      var ring3 = document.querySelector('.sp-ring.r3');
-      var line1 = document.querySelector('.sp-tag-line.line-1');
-      var line2 = document.querySelector('.sp-tag-line.line-2');
-      var sub = document.getElementById('sp-sub');
-
       /* ── 800ms: Equalizer fades out ──────────────────────────────── */
       setTimeout(function () {
         if (eq) eq.classList.add('fade-out');
@@ -524,24 +396,6 @@
         if (laser) laser.classList.add('sweep');
         if (glow) glow.classList.add('active');
       }, 950);
-
-      /* ── 1500ms: Radar rings pulse, Line 1 appears ───────────────── */
-      setTimeout(function () {
-        if (ring1) ring1.classList.add('pulse-1');
-        if (ring2) ring2.classList.add('pulse-2');
-        if (ring3) ring3.classList.add('pulse-3');
-        if (line1) line1.classList.add('show');
-      }, 1500);
-
-      /* ── 2000ms: Line 2 appears ─────────────────────────────────── */
-      setTimeout(function () {
-        if (line2) line2.classList.add('show');
-      }, 2000);
-
-      /* ── 2400ms: Subtitle appears ────────────────────────────────── */
-      setTimeout(function () {
-        if (sub) sub.classList.add('show');
-      }, 2400);
 
       /* ── Splash Dismissal ────────────────────────────────────────── */
       var flutterReady = false;
